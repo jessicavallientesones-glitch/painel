@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jéssica Valiente · Painel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Montserrat:wght@300;400;500;600&family=Pinyon+Script&display=swap" rel="stylesheet">
 <style>
 :root{
   /* Identidade: menu marrom, área de trabalho creme e branco, dourado só nos detalhes */
@@ -4415,7 +4415,7 @@ async function ccLogo(){
   const bg = getComputedStyle(d).backgroundImage; d.remove(); const u = (bg.match(/url\(["']?(.*?)["']?\)$/)||[])[1];
   if(!u) return null; const im = new Image(); im.src = u; try{ await im.decode(); CC_LOGO = im; }catch(e){ return null; } return CC_LOGO;
 }
-async function ccFontes(){ try{ await Promise.all(['600 40px "Montserrat"','500 40px "Montserrat"','400 40px "Bodoni Moda"','italic 400 40px "Bodoni Moda"'].map(f => document.fonts.load(f))); }catch(e){} }
+async function ccFontes(){ try{ await Promise.all(['600 40px "Montserrat"','500 40px "Montserrat"','400 40px "Bodoni Moda"','italic 400 40px "Bodoni Moda"','400 40px "Pinyon Script"'].map(f => document.fonts.load(f))); }catch(e){} }
 function ccTokens(texto){ const r = []; let dest = false; String(texto||"").split(/(\*)/).forEach(p => { if(p==="*"){ dest = !dest; return; } p.split(/(\s+)/).forEach(w => { if(w && !/^\s+$/.test(w)) r.push({w, d:dest}); }); }); return r; }
 function ccQuebrar(g, toks, max){ const linhas = [[]]; let larg = 0; const esp = g.measureText(" ").width;
   toks.forEach(t => { const w = g.measureText(t.w).width; if(larg && larg + esp + w > max){ linhas.push([]); larg = 0; } linhas[linhas.length-1].push({...t, larg:w}); larg += (larg?esp:0) + w; }); return linhas; }
@@ -5182,6 +5182,7 @@ async function ccAtDesenhar(g, W, H, i, idx){
   const X = (txt, o) => atAjustar(g, txt, Object.assign({fam:AT_SANS, peso:400, pesoD:600, lh:1.48, min:24*k}, o));
   const rotulo = s.rotulo || atAreaRot(i);
 
+  if((papel==="capa" || papel==="unico") && AT_CAPAS_V4[lay]){ await atCapaV4(g, W, H, i, s, P, k, seed, idx, total, lay); g.restore(); return; }
   if(papel==="capa" && AT_CAPAS_V3[lay]){ await atCapaV3(g, W, H, i, s, P, k, seed, idx, total, lay); g.restore(); return; }
   if(papel==="unico" && (lay==="frase" || lay==="dica")){ await atPostLeve(g, W, H, i, s, P, k, seed, idx, total, lay); g.restore(); return; }
   if(papel==="capa"){
@@ -5465,8 +5466,8 @@ function ccFeedGerar(temaId, tipo, opc){
   const estilo = opc.estilo || (tipo==="post" ? "info" : "carrossel");
   const slides = atMontarSlides(t, tipo, v, seed, estilo);
   let capa = opc.capa; if(!capa || AT_CAPAS_LEGADO.includes(capa)){ const tt = slides[0].titulo.replace(/\*/g,"");
-    const pos = opc.data ? Math.floor(Math.floor(toUTC(opc.data)/86400000) / 3) : seed + v; let c = ["cartao","roteiro","alerta","pergunta"][pos % 4];
-    if(c==="pergunta" && !/\?$/.test(tt)) c = "roteiro"; capa = t.lista ? "numero" : c; }
+    const pos = opc.data ? Math.floor(Math.floor(toUTC(opc.data)/86400000) / 3) : seed + v; const rot = ["cartao","premium","roteiro","colagem","alerta","assinatura","pergunta","lembretes","selecao","premiumclaro"]; let c = rot[pos % rot.length];
+    if(c==="pergunta" && !/\?$/.test(tt)) c = "roteiro"; capa = t.lista && !AT_CAPAS_V4[c] ? "numero" : c; }
   const paleta = opc.paleta || (opc.data ? atPaletaPorData(opc.data) : [...AT_CLAROS, ...AT_ESCUROS][seed % 6]);
   const fotos = (ccDB().imagens||[]).filter(x => x.marca); const fotoId = fotos.length && ["cartao"].includes(capa) ? fotos[(seed) % fotos.length].id : null;
   const cta = AT_CTAS[(v + (tipo==="post"?1:0)) % AT_CTAS.length];
@@ -5552,7 +5553,7 @@ function ccFeedPlanejar(inicio, dias){
     const d = addDias(inicio, n); if(ccFeedDoDia(d).length) continue;
     const dn = Math.floor(toUTC(d)/86400000); const area = dn % 2 ? "fam" : "prev";
     const t = ccProximoTema(area, usados); usados.add(t.id);
-    const estilo = AT_RITMO[dn % AT_RITMO.length]; const tipo = estilo==="carrossel" ? "carrossel" : "post";
+    const estilo = dn % 7 === 3 ? "motivacional" : AT_RITMO[dn % AT_RITMO.length]; const tipo = estilo==="carrossel" ? "carrossel" : "post";
     const base = ccDB().itens.filter(i => i.temaId===t.id).length;
     const it = ccFeedGerar(t.id, tipo, {variacao:base, data:d, estilo}); it.planoFeed = inicio;
     ccDB().itens.push(it); criados.push(it);
@@ -5755,7 +5756,7 @@ async function ccFeedEditor(c, i){
   const fotos = () => (ccDB().imagens||[]);
   const desenhar = async () => {
     const s = i.slides[sel], d = i.design; const ehCapa = s.papel==="capa";
-    const opLay = ehCapa ? Object.entries(AT_CAPAS).filter(([k]) => AT_CAPAS_V3[k] || k===s.layout) : Object.entries(AT_LAYOUTS).filter(([k]) => i.slides.length===1 ? ["unico","mito","check","frase","dica"].includes(k) : !["unico"].includes(k));
+    const opLay = ehCapa ? Object.entries(AT_CAPAS).filter(([k]) => AT_CAPAS_V3[k] || AT_CAPAS_V4[k] || k===s.layout) : (i.slides.length===1 ? [...Object.entries(AT_LAYOUTS).filter(([k]) => ["unico","mito","check","frase","dica"].includes(k)), ...Object.entries(AT_CAPAS_V4)] : Object.entries(AT_LAYOUTS).filter(([k]) => !["unico"].includes(k)));
     c.innerHTML = `<div class="cab"><div><h2 class="secao-tit" style="margin:0">${esc(i.titulo)}</h2><div class="sub">Editor de artes · 1080×1350 · versão ${i.versao||1} · ${atPill(i)}</div></div>
       <div class="acoes"><button class="btn" id="ed-voltar">Voltar</button><button class="btn" id="ed-feed">Ver no feed</button><button class="btn" id="ed-bx">Baixar</button><button class="btn btn-pri" id="ed-aprov">Revisar e aprovar</button></div></div>
     <div class="cc-estudio"><div><canvas id="ed-c" width="${W}" height="${H}" class="cc-es-canvas"></canvas><div class="cc-thumbs at-ed-th">${i.slides.map((_, n) => `<div data-mini="${i.id}:${n}" data-esc=".12" data-sl="${n}" class="${n===sel?"ativo":""}"></div>`).join("")}</div></div>
@@ -5811,7 +5812,7 @@ const AT_EXEMPLOS = [
   ["Carrossel: O que acontece quando a pensão alimentícia não é paga?","f-atraso","carrossel",{tituloCapa:"O que acontece quando a pensão *não é paga?*", capa:"alerta"}]
 ];
 function atCriarExemplo(temaId, tipo, o, data){
-  if(tipo==="frase" || tipo==="dica"){ const it0 = ccFeedGerar(temaId, "post", {variacao:0, data, estilo:tipo}); ccDB().itens.push(it0); return it0; }
+  if(tipo==="frase" || tipo==="dica" || tipo==="motivacional"){ const it0 = ccFeedGerar(temaId, "post", {variacao:0, data, estilo:tipo}); ccDB().itens.push(it0); return it0; }
   const base = ccDB().itens.filter(i => i.temaId===temaId).length;
   const it = ccFeedGerar(temaId, tipo, {variacao:base, capa:o.capa, data, estilo: tipo==="post" ? "info" : "carrossel"});
   if(o.variante && tipo==="post"){ const t = ccTema(temaId); const vs = ["pergunta","fato","mito","check"]; for(let v=0; v<8; v++){ const sl = atMontarSlides(t, "post", v, it.design.seed); const lay = sl[0].layout==="unico" ? sl[0].variante : sl[0].layout; if(lay===o.variante){ it.slides = sl; break; } } }
@@ -7330,6 +7331,310 @@ if(window.JV_NUVEM){
     const bd = $("#nv-desc"); if(bd) bd.onclick = async () => { if(!(await confirmar("Desconectar o Instagram", "O servidor apaga a chave e nada mais será publicado até você conectar de novo. Continuar?", "Desconectar", true))) return; await nvFn("desconectar").catch(e => toast(e.message, true)); f.pubAuto = false; salvar(); await nvStatus(); ccRerender(); };
   };
 }
+
+/* =========================================================
+   NOVOS ESTILOS DE CAPA (v4) — inspirados nas referências
+   enviadas pela Jéssica: premium escuro (couro e selo),
+   premium claro (papel e caneta), palavra manuscrita gigante,
+   colagem com recortes, bilhetes (post-its) e texto selecionado.
+   Sempre nas cores da marca: dourado, bege, nude e marrom.
+   Os estilos anteriores continuam todos disponíveis.
+   ========================================================= */
+const AT_SCRIPT = `"Pinyon Script", "Bodoni Moda", Georgia, serif`;
+const AT_CAPAS_V4 = {premium:"Premium escuro (couro e selo)", premiumclaro:"Premium claro (papel e caneta)", assinatura:"Palavra manuscrita gigante", colagem:"Colagem com recortes", lembretes:"Bilhetes (post-its)", selecao:"Texto selecionado (menu)"};
+Object.assign(AT_CAPAS, AT_CAPAS_V4);
+
+/* partes do título: antes do destaque, destaque (*...*) e depois */
+function atPartes(s){
+  let t = String(s.titulo || "").trim();
+  if(s.numero && !t.startsWith(String(s.numero))) t = s.numero + " " + t;
+  const m = t.match(/^([^*]*)\*([^*]+)\*(.*)$/);
+  if(!m){ const ws = t.replace(/\*/g,"").split(/\s+/); const n = ws.length > 4 ? 2 : 1; return {antes: ws.slice(0, -n).join(" "), dest: ws.slice(-n).join(" ").replace(/[.?!]+$/,""), depois: ""}; }
+  const dep = m[3].trim(); return {antes: m[1].trim(), dest: m[2].trim().replace(/[.]+$/,""), depois: /^[\s.!?…,;:]*$/.test(dep) ? "" : dep};
+}
+/* texto simples com quebra automática (sem destaque) */
+function atBloco(g, txt, o){ return atAjustar(g, String(txt||"").replace(/\*/g,""), Object.assign({peso:400, lh:1.12, min:30}, o)); }
+function atEscreverBloco(g, f, x, y, cor, alinh){ return atEscrever(g, f, x, y, {cor, alinh}); }
+/* palavra manuscrita (fonte cursiva) com ajuste de tamanho e até 2 linhas */
+function atScript(g, txt, cx, y, maxW, tam, fill, o){
+  o = o || {}; let t = tam, linhas;
+  const quebrar = sz => { g.font = `400 ${sz}px ${AT_SCRIPT}`; const ws = txt.split(/\s+/); if(g.measureText(txt).width <= maxW) return [txt];
+    let best = null; for(let n=1;n<ws.length;n++){ const a = ws.slice(0,n).join(" "), b = ws.slice(n).join(" "); const w = Math.max(g.measureText(a).width, g.measureText(b).width); if(!best || w < best.w) best = {w, l:[a,b]}; }
+    return best && best.w <= maxW ? best.l : null; };
+  while(t > (o.min || 60)){ linhas = quebrar(t); if(linhas && (o.uma ? linhas.length===1 : true)) break; t -= 4; }
+  if(!linhas) linhas = [txt];
+  g.font = `400 ${t}px ${AT_SCRIPT}`; g.textAlign = o.alinh || "center"; g.fillStyle = fill;
+  const lh = t * (o.lh || .92);
+  linhas.forEach((l, n) => { if(o.sombra){ g.save(); g.shadowColor = o.sombra; g.shadowBlur = 18; g.shadowOffsetY = 6; g.fillText(l, cx, y + t*.78 + n*lh); g.restore(); } else g.fillText(l, cx, y + t*.78 + n*lh); });
+  g.textAlign = "left"; return {alt: t*.78 + (linhas.length-1)*lh + t*.28, t, n: linhas.length};
+}
+function atSombra(g, cor, blur, dy){ g.shadowColor = cor; g.shadowBlur = blur; g.shadowOffsetX = 0; g.shadowOffsetY = dy; }
+function atSemSombra(g){ g.shadowColor = "transparent"; g.shadowBlur = 0; g.shadowOffsetY = 0; }
+
+/* ---------- texturas e objetos desenhados ---------- */
+function atCouro(g, W, H, seed, base){
+  const gr = g.createRadialGradient(W*.5, H*.42, 60, W*.5, H*.5, H*.85); gr.addColorStop(0, base[0]); gr.addColorStop(.6, base[1]); gr.addColorStop(1, base[2]);
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  const r = atRng(seed*13+5); g.save();
+  for(let n=0;n<9000;n++){ g.globalAlpha = .05*r(); g.fillStyle = r() > .5 ? "#000" : "#E9D9BC"; const s = .8 + r()*2.2; g.fillRect(r()*W, r()*H, s, s); }
+  g.globalAlpha = .07; g.strokeStyle = "#E9D9BC"; g.lineWidth = 1;
+  for(let n=0;n<26;n++){ g.beginPath(); let x = r()*W, y = r()*H; g.moveTo(x, y); for(let j=0;j<5;j++){ x += (r()-.5)*90; y += (r()-.5)*40; g.lineTo(x, y); } g.stroke(); }
+  g.restore();
+  const v = g.createRadialGradient(W/2, H/2, H*.3, W/2, H/2, H*.8); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(15,9,6,.55)"); g.fillStyle = v; g.fillRect(0,0,W,H);
+}
+function atPapel(g, x, y, w, h, ang, k, o){
+  o = o || {}; g.save(); g.translate(x + w/2, y + h/2); g.rotate(ang);
+  atSombra(g, "rgba(30,18,10,.45)", 40*k, 18*k); g.fillStyle = o.cor || "#FBF7F0"; g.fillRect(-w/2, -h/2, w, h); atSemSombra(g);
+  const gr = g.createLinearGradient(-w/2, -h/2, w/2, h/2); gr.addColorStop(0, "rgba(255,255,255,.35)"); gr.addColorStop(1, "rgba(120,90,60,.10)"); g.fillStyle = gr; g.fillRect(-w/2, -h/2, w, h);
+  const r = atRng(o.seed || 7); const mx = -w/2 + 70*k;
+  if(o.titulo){ g.font = `500 ${22*k}px ${AT_SANS}`; g.fillStyle = "rgba(90,64,50,.55)"; atEspacado(g, o.titulo, mx, -h/2 + 90*k, 6*k); }
+  g.fillStyle = "rgba(90,64,50,.16)";
+  for(let yy = -h/2 + (o.titulo ? 140 : 90)*k; yy < h/2 - 60*k; yy += 30*k){ const ww = (w - 140*k) * (.55 + r()*.45); g.fillRect(mx, yy, ww, 7*k); }
+  if(o.caixas){ g.strokeStyle = "rgba(90,64,50,.35)"; g.lineWidth = 2*k; for(let n=0;n<3;n++){ g.strokeRect(w/2 - 150*k, -h/2 + (150 + n*60)*k, 26*k, 26*k); } }
+  g.restore();
+}
+function atSeloCera(g, cx, cy, rad, k, escuro){
+  g.save(); atSombra(g, "rgba(20,12,8,.5)", 24*k, 10*k);
+  g.beginPath(); for(let n=0;n<=72;n++){ const a = n/72*Math.PI*2, rr = rad*(1 + .06*Math.sin(n*1.7) + .04*Math.sin(n*4.3)); g.lineTo(cx + Math.cos(a)*rr, cy + Math.sin(a)*rr); } g.closePath();
+  g.fillStyle = atOuro(g, cx - rad, cy - rad, cx + rad, cy + rad, true); g.fill(); atSemSombra(g);
+  g.strokeStyle = "rgba(90,64,40,.55)"; g.lineWidth = 2.5*k; g.beginPath(); g.arc(cx, cy, rad*.72, 0, Math.PI*2); g.stroke();
+  g.lineWidth = 1.2*k; g.beginPath(); g.arc(cx, cy, rad*.64, 0, Math.PI*2); g.stroke();
+  g.font = `italic 400 ${rad*.62}px ${AT_SERIF}`; g.fillStyle = "rgba(80,56,34,.85)"; g.textAlign = "center"; g.fillText("JV", cx, cy + rad*.2); g.textAlign = "left";
+  const gr = g.createRadialGradient(cx - rad*.35, cy - rad*.4, 2, cx, cy, rad); gr.addColorStop(0, "rgba(255,255,255,.45)"); gr.addColorStop(.4, "rgba(255,255,255,0)"); g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rad, 0, Math.PI*2); g.fill();
+  g.restore();
+}
+function atCaneta(g, x, y, comp, ang, k){
+  g.save(); g.translate(x, y); g.rotate(ang); atSombra(g, "rgba(40,25,15,.4)", 22*k, 14*k);
+  g.fillStyle = "#2E211B"; atRR(g, 0, -13*k, comp, 26*k, 13*k); g.fill(); atSemSombra(g);
+  const gr = g.createLinearGradient(0, -13*k, 0, 13*k); gr.addColorStop(0, "rgba(255,255,255,.25)"); gr.addColorStop(.5, "rgba(255,255,255,0)"); g.fillStyle = gr; atRR(g, 0, -13*k, comp, 26*k, 13*k); g.fill();
+  g.fillStyle = atOuro(g, comp*.62, -14*k, comp*.62, 14*k, true); g.fillRect(comp*.62, -13*k, 14*k, 26*k); g.fillRect(comp*.2, -15*k, comp*.3, 5*k);
+  g.fillStyle = atOuro(g, -60*k, -10*k, 0, 10*k, true); g.beginPath(); g.moveTo(0, -12*k); g.lineTo(-62*k, 0); g.lineTo(0, 12*k); g.closePath(); g.fill();
+  g.restore();
+}
+function atFita(g, x, y, w, h, ang, cor){ g.save(); g.translate(x, y); g.rotate(ang); g.globalAlpha = .78; g.fillStyle = cor; g.beginPath(); g.moveTo(-w/2, -h/2);
+  for(let n=0;n<=6;n++) g.lineTo(-w/2 + (n%2)*4, -h/2 + n*h/6); g.lineTo(w/2, h/2); for(let n=6;n>=0;n--) g.lineTo(w/2 - (n%2)*4, -h/2 + n*h/6); g.closePath(); g.fill();
+  g.globalAlpha = .18; g.fillStyle = "#fff"; g.fillRect(-w/2, -h/2, w, h*.35); g.restore(); }
+function atRasgado(g, x, y, w, h, ang, cor, seed, k){
+  const r = atRng(seed); g.save(); g.translate(x, y); g.rotate(ang); atSombra(g, "rgba(40,25,15,.28)", 14*k, 6*k); g.fillStyle = cor; g.beginPath();
+  g.moveTo(0, 0); for(let xx=0; xx<=w; xx+=14*k) g.lineTo(xx, (r()-.5)*7*k);
+  for(let yy=0; yy<=h; yy+=12*k) g.lineTo(w + (r()-.5)*9*k, yy);
+  for(let xx=w; xx>=0; xx-=14*k) g.lineTo(xx, h + (r()-.5)*7*k);
+  for(let yy=h; yy>=0; yy-=12*k) g.lineTo((r()-.5)*9*k, yy); g.closePath(); g.fill(); atSemSombra(g); g.restore(); }
+function atPostit(g, cx, cy, s, ang, cor, k){
+  g.save(); g.translate(cx, cy); g.rotate(ang); atSombra(g, "rgba(40,25,15,.32)", 22*k, 12*k);
+  g.fillStyle = cor; g.beginPath(); g.moveTo(-s/2, -s/2); g.lineTo(s/2, -s/2); g.lineTo(s/2, s/2 - 40*k); g.quadraticCurveTo(s/2 - 8*k, s/2 - 4*k, s/2 - 50*k, s/2); g.lineTo(-s/2, s/2); g.closePath(); g.fill(); atSemSombra(g);
+  const gr = g.createLinearGradient(0, -s/2, 0, -s/2 + 40*k); gr.addColorStop(0, "rgba(0,0,0,.08)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(-s/2, -s/2, s, 40*k);
+  g.restore();
+}
+function atPilula(g, txt, cx, y, k, cor, corTxt, cheio){
+  g.font = `500 ${19*k}px ${AT_SANS}`; const w = g.measureText(txt).width + 64*k, h = 48*k;
+  atRR(g, cx - w/2, y, w, h, h/2); if(cheio){ g.fillStyle = cor; g.fill(); } else { g.strokeStyle = cor; g.lineWidth = 1.6*k; g.stroke(); }
+  g.fillStyle = corTxt; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, cx, y + h/2 + 1*k); g.textAlign = "left"; g.textBaseline = "alphabetic"; return h;
+}
+function atArrobaRodape(g, W, y, k, cor){
+  const a = ccCfg().arroba || "@jessicavaliente_"; g.font = `500 ${21*k}px ${AT_SANS}`; const w = g.measureText(a).width; const x0 = W/2 - (w + 34*k)/2;
+  g.strokeStyle = cor; g.lineWidth = 2*k; atRR(g, x0, y - 19*k, 22*k, 22*k, 7*k); g.stroke(); g.beginPath(); g.arc(x0 + 11*k, y - 8*k, 5*k, 0, Math.PI*2); g.stroke();
+  g.fillStyle = cor; g.beginPath(); g.arc(x0 + 17*k, y - 14*k, 1.5*k, 0, Math.PI*2); g.fill(); g.fillText(a, x0 + 34*k, y);
+}
+async function atMarcaTopo(g, W, y, k, cor, esq){
+  const logo = await ccLogo(); const cx = esq ? 80*k + 30*k : W/2; if(logo) g.drawImage(logo, cx - 30*k, y, 60*k, 60*k);
+  g.font = `500 ${14*k}px ${AT_SANS}`; g.fillStyle = cor; atEspacado(g, (ccCfg().assinatura || "JÉSSICA VALIENTE").toUpperCase(), esq ? 80*k : W/2, y + (logo ? 88 : 20)*k, 4*k, esq ? "left" : "center");
+}
+function atCtaV4(i, total){ return total > 1 ? "Deslize para ler  →" : "Leia a legenda"; }
+
+/* ---------- capas v4 ---------- */
+async function atCapaV4(g, W, H, i, s, P, k, seed, idx, total, lay){
+  const pt = atPartes(s), olho = (s.rotulo || atAreaRot(i)).toUpperCase(), r = atRng(seed*3+1), d = i.design || {};
+  const foto = d.fotoId || s.imgId;
+  g.textAlign = "left"; g.textBaseline = "alphabetic";
+
+  if(lay==="premium" || lay==="premiumclaro"){
+    const escuro = lay==="premium";
+    const corT = escuro ? "#F7F2E9" : "#47322A", corM = escuro ? "#D9C092" : "#8F6E3E", corS = escuro ? "rgba(235,221,203,.85)" : "#735746";
+    if(escuro){
+      let ok = false; if(foto){ ok = await atFoto(g, foto, 0, 0, W, H); if(ok){ g.fillStyle = "rgba(40,28,22,.62)"; g.fillRect(0,0,W,H); } }
+      if(!ok) atCouro(g, W, H, seed, ["#5A4032", "#3E2B24", "#241812"]);
+      atPapel(g, 150*k, 1000*k, 760*k, 620*k, -.09, k, {titulo:"PROTOCOLO", seed});
+      atSeloCera(g, 820*k, 1070*k, 78*k, k, true);
+    } else {
+      g.fillStyle = "#F3EADD"; g.fillRect(0,0,W,H); atGrao(g, W, H, seed, false);
+      const v = g.createRadialGradient(W*.5, H*.35, 100, W*.5, H*.5, H*.9); v.addColorStop(0, "rgba(255,255,255,.55)"); v.addColorStop(1, "rgba(120,90,60,.18)"); g.fillStyle = v; g.fillRect(0,0,W,H);
+      let ok = false; if(foto){ g.save(); g.beginPath(); g.rect(0, 0, W, 560*k); g.clip(); ok = await atFoto(g, foto, 0, 0, W, 560*k); g.restore(); if(ok){ const gr = g.createLinearGradient(0, 380*k, 0, 560*k); gr.addColorStop(0, "rgba(243,234,221,0)"); gr.addColorStop(1, "#F3EADD"); g.fillStyle = gr; g.fillRect(0, 380*k, W, 180*k); } }
+      if(!ok){ atPapel(g, 420*k, -120*k, 640*k, 640*k, .16, k, {titulo:"ORIENTAÇÃO", seed, caixas:true}); atCaneta(g, 560*k, 470*k, 420*k, -.62, k); }
+    }
+    await atMarcaTopo(g, W, 60*k, k, corM, !escuro && !foto);
+    // bloco de texto
+    const larg = 860*k;
+    const fA = pt.antes ? atBloco(g, pt.antes, {fam:AT_SERIF, max:larg, maxAlt:300*k, tam:76*k, lh:1.1, min:44*k}) : null;
+    g.font = `500 ${18*k}px ${AT_SANS}`;
+    const topo = escuro ? 250*k : (foto ? 520*k : 560*k), fundo = escuro ? 960*k : 1180*k;
+    // mede o script sem desenhar
+    const medir = () => { g.save(); g.globalAlpha = 0; const m = atScript(g, pt.dest, W/2, 0, larg, 170*k, "#000", {min:70*k}); g.restore(); return m; };
+    const mS = medir(); const altTot = (fA ? fA.alt : 0) + mS.alt - 20*k + 60*k + 48*k + 56*k;
+    let y = topo + Math.max(0, (fundo - topo - altTot)/2);
+    if(fA){ y = atEscreverBloco(g, fA, W/2, y, corT, "center"); y += 6*k; }
+    const sc = atScript(g, pt.dest, W/2, y, larg, 170*k, atOuro(g, W/2 - 300*k, y, W/2 + 300*k, y + 160*k, escuro), {min:70*k, sombra: escuro ? "rgba(0,0,0,.35)" : null}); y += sc.alt + 22*k;
+    g.font = `500 ${18*k}px ${AT_SANS}`; g.fillStyle = corS; atEspacado(g, pt.depois ? pt.depois.toUpperCase() : olho, W/2, y + 18*k, 3.6*k, "center"); y += 52*k;
+    atPilula(g, atCtaV4(i, total), W/2, y, k, corM, corM, false);
+    if(escuro) atArrobaRodape(g, W, 1300*k, k, "#6E5230"); else atArrobaRodape(g, W, 1290*k, k, "#735746");
+    return;
+  }
+
+  if(lay==="assinatura"){
+    const escuro = P.escuro || true;
+    g.fillStyle = "#3E2B24"; g.fillRect(0,0,W,H);
+    let ok = false; if(foto){ ok = await atFoto(g, foto, 0, 0, W, H); if(ok){ const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, "rgba(46,32,25,.85)"); gr.addColorStop(.6, "rgba(46,32,25,.35)"); gr.addColorStop(1, "rgba(46,32,25,.15)"); g.fillStyle = gr; g.fillRect(0,0,W,H); } }
+    if(!ok){ const gr = g.createLinearGradient(0,0,0,H); gr.addColorStop(0, "#5A4032"); gr.addColorStop(1, "#2E201A"); g.fillStyle = gr; g.fillRect(0,0,W,H);
+      g.fillStyle = "#EBDDCB"; g.globalAlpha = .12; atArco(g, 560*k, 180*k, 440*k, 1300*k); g.fill(); g.globalAlpha = .2; g.strokeStyle = "#D9C092"; g.lineWidth = 2*k; atArco(g, 530*k, 150*k, 500*k, 1300*k); g.stroke(); g.globalAlpha = 1;
+      atGrao(g, W, H, seed, true); }
+    // círculo com a primeira parte
+    const cx = 250*k, cy = 250*k, cr = 245*k;
+    g.fillStyle = "#EBDDCB"; g.beginPath(); g.arc(cx, cy, cr, 0, Math.PI*2); g.fill();
+    if(pt.antes){ const f = atBloco(g, pt.antes, {fam:AT_SERIF, max:330*k, maxAlt:260*k, tam:46*k, lh:1.08, min:28*k}); atEscreverBloco(g, f, cx, cy - f.alt/2 + 10*k, "#47322A", "center"); }
+    // palavra manuscrita gigante, inclinada
+    g.save(); g.translate(W/2, 720*k); g.rotate(-.09);
+    atScript(g, pt.dest, 0, -170*k, 980*k, 300*k, atOuro(g, -400*k, -150*k, 400*k, 150*k, true), {min:110*k, lh:.82, sombra:"rgba(0,0,0,.45)"});
+    g.restore();
+    // caixa inferior
+    const bx = 560*k, bw = 440*k, by = 1010*k, bh = 230*k;
+    g.fillStyle = "#47322A"; g.globalAlpha = .92; g.fillRect(bx, by, bw, bh); g.globalAlpha = 1;
+    const txt = pt.depois || (s.sub ? s.sub : "Leia até o final.");
+    const f2 = atBloco(g, txt, {fam:AT_SERIF, max:bw - 80*k, maxAlt:bh - 70*k, tam:44*k, lh:1.1, min:26*k}); atEscreverBloco(g, f2, bx + bw - 40*k, by + (bh - f2.alt)/2 - 6*k, "#F7F2E9", "right");
+    g.font = `600 ${16*k}px ${AT_SANS}`; g.fillStyle = "#D9C092"; atEspacado(g, olho, 80*k, 1150*k, 3.4*k);
+    atArrobaRodape(g, W, 1305*k, k, "#C9B39A");
+    return;
+  }
+
+  if(lay==="colagem"){
+    g.fillStyle = "#E1CDA9"; g.fillRect(0,0,W,H);
+    const gr = g.createRadialGradient(W/2, H/2, 200, W/2, H/2, H*.8); gr.addColorStop(0, "rgba(255,255,255,.25)"); gr.addColorStop(1, "rgba(90,64,50,.25)"); g.fillStyle = gr; g.fillRect(0,0,W,H); atGrao(g, W, H, seed, false);
+    // recortes de fundo
+    atRasgado(g, -40*k, 150*k, 620*k, 420*k, -.05, "#EBDDCB", seed+1, k);
+    atRasgado(g, 560*k, 820*k, 600*k, 460*k, .06, "#5A4032", seed+2, k);
+    g.save(); g.globalAlpha = .5; g.strokeStyle = "#8F6E3E"; g.lineWidth = 1.4*k; for(let n=0;n<4;n++){ g.beginPath(); g.arc(860*k, 300*k, (90 + n*34)*k, 0, Math.PI*2); g.stroke(); } g.restore();
+    await atMarcaTopo(g, W, 52*k, k, "#6E5230");
+    // tiras com as palavras da primeira parte
+    const ws = (pt.antes || "").split(/\s+/).filter(Boolean); const lin = []; let cur = "";
+    ws.forEach(w => { const t = cur ? cur + " " + w : w; if(t.length > 17 && cur){ lin.push(cur); cur = w; } else cur = t; }); if(cur) lin.push(cur);
+    const linhas = lin.slice(0, 4); let y = 250*k + Math.max(0, (4 - linhas.length))*40*k;
+    const cores = [["#FBF7F0","#47322A"],["#47322A","#F7F2E9"],["#F7F2E9","#5A4032"],["#B8955F","#FFFFFF"]];
+    linhas.forEach((l, n) => { const serif = n % 2 === 0; const tam = (serif ? 64 : 50)*k; g.font = serif ? `italic 400 ${tam}px ${AT_SERIF}` : `600 ${tam}px ${AT_SANS}`;
+      const txt = serif ? l : l.toUpperCase(); const w = g.measureText(txt).width; const x = 110*k + (n % 2)*50*k; const [bg, fg] = cores[n % 4]; const ang = (r() - .5)*.06;
+      atRasgado(g, x - 26*k, y - tam*.95, w + 52*k, tam*1.3, ang, bg, seed + 10 + n, k);
+      g.save(); g.translate(x - 26*k, y - tam*.95); g.rotate(ang); g.fillStyle = fg; g.fillText(txt, 26*k, tam*.95); g.restore(); y += tam*1.45; });
+    // palavra do destaque em letras recortadas
+    const letras = [...pt.dest.replace(/\s+/g, " ").toUpperCase()]; const caixas = ["#47322A","#FBF7F0","#B8955F","#EBDDCB","#5A4032","#D9C092"];
+    const fontes = [l => `italic 400 ${l}px ${AT_SERIF}`, l => `600 ${l}px ${AT_SANS}`, l => `400 ${l}px ${AT_SERIF}`];
+    // quebra em linhas pelo tamanho
+    const maxW = 900*k; let tamL = 110*k; const medirLinhas = tl => { const out = [[]]; let w = 0; pt.dest.toUpperCase().split(/\s+/).forEach(pal => { const pw = pal.length * tl*.78; if(w && w + pw + tl*.4 > maxW){ out.push([]); w = 0; } out[out.length-1].push(pal); w += pw + tl*.4; }); return out; };
+    let ls = medirLinhas(tamL); while(ls.length > 3 && tamL > 60*k){ tamL -= 6*k; ls = medirLinhas(tamL); }
+    y += 40*k; let li = 0;
+    ls.forEach(pals => { let x = 90*k + (li % 2)*40*k; pals.forEach(pal => { [...pal].forEach((ch, j) => { const bgc = caixas[(j + li*2 + seed) % caixas.length]; const esc = ["#47322A","#5A4032","#B8955F"].includes(bgc);
+        const fs = fontes[(j + seed) % 3](tamL*(.78 + r()*.18)); g.font = fs; const cw = Math.max(g.measureText(ch).width + 22*k, tamL*.55); const ang = (r() - .5)*.22;
+        g.save(); g.translate(x + cw/2, y + tamL/2); g.rotate(ang); atSombra(g, "rgba(40,25,15,.3)", 8*k, 4*k); g.fillStyle = bgc; g.fillRect(-cw/2, -tamL*.58, cw, tamL*1.12); atSemSombra(g);
+        g.fillStyle = esc ? "#F7F2E9" : "#47322A"; g.textAlign = "center"; g.fillText(ch, 0, tamL*.3); g.textAlign = "left"; g.restore(); x += cw + 4*k; }); x += tamL*.35; }); y += tamL*1.25; li++; });
+    // etiqueta + fitas
+    g.save(); g.translate(150*k, Math.min(y + 30*k, 1120*k)); g.rotate(-.04); g.fillStyle = "#47322A"; g.font = `600 ${20*k}px ${AT_SANS}`; const tw = g.measureText(olho).width + olho.length*3.2*k + 48*k; g.fillRect(0, 0, tw, 52*k); g.fillStyle = "#F7F2E9"; atEspacado(g, olho, 24*k, 34*k, 3.2*k); g.restore();
+    atFita(g, 120*k, 170*k, 170*k, 44*k, -.5, "#D9C092"); atFita(g, 960*k, 1130*k, 190*k, 46*k, .6, "#EBDDCB");
+    atPilula(g, atCtaV4(i, total), W/2 + 230*k, 1200*k, k, "#EBDDCB", "#47322A", true);
+    atArrobaRodape(g, W, 1305*k, k, "#5A4032");
+    return;
+  }
+
+  if(lay==="lembretes"){
+    const escuro = P.escuro; const fundo = escuro ? "#4F382C" : "#EBDDCB";
+    g.fillStyle = fundo; g.fillRect(0,0,W,H);
+    let ok = false; if(foto){ ok = await atFoto(g, foto, 0, 0, W, H); if(ok){ g.fillStyle = escuro ? "rgba(46,32,25,.55)" : "rgba(235,221,203,.55)"; g.fillRect(0,0,W,H); } }
+    if(!ok){ const gr = g.createRadialGradient(W*.5, H*.55, 100, W*.5, H*.55, H*.75); gr.addColorStop(0, escuro ? "#6A4D3D" : "#F7F2E9"); gr.addColorStop(1, fundo); g.fillStyle = gr; g.fillRect(0,0,W,H); atGrao(g, W, H, seed, escuro); }
+    const corT = escuro ? "#F7F2E9" : "#47322A", corM = escuro ? "#D9C092" : "#8F6E3E";
+    await atMarcaTopo(g, W, 50*k, k, corM);
+    let y = 200*k;
+    g.font = `500 ${20*k}px ${AT_SANS}`; g.fillStyle = corM; atEspacado(g, olho, W/2, y, 4*k, "center"); y += 30*k;
+    if(pt.antes){ const f = atBloco(g, pt.antes, {fam:AT_SERIF, max:880*k, maxAlt:230*k, tam:64*k, lh:1.1, min:38*k}); y = atEscreverBloco(g, f, W/2, y, corT, "center"); }
+    const sc = atScript(g, pt.dest, W/2, y - 14*k, 900*k, 150*k, atOuro(g, 200*k, y, 880*k, y + 150*k, escuro), {min:70*k}); y += sc.alt + 10*k;
+    // bilhetes com os itens
+    const itens = (s.itens && s.itens.length ? s.itens : i.slides.filter(x => x.papel==="meio").map(x => String(x.titulo||"").replace(/\*/g,""))).slice(0, 3);
+    const cores = ["#F7F2E9","#E9D9BC","#D9C092"], pos = [[300, .0], [560, .0], [820, .0]];
+    const sz = 300*k, cy = Math.max(y + 200*k, 880*k);
+    itens.forEach((t, n) => { const cx = (210 + n*330)*k, ang = [-.08, .05, -.03][n], yy = cy + [0, 40, -10][n]*k;
+      atPostit(g, cx, yy, sz, ang, cores[n], k);
+      g.save(); g.translate(cx, yy); g.rotate(ang);
+      g.font = `400 ${30*k}px ${AT_SERIF}`; g.fillStyle = "#8F6E3E"; g.textAlign = "center"; g.fillText(String(n+1).padStart(2,"0"), 0, -sz/2 + 62*k); g.textAlign = "left";
+      const f = atBloco(g, t, {fam:AT_SERIF, ital:true, max:sz - 60*k, maxAlt:sz - 130*k, tam:40*k, lh:1.12, min:22*k}); atEscreverBloco(g, f, 0, -sz/2 + 90*k + Math.max(0, (sz - 150*k - f.alt)/2), "#47322A", "center");
+      g.restore();
+      atFita(g, cx + [ -30, 20, 0][n]*k, yy - sz/2 + 4*k, 120*k, 34*k, ang + [.3, -.25, .15][n], escuro ? "#B8955F" : "#C9B39A"); });
+    atPilula(g, atCtaV4(i, total), W/2, 1180*k, k, corM, escuro ? "#3E2B24" : "#F7F2E9", true);
+    atArrobaRodape(g, W, 1300*k, k, escuro ? "#C9B39A" : "#735746");
+    return;
+  }
+
+  // selecao: texto “selecionado” com o menu de opções por cima
+  const escuro = P.escuro !== false;
+  const base = escuro ? ["#5A4032", "#2E201A"] : ["#F3EADD", "#E1CDA9"];
+  g.fillStyle = base[1]; g.fillRect(0,0,W,H);
+  g.save(); g.filter = `blur(${46*k}px)`;
+  for(let n=0;n<14;n++){ g.globalAlpha = .35 + r()*.3; g.fillStyle = [base[0], escuro ? "#735746" : "#FBF7F0", escuro ? "#8F6E3E" : "#D9C092", base[1]][n % 4]; g.save(); g.translate(r()*W, r()*H); g.rotate(-.5 + r()*.2); g.fillRect(-500*k, -40*k, 1000*k, (60 + r()*120)*k); g.restore(); }
+  g.restore(); g.globalAlpha = 1; atGrao(g, W, H, seed, escuro);
+  const corT = escuro ? "#F7F2E9" : "#47322A", corM = escuro ? "#D9C092" : "#8F6E3E";
+  await atMarcaTopo(g, W, 60*k, k, escuro ? "#D9C092" : "#6E5230");
+  const fA = pt.antes ? atBloco(g, pt.antes, {fam:AT_SERIF, ital:true, max:880*k, maxAlt:260*k, tam:74*k, lh:1.08, min:40*k}) : null;
+  g.font = `600 ${110*k}px ${AT_SANS}`; let tD = 118*k; const dTxt = pt.dest.toLowerCase(); while(tD > 54*k){ g.font = `600 ${tD}px ${AT_SANS}`; if(g.measureText(dTxt).width <= 860*k) break; tD -= 4*k; }
+  const linhasD = g.measureText(dTxt).width > 860*k ? (() => { const ws = dTxt.split(" "), h = Math.ceil(ws.length/2); return [ws.slice(0,h).join(" "), ws.slice(h).join(" ")]; })() : [dTxt];
+  const altTot = 90*k + (fA ? fA.alt : 0) + linhasD.length*tD*1.1 + 120*k; let y = Math.max(250*k, (H - altTot)/2 - 40*k);
+  // menu
+  const itensM = ["Salvar","Copiar","Compartilhar","Enviar…"]; g.font = `500 ${20*k}px ${AT_SANS}`; const ws = itensM.map(t => g.measureText(t).width); const mw = ws.reduce((a,b)=>a+b,0) + itensM.length*44*k;
+  atSombra(g, "rgba(0,0,0,.3)", 20*k, 8*k); g.fillStyle = "#FBF7F0"; atRR(g, W/2 - mw/2, y, mw, 58*k, 14*k); g.fill(); atSemSombra(g);
+  let mx = W/2 - mw/2 + 22*k; itensM.forEach((t, n) => { g.fillStyle = "#47322A"; g.fillText(t, mx, y + 37*k); mx += ws[n] + 44*k; if(n < itensM.length-1){ g.fillStyle = "#D6C0A4"; g.fillRect(mx - 22*k, y + 16*k, 1.5*k, 26*k); } });
+  g.fillStyle = "#FBF7F0"; g.beginPath(); g.moveTo(W/2 - 12*k, y + 58*k); g.lineTo(W/2, y + 72*k); g.lineTo(W/2 + 12*k, y + 58*k); g.fill();
+  y += 110*k;
+  if(fA){ y = atEscreverBloco(g, fA, W/2, y, corT, "center"); y += 6*k; }
+  g.font = `600 ${tD}px ${AT_SANS}`;
+  linhasD.forEach((l, n) => { const w = g.measureText(l).width, x = W/2 - w/2, yy = y + tD*.86;
+    g.fillStyle = escuro ? "rgba(217,192,146,.35)" : "rgba(184,149,95,.30)"; g.fillRect(x - 10*k, y + 4*k, w + 20*k, tD*1.02);
+    g.fillStyle = corT; g.fillText(l, x, yy);
+    if(n===0){ g.fillStyle = corM; g.fillRect(x - 12*k, y - 6*k, 4*k, tD*1.12); g.beginPath(); g.arc(x - 10*k, y - 10*k, 9*k, 0, Math.PI*2); g.fill(); }
+    if(n===linhasD.length-1){ g.fillStyle = corM; g.fillRect(x + w + 8*k, y + 4*k, 4*k, tD*1.12); g.beginPath(); g.arc(x + w + 10*k, y + tD*1.18, 9*k, 0, Math.PI*2); g.fill(); }
+    y += tD*1.12; });
+  // etiqueta
+  y += 26*k; g.font = `600 ${21*k}px ${AT_SANS}`; const lw = g.measureText(olho).width + olho.length*3.2*k + 44*k;
+  g.save(); g.translate(W/2 + 120*k, y); g.rotate(-.025); g.fillStyle = escuro ? "#D9C092" : "#47322A"; g.fillRect(-lw/2, 0, lw, 50*k); g.fillStyle = escuro ? "#2E201A" : "#F7F2E9"; atEspacado(g, olho, 0, 33*k, 3.2*k, "center"); g.restore();
+  atPilula(g, atCtaV4(i, total), W/2, 1190*k, k, corM, corM, false);
+  atArrobaRodape(g, W, 1300*k, k, escuro ? "#C9B39A" : "#735746");
+}
+
+/* ---------- Posts motivacionais (poucos: cerca de 1 por semana) ----------
+   Frases próprias, sem citar pessoas reais, sem leis e sem promessa de resultado. */
+const AT_MOTIV = [
+  ["Nenhum passo é pequeno quando você *não desiste do caminho*.", "Cada pequena atitude conta. O importante é seguir em frente, no seu ritmo."],
+  ["Recomeçar também é *uma forma de coragem*.", "Não existe idade nem momento errado para começar de novo."],
+  ["Cuidar de você também *é prioridade*.", "Descansar, pedir ajuda e se organizar também fazem parte de quem segue em frente."],
+  ["Toda conquista começa com *a coragem de tentar*.", "O primeiro passo costuma ser o mais difícil. E também o mais importante."],
+  ["Dias difíceis também *fazem parte do caminho*.", "Se hoje está pesado, lembre de tudo o que você já superou até aqui."],
+  ["Persistência é continuar *mesmo quando ninguém vê*.", "O esforço silencioso de cada dia constrói grandes histórias."],
+  ["Informação é o primeiro passo para *conhecer o que é seu*.", "Quem se informa faz escolhas com mais segurança e tranquilidade."],
+  ["Respeite o seu tempo. *Ele também está trabalhando*.", "Nem tudo acontece na hora que a gente quer, mas cada etapa tem o seu valor."],
+  ["Seu esforço de hoje *é a sua história amanhã*.", "Continue. O que você planta agora vai fazer diferença lá na frente."],
+  ["Mulher que se informa *caminha mais segura*.", "Conhecimento é cuidado: com você, com a sua família e com o seu futuro."],
+  ["Grandes mudanças começam com *uma decisão de hoje*.", "Que tal dar hoje o primeiro passo daquilo que você vem adiando?"],
+  ["Você não precisa ter todas as respostas. *Só não pare de perguntar*.", "Tirar dúvidas é sinal de cuidado, não de fraqueza."]
+];
+const AT_MOTIV_LAYOUTS = ["assinatura","premium","frase","selecao","premiumclaro"];
+AT_ESTILOS.motivacional = "Motivacional";
+const _atFeedGerarBase = ccFeedGerar;
+ccFeedGerar = function(temaId, tipo, opc){
+  opc = opc || {}; if(opc.estilo !== "motivacional") return _atFeedGerarBase(temaId, tipo, opc);
+  const it = _atFeedGerarBase(temaId, "post", Object.assign({}, opc, {estilo:"frase"})); if(!it) return it;
+  const n = (ccDB().itens || []).filter(x => x.estilo==="motivacional").length + (opc.variacao || 0);
+  const [frase, comp] = AT_MOTIV[n % AT_MOTIV.length]; const lay = AT_MOTIV_LAYOUTS[n % AT_MOTIV_LAYOUTS.length];
+  const limpa = frase.replace(/\*/g, "");
+  it.estilo = "motivacional"; it.formato = "motivacional"; it.area = "bast"; it.titulo = "Motivacional: " + limpa; it.gancho = limpa;
+  it.slides = [{papel:"unico", layout:lay, titulo:frase, rotulo:"PARA LEMBRAR HOJE", sub:"Leia a legenda"}];
+  it.design.capa = lay; it.design.paleta = ["chocolate","areia","cafe","nude","champanhe"][n % 5];
+  it.legenda = `${limpa}\n\n${comp}\n\nSe essa mensagem fez sentido para você, salve e envie para alguém que precisa ler isso hoje. 🤍`;
+  it.hashtags = ["#motivação","#reflexão","#mulheresfortes","#persistência","#jessicavaliente","#dompedrito","#bagé"];
+  it.verificacao = {status:"confirmado", texto:"Mensagem motivacional: não cita leis, números nem promete resultados."};
+  return it;
+};
 
 
 iniciar();
