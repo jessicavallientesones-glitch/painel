@@ -380,14 +380,7 @@ textarea.at-leg{min-height:220px;font-size:13px}textarea.at-hash{min-height:64px
 .ia-quem{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--suave);margin-bottom:4px}.ia-msg h3,.ia-msg h4{margin:8px 0 4px}
 .ia-acoes{display:flex;gap:10px;margin-top:6px}.ia-form textarea{min-height:80px;width:100%}
 @media (max-width:860px){.ia-wrap{grid-template-columns:1fr}.ia-lado{display:none}}
-.pv-per input,.pv-per select{width:100%;min-width:90px}.pv-per td{padding:4px 6px}
-.pv-kv{width:100%;border-collapse:collapse;margin:4px 0 10px}.pv-kv th{text-align:left;font-weight:500;color:var(--marrom);width:42%;padding:5px 8px 5px 0;vertical-align:top;border-bottom:1px solid var(--linha)}.pv-kv td{padding:5px 0;border-bottom:1px solid var(--linha)}
-.pv-chips{display:flex;gap:6px;flex-wrap:wrap}.pv-chips .pill{border:1px solid var(--linha);cursor:pointer;font-size:12.5px;padding:5px 12px}.pv-chips .pill.ativo{background:var(--marrom);color:#fff;border-color:var(--marrom)}
-.chk{display:flex;gap:6px;align-items:center;font-size:13px}.pv-res h3{font-family:var(--f-display)}
 </style>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icone-180.png"><link rel="icon" href="icone-192.png">
-<meta name="theme-color" content="#5A4032"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Painel JV">
-<script>window.JV_NUVEM = {"url": "https://ruhtcnrbjrajmzrefhoz.supabase.co", "chave": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1aHRjbnJianJham16cmVmaG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1MDM0MDgsImV4cCI6MjExMDA3OTQwOH0.5lE09yddfHkOpfb-sLQq-zs7epeuI5H_1Vx_ljryiNM"};</script>
 </head>
 <body>
 
@@ -551,7 +544,7 @@ const ESQUEMA_VERSAO = 2; // 2: financeiro completo
 function bancoVazio(){
   return {
     versao: ESQUEMA_VERSAO,
-    escritorio: {nome:"Jéssica Valiente · Correspondente Jurídica", cidade:"Dom Pedrito/RS", endereco:"", telefone:"", email:"", inscricao:""},
+    escritorio: {nome:"Jéssica Valiente Advocacia", cidade:"Dom Pedrito/RS", endereco:"", telefone:"", email:"", inscricao:""},
     clientes:[], familiares:[], atendimentos:[],
     processos:[], movimentacoes:[], partes:[],
     prazos:[], compromissos:[], feriados:[], suspensoes:[],
@@ -606,7 +599,7 @@ function feriadosNacionais(y){
 function normalizarDB(){ // retirada definitiva de gravação/transcrição e novos módulos
   delete DB.gravacoes; delete DB.transcricoes;
   if(Array.isArray(DB.config.mensagens) && JSON.stringify(DB.config.mensagens) === JSON.stringify(MENSAGENS_ANTIGAS)) DB.config.mensagens = null; // passa a usar as novas mensagens motivacionais
-  garantirAcessos(); garantirEscritorio(); garantirFinanceiro(); garantirConteudo(); if(typeof pvGarantir==="function") pvGarantir();
+  garantirAcessos(); garantirEscritorio(); garantirFinanceiro(); garantirConteudo();
 }
 function garantirFeriados(){
   const ano = new Date().getFullYear(); let novos = 0;
@@ -703,8 +696,7 @@ function lerForm(f){ const o = {}; f.querySelectorAll("[name]").forEach(el => { 
 function telaMarca(){ return `<div class="mono" role="img" aria-label="Monograma JV"></div><div class="marca-nome ouro-txt">JÉSSICA VALIENTE</div><div class="marca-sub">CORRESPONDENTE JURÍDICA</div>`; }
 async function iniciar(){
   mostrarLogin(`<p class="sub" style="margin-top:18px">Conectando ao seu banco de dados…</p>`);
-  if(window.JV_NUVEM){ if(!(await ARM_SUPA.abrir())) return; ARM = ARM_SUPA; }
-  else if(window.claude && typeof window.claude.use==="function" && await ARM_NUVEM.abrir()) ARM = ARM_NUVEM;
+  if(window.claude && typeof window.claude.use==="function" && await ARM_NUVEM.abrir()) ARM = ARM_NUVEM;
   else await ARM_LOCAL.abrir();
   META = await ARM.get("kv", "meta");
   if(!META) telaPrimeiroAcesso(); else telaLogin();
@@ -821,9 +813,9 @@ const MODULOS = [
   {r:"assinaturas", t:"Assinaturas", badge:"assinaturas"},
   {r:"financeiro", t:"Financeiro", badge:"financeiro"},
   {g:"Previdenciário"},
-  {r:"calculos", t:"Calculadoras"},
-  {r:"bpc", t:"BPC/LOAS"},
-  {r:"pericias", t:"Perícias e quesitos"},
+  {r:"calculos", t:"Calculadoras", etapa:3},
+  {r:"bpc", t:"BPC/LOAS", etapa:3},
+  {r:"pericias", t:"Perícias e quesitos", etapa:3},
   {g:"Jurisprudência"},
   {r:"jurisprudencia", t:"Pesquisas e favoritos", etapa:4},
   {g:"Inteligência artificial"},
@@ -869,7 +861,7 @@ function rota(){
   desenharMenu(menuAtual);
   $("#lateral").classList.remove("aberta");
   const c = $("#conteudo");
-  const telas = {painel:telaPainel, clientes:telaClientes, cliente:()=>telaCliente(id), processos:telaProcessos, processo:()=>telaProcesso(id), agenda:telaAgenda, documentos:telaDocumentos, config:telaConfig, assinaturas:telaAssinaturas, financeiro:c_ => telaFinanceiro(c_, id), acessos:c_ => telaAcessos(c_, id), conteudo:c_ => telaConteudo(c_, id), ia:telaIA, calculos:telaCalculos, bpc:telaBPC, pericias:telaPericias};
+  const telas = {painel:telaPainel, clientes:telaClientes, cliente:()=>telaCliente(id), processos:telaProcessos, processo:()=>telaProcesso(id), agenda:telaAgenda, documentos:telaDocumentos, config:telaConfig, assinaturas:telaAssinaturas, financeiro:c_ => telaFinanceiro(c_, id), acessos:c_ => telaAcessos(c_, id), conteudo:c_ => telaConteudo(c_, id), ia:telaIA};
   if(telas[base]) telas[base](c);
   else { const m = MODULOS.find(x => x.r===base); m ? telaEtapa(c, m) : telaPainel(c); }
   document.querySelector(".principal").scrollTop = 0;
@@ -901,7 +893,7 @@ function linkGoogle(t, data, hora, duracaoMin, local, det){
   return "https://calendar.google.com/calendar/render?" + p.toString();
 }
 function gerarICS(itens){
-  const l = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Jessica Valiente//Sistema//PT-BR","CALSCALE:GREGORIAN"];
+  const l = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Jessica Valiente Advocacia//Sistema//PT-BR","CALSCALE:GREGORIAN"];
   itens.forEach(i => {
     l.push("BEGIN:VEVENT", "UID:"+i.id+"@jva", "DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z");
     if(i.hora){ const h = i.hora.replace(":",""); l.push(`DTSTART;TZID=America/Sao_Paulo:${i.data.replace(/-/g,"")}T${h}00`); }
@@ -1628,7 +1620,7 @@ function finalizarPDF(paginas, {titulo, timbre, md, rodapeTxt}){
   objs[idCatalogo-1] = `<< /Type /Catalog /Pages ${idPaginas} 0 R >>`;
   objs[idPaginas-1] = `<< /Type /Pages /Kids [${idsPag.map(i => i+" 0 R").join(" ")}] /Count ${idsPag.length} >>`;
   const d = new Date(), dt = `D:${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-  const idInfo = add(`<< /Title ${strPDF(titulo||"Documento")} /Author ${strPDF(esc_.nome||"")} /Creator ${strPDF("Sistema Jéssica Valiente")} /CreationDate (${dt}) >>`);
+  const idInfo = add(`<< /Title ${strPDF(titulo||"Documento")} /Author ${strPDF(esc_.nome||"")} /Creator ${strPDF("Sistema Jéssica Valiente Advocacia")} /CreationDate (${dt}) >>`);
   const partes = [latin("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n")]; let pos = partes[0].length; const xref = [];
   objs.forEach((o, i) => {
     xref.push(pos);
@@ -3701,7 +3693,7 @@ const CC_ABAS = [["criar","Criar conteúdo"],["feed","Meu Feed Preview"],["carro
   ["hoje","Hoje"],["planejamento","Planejamento"],["producao","Produção (vídeos)"],["edicao","Edição de vídeos"],["posts","Estúdio de artes"],["stories","Stories"],["calendario","Calendário geral"],["desempenho","Desempenho"],["assistente","Assistente"],["ajustes","Fontes, regras e integrações"]];
 let CC_SUB = "feed", CC_MIGROU_V3 = false;
 function telaConteudo(c, id){
-  garantirConteudo(); if(!CC_MIGROU_V3){ CC_MIGROU_V3 = true; const nm = ccFeedMigrarV3(); if(nm) setTimeout(() => toast(`${nm} publicação(ões) aguardando aprovação foram refeitas com as novas capas e o novo ritmo do feed.`), 600); }
+  garantirConteudo(); if(!CC_MIGROU_V3){ CC_MIGROU_V3 = true; const nm = ccFeedMigrarV3(); if(nm) setTimeout(() => toast(`${nm} publicação(ões) aguardando aprovação foram refeitas com as novas capas e o novo ritmo do feed.`), 600);  const ne = ccFeedMigrarEditorial(); if(ne) setTimeout(() => toast(`${ne} publicação(ões) aguardando aprovação ganharam as novas capas editoriais.`), 1400); }
   const [sub, ...resto] = String(id||"feed").split("-"); CC_SUB = CC_ABAS.some(a => a[0]===sub) ? sub : "feed"; const arg = resto.join("-");
   const sem = ccFeedSemConteudo(7).length, err = ccFeedItens().filter(i => i.status==="agendado" && ["erro","atrasado"].includes(i.pub?.status)).length;
   const btn = ([k,t]) => `<button data-cc-ir="${k}" class="${k===CC_SUB?"ativo":""}">${esc(t)}${ccBadgeAba(k)}</button>`;
@@ -5182,7 +5174,7 @@ async function ccAtDesenhar(g, W, H, i, idx){
   const X = (txt, o) => atAjustar(g, txt, Object.assign({fam:AT_SANS, peso:400, pesoD:600, lh:1.48, min:24*k}, o));
   const rotulo = s.rotulo || atAreaRot(i);
 
-  if((papel==="capa" || papel==="unico") && AT_CAPAS_V4[lay]){ await atCapaV4(g, W, H, i, s, P, k, seed, idx, total, lay); g.restore(); return; }
+  if(papel==="unico" && lay==="unico" && AT_CAPAS_ED[d.capa]){ await atCapaEd(g, W, H, i, s, P, k, seed, idx, total, d.capa); g.restore(); return; }
   if(papel==="capa" && AT_CAPAS_V3[lay]){ await atCapaV3(g, W, H, i, s, P, k, seed, idx, total, lay); g.restore(); return; }
   if(papel==="unico" && (lay==="frase" || lay==="dica")){ await atPostLeve(g, W, H, i, s, P, k, seed, idx, total, lay); g.restore(); return; }
   if(papel==="capa"){
@@ -5466,10 +5458,10 @@ function ccFeedGerar(temaId, tipo, opc){
   const estilo = opc.estilo || (tipo==="post" ? "info" : "carrossel");
   const slides = atMontarSlides(t, tipo, v, seed, estilo);
   let capa = opc.capa; if(!capa || AT_CAPAS_LEGADO.includes(capa)){ const tt = slides[0].titulo.replace(/\*/g,"");
-    const pos = opc.data ? Math.floor(Math.floor(toUTC(opc.data)/86400000) / 3) : seed + v; const rot = ["cartao","premium","roteiro","colagem","alerta","assinatura","pergunta","lembretes","selecao","premiumclaro"]; let c = rot[pos % rot.length];
-    if(c==="pergunta" && !/\?$/.test(tt)) c = "roteiro"; capa = t.lista && !AT_CAPAS_V4[c] ? "numero" : c; }
+    const pos = opc.data ? Math.floor(Math.floor(toUTC(opc.data)/86400000) / 3) : seed + v; let c = ["cartao","bilhete","roteiro","manchete","alerta","fichario","pergunta","fotofaixa"][pos % 8];
+    if(c==="pergunta" && !/\?$/.test(tt)) c = "roteiro"; capa = t.lista ? "numero" : c; }
   const paleta = opc.paleta || (opc.data ? atPaletaPorData(opc.data) : [...AT_CLAROS, ...AT_ESCUROS][seed % 6]);
-  const fotos = (ccDB().imagens||[]).filter(x => x.marca); const fotoId = fotos.length && ["cartao"].includes(capa) ? fotos[(seed) % fotos.length].id : null;
+  const fotos = (ccDB().imagens||[]).filter(x => x.marca); const fotoId = fotos.length && ["cartao","bilhete","manchete","fotofaixa"].includes(capa) ? fotos[(seed) % fotos.length].id : null;
   const cta = AT_CTAS[(v + (tipo==="post"?1:0)) % AT_CTAS.length];
   const it = ccNovoItem({tipo, temaId, titulo:t.titulo.replace(/\*/g,""), area:t.area, formato: tipo==="post" ? (slides[0].layout==="mito" ? "mitos" : "educativo") : (t.mito ? "educativo" : "educativo"),
     objetivo:t.objetivo, publico:t.publico, gancho:slides[0].titulo.replace(/\*/g,""), slides, cta, legenda:atLegenda(t, tipo, v), hashtags:atHashtags(t),
@@ -5546,6 +5538,16 @@ function ccFeedMigrarV3(){ // refaz capas e ritmo das publicações ainda não a
   if(n){ registrar("conteúdo", `${n} publicação(ões) refeitas no novo padrão de capas`); salvar(); }
   return n;
 }
+function ccFeedMigrarEditorial(){ // novas capas editoriais nas publicações ainda não aprovadas
+  const db = ccDB(); if(db.migrouEditorial) return 0; db.migrouEditorial = true; let n = 0;
+  const novas = Object.keys(AT_CAPAS_ED), fotos = (db.imagens||[]).filter(x => x.marca);
+  ccFeedItens().filter(i => i.design && ["aprovacao","ajustes"].includes(i.status) && !i.aprovacao && !AT_CAPAS_ED[i.design.capa] && (i.tipo==="carrossel" || (i.slides?.length===1 && i.slides[0].layout==="unico")))
+    .sort((a,b) => String(a.dataPrevista||"").localeCompare(String(b.dataPrevista||""))).forEach((i, j) => { if(j % 2) return;
+      atGuardarVersao(i, "Antes das capas editoriais"); i.design.capa = novas[(j/2) % novas.length]; i.design.v = 3; if(i.slides[0]?.papel==="capa") delete i.slides[0].layout;
+      if(fotos.length && !i.design.fotoId) i.design.fotoId = fotos[(i.design.seed||j) % fotos.length].id;
+      i.historico.push({ts:new Date().toISOString(), de:i.status, para:i.status, obs:`Capa trocada para o novo estilo “${AT_CAPAS_ED[i.design.capa]}”`, usuario:"sistema"}); n++; });
+  if(n){ registrar("conteúdo", `${n} publicação(ões) receberam as novas capas editoriais`); } salvar(); return n;
+}
 function ccFeedDoDia(d){ return ccFeedItens().filter(i => i.dataPrevista===d && i.status!=="ajustes"); }
 function ccFeedPlanejar(inicio, dias){
   inicio = inicio || hojeStr(); dias = dias || 30; const criados = [], usados = new Set(ccFeedItens().filter(i => i.dataPrevista >= addDias(inicio, -20)).map(i => i.temaId).filter(Boolean));
@@ -5553,7 +5555,7 @@ function ccFeedPlanejar(inicio, dias){
     const d = addDias(inicio, n); if(ccFeedDoDia(d).length) continue;
     const dn = Math.floor(toUTC(d)/86400000); const area = dn % 2 ? "fam" : "prev";
     const t = ccProximoTema(area, usados); usados.add(t.id);
-    const estilo = dn % 7 === 3 ? "motivacional" : AT_RITMO[dn % AT_RITMO.length]; const tipo = estilo==="carrossel" ? "carrossel" : "post";
+    const estilo = AT_RITMO[dn % AT_RITMO.length]; const tipo = estilo==="carrossel" ? "carrossel" : "post";
     const base = ccDB().itens.filter(i => i.temaId===t.id).length;
     const it = ccFeedGerar(t.id, tipo, {variacao:base, data:d, estilo}); it.planoFeed = inicio;
     ccDB().itens.push(it); criados.push(it);
@@ -5756,7 +5758,7 @@ async function ccFeedEditor(c, i){
   const fotos = () => (ccDB().imagens||[]);
   const desenhar = async () => {
     const s = i.slides[sel], d = i.design; const ehCapa = s.papel==="capa";
-    const opLay = ehCapa ? Object.entries(AT_CAPAS).filter(([k]) => AT_CAPAS_V3[k] || AT_CAPAS_V4[k] || k===s.layout) : (i.slides.length===1 ? [...Object.entries(AT_LAYOUTS).filter(([k]) => ["unico","mito","check","frase","dica"].includes(k)), ...Object.entries(AT_CAPAS_V4)] : Object.entries(AT_LAYOUTS).filter(([k]) => !["unico"].includes(k)));
+    const opLay = ehCapa ? Object.entries(AT_CAPAS).filter(([k]) => AT_CAPAS_V3[k] || k===s.layout) : Object.entries(AT_LAYOUTS).filter(([k]) => i.slides.length===1 ? ["unico","mito","check","frase","dica"].includes(k) : !["unico"].includes(k));
     c.innerHTML = `<div class="cab"><div><h2 class="secao-tit" style="margin:0">${esc(i.titulo)}</h2><div class="sub">Editor de artes · 1080×1350 · versão ${i.versao||1} · ${atPill(i)}</div></div>
       <div class="acoes"><button class="btn" id="ed-voltar">Voltar</button><button class="btn" id="ed-feed">Ver no feed</button><button class="btn" id="ed-bx">Baixar</button><button class="btn btn-pri" id="ed-aprov">Revisar e aprovar</button></div></div>
     <div class="cc-estudio"><div><canvas id="ed-c" width="${W}" height="${H}" class="cc-es-canvas"></canvas><div class="cc-thumbs at-ed-th">${i.slides.map((_, n) => `<div data-mini="${i.id}:${n}" data-esc=".12" data-sl="${n}" class="${n===sel?"ativo":""}"></div>`).join("")}</div></div>
@@ -5812,7 +5814,7 @@ const AT_EXEMPLOS = [
   ["Carrossel: O que acontece quando a pensão alimentícia não é paga?","f-atraso","carrossel",{tituloCapa:"O que acontece quando a pensão *não é paga?*", capa:"alerta"}]
 ];
 function atCriarExemplo(temaId, tipo, o, data){
-  if(tipo==="frase" || tipo==="dica" || tipo==="motivacional"){ const it0 = ccFeedGerar(temaId, "post", {variacao:0, data, estilo:tipo}); ccDB().itens.push(it0); return it0; }
+  if(tipo==="frase" || tipo==="dica"){ const it0 = ccFeedGerar(temaId, "post", {variacao:0, data, estilo:tipo}); ccDB().itens.push(it0); return it0; }
   const base = ccDB().itens.filter(i => i.temaId===temaId).length;
   const it = ccFeedGerar(temaId, tipo, {variacao:base, capa:o.capa, data, estilo: tipo==="post" ? "info" : "carrossel"});
   if(o.variante && tipo==="post"){ const t = ccTema(temaId); const vs = ["pergunta","fato","mito","check"]; for(let v=0; v<8; v++){ const sl = atMontarSlides(t, "post", v, it.design.seed); const lay = sl[0].layout==="unico" ? sl[0].variante : sl[0].layout; if(lay===o.variante){ it.slides = sl; break; } } }
@@ -6221,13 +6223,92 @@ const AT_GANCHOS = {
   "f-filhos":{capas:["Filho de fora do casamento *tem os mesmos direitos?*","Filho é filho. *E a lei garante isso*"], olho:"VOCÊ SABIA?", teaser:["Igualdade","Adoção","Herança"], frase:"Filho é filho: *todos têm os mesmos direitos*.", dica:"A Constituição proíbe qualquer distinção entre filhos, de qualquer origem."},
   "f-abandono":{capas:["Amar é uma escolha. *Cuidar é dever*","Abandono afetivo *tem consequência?*"], olho:"REFLEXÃO", teaser:["O que é","O que diz o STJ","Provas"], frase:"Amar é faculdade, *cuidar é dever*.", dica:"Não se trata de punir a falta de amor, e sim a falta de cuidado e presença."}
 };
-const AT_CAPAS_V3 = {cartao:"Cartão com ilustração", numero:"Número em destaque", pergunta:"Pergunta em destaque", alerta:"Alerta / curiosidade", roteiro:"Roteiro (o que você vai ver)"};
+const AT_CAPAS_ED = {bilhete:"Editorial · bilhete com clipe", fichario:"Editorial · página de fichário", manchete:"Editorial · manchete", fotofaixa:"Editorial · foto e título"};
+const AT_CAPAS_V3 = Object.assign({cartao:"Cartão com ilustração", numero:"Número em destaque", pergunta:"Pergunta em destaque", alerta:"Alerta / curiosidade", roteiro:"Roteiro (o que você vai ver)"}, AT_CAPAS_ED);
+const AT_SCRIPT = `"Pinyon Script", "Bodoni Moda", cursive`;
 Object.assign(AT_CAPAS, AT_CAPAS_V3);
 const AT_CAPAS_LEGADO = ["arco","editorial","faixa","moldura","lista"];
 function atGancho(t, v){ const g = AT_GANCHOS[t.id]; if(!g) return null; return {capa: g.capas[(v||0) % g.capas.length], olho:g.olho, teaser:g.teaser, frase:g.frase, dica:g.dica}; }
 
+/* ---------- Capas editoriais (estilo revista: serifa + palavra manuscrita dourada) ---------- */
+function atAjustarEd(g, txt, o){ // títulos com *destaque* em letra manuscrita
+  const toks = atToks(txt).map(t => (o.caixa && !t.d) ? {...t, w:t.w.toUpperCase()} : t); let t = o.tam, ls;
+  while(true){ const fN = `${o.peso||400} ${t}px ${AT_SERIF}`, fD = `400 ${Math.round(t*1.32)}px ${AT_SCRIPT}`;
+    ls = atLinhas(g, toks, o.max, fN, fD); const alt = ls.length*t*o.lh;
+    if((alt <= o.maxAlt && !ls.some(l => l.length===1 && l[0].larg > o.max)) || t <= o.min) return {t, ls, fN, fD, lh:o.lh, alt};
+    t -= 2; }
+}
+function atClipe(g, x, y, k, ang){ g.save(); g.translate(x, y); g.rotate(ang); g.lineCap = "round"; g.lineWidth = 6*k; g.strokeStyle = atOuro(g, -30*k, -90*k, 30*k, 90*k, false);
+  g.shadowColor = "rgba(43,30,22,.25)"; g.shadowBlur = 6*k; g.shadowOffsetY = 3*k;
+  atRR(g, -22*k, -80*k, 44*k, 165*k, 22*k); g.stroke(); g.beginPath(); g.moveTo(-10*k, 60*k); g.lineTo(-10*k, -50*k); g.arc(1*k, -50*k, 11*k, Math.PI, 0); g.lineTo(12*k, 40*k); g.stroke(); g.restore(); }
+async function atCapaEd(g, W, H, i, s, P, k, seed, idx, total, lay){
+  const unico = total===1, d = i.design || {}, ic = s.icone || d.icone || "balanca";
+  const olho = (s.rotulo || (unico ? atAreaRot(i) : "VOCÊ SABIA?")).toUpperCase();
+  const cta = (unico ? "Leia a legenda" : (s.sub || "Deslize e descubra")).toUpperCase();
+  const CL = AT_PALETAS.areia, ES = AT_PALETAS.chocolate; let PR = P;
+  const rot = (txt, x, y, cor, al, tam) => { g.font = `600 ${(tam||19)*k}px ${AT_SANS}`; g.fillStyle = cor; atEspacado(g, txt, x, y, 3.4*k, al); };
+  const foto = async (x, y, w, h) => d.fotoId ? await atFoto(g, d.fotoId, x, y, w, h) : false;
+  if(lay==="bilhete"){
+    g.fillStyle = P.bg; g.fillRect(0,0,W,H); let temFoto = false;
+    if(d.fotoId){ temFoto = await foto(0, 0, W, H); if(temFoto){ g.fillStyle = "rgba(58,40,31,.38)"; g.fillRect(0,0,W,H); PR = ES; } }
+    if(!temFoto){ atFundo(g, W, H, P, i, seed, k, "degrade"); g.save(); g.globalAlpha = P.escuro ? .14 : .2; atIcone(g, ic, W*.86, H*.14, 300*k, P.ac, 1.2); g.restore(); }
+    const cx = W/2, cy = H*0.45, cw = 700*k, ch = 860*k;
+    g.save(); g.translate(cx, cy); g.rotate(-0.035); g.shadowColor = "rgba(43,30,22,.32)"; g.shadowBlur = 46*k; g.shadowOffsetY = 20*k;
+    g.fillStyle = "#FCF9F3"; g.fillRect(-cw/2, -ch/2, cw, ch); g.shadowColor = "transparent";
+    g.strokeStyle = "#E3D6C4"; g.lineWidth = 1.4*k; g.strokeRect(-cw/2 + 26*k, -ch/2 + 26*k, cw - 52*k, ch - 52*k);
+    const f = atAjustarEd(g, s.titulo, {max:cw - 140*k, maxAlt:470*k, tam:84*k, lh:1.12, min:44*k});
+    const tot = 70*k + f.alt + 150*k; let y = -tot/2 + 10*k;
+    g.textAlign = "left"; rot(olho, 0, y + 20*k, CL.ac2, "center"); y += 70*k;
+    y = atEscrever(g, f, 0, y, {cor:CL.tit, corD:CL.ac, alinh:"center"}); y += 56*k;
+    atDivisor(g, 0, y, 200*k, CL.ac, k); g.fillStyle = CL.ac; g.beginPath(); g.arc(0, y, 4*k, 0, Math.PI*2); g.fill();
+    rot(cta, 0, y + 64*k, CL.ac2, "center", 18);
+    g.restore(); atClipe(g, cx + cw/2 - 90*k, cy - ch/2 + 10*k, k, 0.08);
+  }
+  else if(lay==="fichario"){
+    atFundo(g, W, H, P, i, seed, k, "bolha");
+    const x0 = 150*k, y0 = 86*k, x1 = W - 70*k, y1 = H - 176*k;
+    g.save(); g.shadowColor = "rgba(43,30,22,.28)"; g.shadowBlur = 40*k; g.shadowOffsetY = 16*k; g.fillStyle = "#FCF9F3"; g.fillRect(x0, y0, x1 - x0, y1 - y0); g.restore();
+    g.strokeStyle = "rgba(184,149,95,.18)"; g.lineWidth = 1.2*k; for(let yy = y0 + 150*k; yy < y1 - 40*k; yy += 58*k){ g.beginPath(); g.moveTo(x0 + 70*k, yy); g.lineTo(x1 - 40*k, yy); g.stroke(); }
+    g.strokeStyle = "rgba(184,149,95,.45)"; g.beginPath(); g.moveTo(x0 + 64*k, y0); g.lineTo(x0 + 64*k, y1); g.stroke();
+    const nA = 7, passo = (y1 - y0 - 120*k)/(nA - 1);
+    for(let n=0;n<nA;n++){ const yy = y0 + 60*k + n*passo; g.fillStyle = P.escuro ? "#3E2B24" : "#D9C9B3"; g.beginPath(); g.arc(x0 + 26*k, yy, 9*k, 0, Math.PI*2); g.fill();
+      g.lineWidth = 5*k; g.strokeStyle = atOuro(g, x0 - 40*k, yy - 20*k, x0 + 30*k, yy + 20*k, false); g.beginPath(); g.ellipse(x0 - 4*k, yy, 34*k, 13*k, 0, Math.PI*0.08, Math.PI*1.92); g.stroke(); }
+    rot(atAreaRot(i), x0 + 96*k, y0 + 64*k, CL.ac2, "left", 16); rot(olho, x1 - 50*k, y0 + 64*k, CL.mut, "right", 16);
+    const mxi = x0 + 110*k, li = x1 - mxi - 70*k; const f = atAjustarEd(g, s.titulo, {max:li, maxAlt:560*k, tam:88*k, lh:1.12, min:44*k});
+    let y = y0 + 150*k + Math.max(0, (y1 - y0 - 330*k - f.alt)/2);
+    y = atEscrever(g, f, mxi, y, {cor:CL.tit, corD:CL.ac}); y += 44*k; g.fillStyle = CL.ac; g.fillRect(mxi, y, 70*k, 3*k);
+    rot(cta, mxi, y + 58*k, CL.ac2, "left", 17);
+    const sx = x1 - 120*k, sy = y1 - 130*k; g.fillStyle = atOuro(g, sx - 50*k, sy - 50*k, sx + 50*k, sy + 50*k, false); g.beginPath(); g.arc(sx, sy, 50*k, 0, Math.PI*2); g.fill(); atIcone(g, ic, sx, sy, 52*k, "#FCF9F3", 2);
+  }
+  else if(lay==="manchete"){
+    PR = P.escuro ? P : ES; g.fillStyle = PR.bg; g.fillRect(0,0,W,H); atGrao(g, W, H, seed, true);
+    const fw = 400*k, fx = W - fw - 60*k, fy = 220*k, fh = 760*k; g.save(); atArco(g, fx, fy, fw, fh); g.clip();
+    const temFoto = await foto(fx, fy, fw, fh); if(!temFoto){ g.fillStyle = PR.soft; g.fillRect(fx, fy, fw, fh); atIcone(g, ic, fx + fw/2, fy + fh*0.55, 200*k, PR.ac, 1.4); } g.restore();
+    g.strokeStyle = PR.ac; g.lineWidth = 1.6*k; atArco(g, fx - 16*k, fy - 16*k, fw + 32*k, fh + 32*k); g.stroke();
+    const mx = 90*k, li = fx - mx - 40*k; const f = atAjustarEd(g, s.titulo, {max:li, maxAlt:700*k, tam:92*k, lh:1.06, min:44*k, caixa:true});
+    let y = Math.max(150*k, (H - 170*k - f.alt - 200*k)/2);
+    rot(olho, mx, y, PR.ac, "left", 18); y += 50*k;
+    y = atEscrever(g, f, mx, y, {cor:PR.tit, corD:PR.ac}); y += 50*k; g.fillStyle = PR.ac; g.fillRect(mx, y, 70*k, 3*k);
+    rot(cta, mx, y + 58*k, PR.txt, "left", 17);
+  }
+  else { // fotofaixa
+    PR = P.escuro ? CL : P; g.fillStyle = PR.bg; g.fillRect(0,0,W,H); const hF = H*0.5;
+    g.save(); g.beginPath(); g.rect(0, 0, W, hF); g.clip(); const temFoto = await foto(0, 0, W, hF);
+    if(!temFoto){ const gr = g.createLinearGradient(0, 0, W, hF); gr.addColorStop(0, "#EBDDCB"); gr.addColorStop(1, "#D9C3A5"); g.fillStyle = gr; g.fillRect(0, 0, W, hF);
+      g.fillStyle = "#F7F2E9"; atArco(g, W/2 - 170*k, 90*k, 340*k, hF - 90*k); g.fill(); atIcone(g, ic, W/2, hF*0.58, 190*k, "#B8955F", 1.6); }
+    else { const gr = g.createLinearGradient(0, hF*0.6, 0, hF); gr.addColorStop(0, "rgba(247,242,233,0)"); gr.addColorStop(1, PR.bg); g.fillStyle = gr; g.fillRect(0, hF*0.6, W, hF*0.4); }
+    g.restore(); atGrao(g, W, H, seed, false);
+    const f = atAjustarEd(g, s.titulo, {max:W - 220*k, maxAlt:H - hF - 330*k, tam:84*k, lh:1.1, min:42*k});
+    let y = hF + 60*k + Math.max(0, (H - hF - 300*k - f.alt)/2);
+    y = atEscrever(g, f, W/2, y, {cor:PR.tit, corD:PR.ac, alinh:"center"}); y += 44*k;
+    rot(cta, W/2, y + 20*k, PR.ac2, "center", 17);
+  }
+  g.textAlign = "left"; await atRodape(g, W, H, PR, k, idx, total);
+}
+
 /* ---------- Capas novas (mesma linguagem dos slides internos) ---------- */
 async function atCapaV3(g, W, H, i, s, P, k, seed, idx, total, lay){
+  if(AT_CAPAS_ED[lay]) return atCapaEd(g, W, H, i, s, P, k, seed, idx, total, lay);
   const mx = 96*k, larg = W - 2*mx, ic = s.icone || i.design?.icone || "balanca";
   const T = (txt, o) => atAjustar(g, txt, Object.assign({fam:AT_SERIF, peso:400, ital:true, lh:1.08, min:46*k}, o));
   const X = (txt, o) => atAjustar(g, txt, Object.assign({fam:AT_SANS, peso:400, pesoD:600, lh:1.45, min:24*k}, o));
@@ -6436,1205 +6517,6 @@ async function telaIA(c){
     IA_ESTADO.enviando = false; salvar(); if(CC_SUB !== undefined && location.hash.startsWith("#ia")) telaIA(c);
   };
 }
-
-/* =========================================================
-   PREVIDENCIÁRIO · núcleo das calculadoras
-   Regras: nada de índices inventados; parâmetros oficiais com fonte;
-   todo resultado é ESTIMATIVA, nunca garantia de concessão.
-   ========================================================= */
-const PV_AVISO = "Estimativa elaborada para apoio administrativo e documental, com base nos dados informados. Não é cálculo oficial do INSS nem garantia de concessão, de valor ou de data. A análise jurídica do caso compete a advogado(a) inscrito(a) na OAB ou à Defensoria Pública.";
-const PV_PARAMS_PADRAO = [
-  {ano:2025, sm:1518.00, teto:null, fonteSM:"Decreto nº 12.342/2024", fonteTeto:""},
-  {ano:2026, sm:1621.00, teto:8475.55, fonteSM:"Decreto nº 12.797/2025", fonteTeto:"Portaria Interministerial MPS/MF de jan/2026 (reajuste dos benefícios)"}
-];
-const REFORMA = "2019-11-13"; // EC 103/2019, publicada em 13/11/2019
-function pvGarantir(){
-  if(!Array.isArray(DB.tabelasOficiais)) DB.tabelasOficiais = [];
-  let tp = DB.tabelasOficiais.find(t => t.tipo==="parametros");
-  if(!tp){ tp = {id:uid(), tipo:"parametros", nome:"Salário mínimo e teto do RGPS", linhas:JSON.parse(JSON.stringify(PV_PARAMS_PADRAO)), conferidoEm:"2026-11-12"}; DB.tabelasOficiais.push(tp); }
-  if(!Array.isArray(DB.calculos)) DB.calculos = [];
-  if(!Array.isArray(DB.bpc)) DB.bpc = [];
-  if(DB.escritorio && DB.escritorio.nome==="Jéssica Valiente Advocacia") DB.escritorio.nome = "Jéssica Valiente · Correspondente Jurídica";
-  return tp;
-}
-function pvParam(ano){
-  const tp = pvGarantir(); const ls = tp.linhas.filter(l => l.ano <= ano).sort((a,b) => b.ano-a.ano);
-  return ls[0] || null;
-}
-const pvR = v => fmtMoeda(v);
-const pvNum = s => { if(s===undefined||s===null||s==="") return NaN; const t = String(s).trim().replace(/\s/g,"").replace(/^R\$/,""); return Number(/,\d{1,2}$/.test(t) || (t.includes(",") && !t.includes(".")) ? t.replace(/\./g,"").replace(",", ".") : t.replace(/,/g,"")); };
-/* ---------- datas no padrão de contagem (anos/meses/dias, mês de 30 dias) ---------- */
-function pvYMD(ini, fimInclusivo){ // tempo entre duas datas, contando o último dia
-  let [y1,m1,d1] = ini.split("-").map(Number); const f = addDias(fimInclusivo, 1); let [y2,m2,d2] = f.split("-").map(Number);
-  if(d2 < d1){ m2 -= 1; d2 += 30; } if(m2 < m1){ y2 -= 1; m2 += 12; }
-  return {a:y2-y1, m:m2-m1, d:d2-d1};
-}
-const pvDias = o => o.a*360 + o.m*30 + o.d;
-function pvFmtT(dias){ dias = Math.max(0, Math.round(dias)); const a = Math.floor(dias/360), m = Math.floor((dias%360)/30), d = dias%30; return `${a}a ${m}m ${d}d`; }
-function pvIdade(nasc, em){ const o = pvYMD(nasc, addDias(em,-1)); return pvDias(o); } // idade em "dias 360"
-function pvAddMeses(s, n){ const [y,m,d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m-1+n, 1)); const ult = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth()+1, 0)).getUTCDate(); return `${t.getUTCFullYear()}-${pad(t.getUTCMonth()+1)}-${pad(Math.min(d, ult))}`; }
-/* une períodos sobrepostos (concomitância conta uma vez) */
-function pvUnir(pers){
-  const ps = pers.filter(p => p.ini && p.fim && p.fim >= p.ini).map(p => ({...p})).sort((a,b) => a.ini.localeCompare(b.ini));
-  const out = [];
-  ps.forEach(p => { const u = out[out.length-1]; if(u && p.ini <= addDias(u.fim,1)){ if(p.fim > u.fim) u.fim = p.fim; } else out.push({ini:p.ini, fim:p.fim}); });
-  return out;
-}
-function pvCortar(pers, ate){ return pers.filter(p => p.ini <= ate).map(p => ({...p, fim: p.fim > ate ? ate : p.fim})); }
-function pvSomar(pers){ return pvUnir(pers).reduce((t,p) => t + pvDias(pvYMD(p.ini, p.fim)), 0); }
-function pvMesesCarencia(pers){ const s = new Set(); pvUnir(pers).forEach(p => { let [y,m] = p.ini.split("-").map(Number); const [yf,mf] = p.fim.split("-").map(Number); while(y<yf || (y===yf && m<=mf)){ s.add(`${y}-${m}`); m++; if(m>12){m=1;y++;} } }); return s.size; }
-const PV_CONV = {25:{M:1.4,F:1.2}, 20:{M:1.75,F:1.5}, 15:{M:2.33,F:2.0}};
-/* tempo total para regras comuns: especial antes da reforma pode ser convertido (EC 103, art. 25, § 2º) */
-function pvTempoComum(pers, sexo, ate, converter){
-  const ps = pvCortar(pers, ate); let base = pvSomar(ps); let extra = 0;
-  if(converter){ ps.filter(p => p.tipo && p.tipo.startsWith("esp")).forEach(p => { const lim = p.fim > REFORMA ? REFORMA : p.fim; if(p.ini > REFORMA) return; const d = pvDias(pvYMD(p.ini, lim)); const k = PV_CONV[+p.tipo.slice(3)][sexo]; extra += d*(k-1); }); }
-  return base + extra;
-}
-/* ---------- PDF de cálculo (texto + tabelas, timbre do sistema) ---------- */
-async function pvPDF(titulo, sub, blocos){
-  const W = 595.28, H = 841.89, ML = 56.69, MR = 56.69, LT = W - ML - MR, esc_ = DB.escritorio;
-  const timbre = await imagemTimbre(esc_, W, 78);
-  const rodapeTxt = [esc_.endereco && `${esc_.endereco}${esc_.cidade?", "+esc_.cidade:""}`, esc_.telefone && `WhatsApp ${esc_.telefone}`, esc_.email, esc_.instagram].filter(Boolean).join("  ·  ");
-  const paginas = []; let ops, y; const TOPO = H - 78 - 34, BASE = 70;
-  const nova = () => { ops = []; paginas.push(ops); y = TOPO; }; nova();
-  const txt = (x, yy, t, f, tam, cor) => ops.push(`BT 0 Tw ${cor||"0.11 0.09 0.08"} rg /F${f} ${tam} Tf 1 0 0 1 ${x.toFixed(2)} ${yy.toFixed(2)} Tm ${strPDF(t)} Tj ET`);
-  const cortar = (t, f, tam, w) => { if(larguraTxt(t, f, tam) <= w) return t; while(t.length > 1 && larguraTxt(t + "…", f, tam) > w) t = t.slice(0, -1); return t + "…"; };
-  const centro = (t, f, tam, cor) => txt((W - larguraTxt(t, f, tam))/2, y, t, f, tam, cor);
-  centro(titulo, "B", 13); y -= 16; if(sub){ centro(sub, "R", 9.5, "0.45 0.38 0.32"); y -= 12; }
-  centro(`Gerado em ${new Date().toLocaleString("pt-BR")}${USU?" por "+USU.nome:""}`, "R", 8, "0.52 0.44 0.37"); y -= 22;
-  const para = (t, tam, f, cor) => { quebrarLinhas(t, f||"R", tam, LT).forEach(l => { if(y < BASE + 12) nova(); let x = ML; l.forEach(p => { if(p.esp){ x += larguraTxt(" ", "R", tam); return; } txt(x, y, p.t, p.f, tam, cor); x += p.w; }); y -= tam*1.45; }); y -= 4; };
-  blocos.forEach(b => {
-    if(b.h){ if(y < BASE + 50) nova(); y -= 4; txt(ML, y, b.h, "B", 11, "0.353 0.251 0.196"); y -= 6; ops.push(`0.722 0.584 0.373 RG 0.5 w ${ML} ${y.toFixed(2)} m ${ML+LT} ${y.toFixed(2)} l S`); y -= 12; }
-    if(b.p) para(b.p, b.tam||9.5, b.f, b.cor);
-    if(b.kv){ b.kv.forEach(([k,v]) => { if(y < BASE + 14) nova(); txt(ML, y, cortar(k,"B",9,LT*0.42), "B", 9); const ls = quebrarLinhas(String(v), "R", 9, LT*0.56); ls.forEach((l,i) => { if(i && y < BASE+12) nova(); let x = ML + LT*0.44; l.forEach(p => { if(p.esp){ x += larguraTxt(" ","R",9); return; } txt(x, y, p.t, p.f, 9); x += p.w; }); y -= 13; }); }); y -= 6; }
-    if(b.cols){
-      const xs = []; let acc = ML; b.cols.forEach(c_ => { xs.push(acc); acc += c_[1]*LT; });
-      const linha = (vals, f, fundo) => { if(y < BASE + 16){ nova(); cab(); } if(fundo) ops.push(`${fundo} rg ${ML} ${(y-4).toFixed(2)} ${LT} 15 re f`);
-        vals.forEach((v, i) => { const w = b.cols[i][1]*LT - 6, t = cortar(String(v??""), f, 8.5, w); const x = b.cols[i][2]==="r" ? xs[i] + b.cols[i][1]*LT - 3 - larguraTxt(t, f, 8.5) : xs[i] + 3; txt(x, y, t, f, 8.5); }); y -= 15; };
-      const cab = () => linha(b.cols.map(c_ => c_[0]), "B", "0.922 0.867 0.796");
-      if(y < BASE + 40) nova(); cab(); b.linhas.forEach((l, i) => linha(l, "R", i%2 ? "0.984 0.973 0.957" : null)); if(b.total) linha(b.total, "B"); y -= 10;
-    }
-  });
-  return finalizarPDF(paginas, {titulo, timbre, md:null, rodapeTxt});
-}
-async function pvBaixarPDF(nome, titulo, sub, blocos){
-  try{ const blob = await pvPDF(titulo, sub, blocos); await salvarArquivo(nome, blob, "application/pdf"); }
-  catch(e){ console.error(e); toast("Não foi possível gerar o PDF: " + (e.message||e), true); }
-}
-/* blocos -> HTML (mesmo conteúdo do PDF, para conferência na tela) */
-function pvBlocosHTML(blocos){
-  return blocos.map(b => {
-    let h = "";
-    if(b.h) h += `<div class="secao-tit" style="font-size:17px">${esc(b.h)}</div>`;
-    if(b.p) h += `<p style="margin:4px 0 8px;${b.cor?"color:var(--suave);font-size:12.5px":""}">${esc(b.p).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}</p>`;
-    if(b.kv) h += `<table class="pv-kv">${b.kv.map(([k,v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table>`;
-    if(b.cols) h += `<div class="tabela-wrap"><table><thead><tr>${b.cols.map(c_ => `<th class="${c_[2]==="r"?"num":""}">${esc(c_[0])}</th>`).join("")}</tr></thead><tbody>${b.linhas.map(l => `<tr>${l.map((v,i) => `<td class="${b.cols[i][2]==="r"?"num":""}">${esc(v)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${b.cols.length}" class="vazio">Sem linhas.</td></tr>`}${b.total?`<tr class="total">${b.total.map((v,i)=>`<td class="${b.cols[i][2]==="r"?"num":""}">${esc(v)}</td>`).join("")}</tr>`:""}</tbody></table></div>`;
-    return h;
-  }).join("");
-}
-function pvClienteOpts(sel){ return `<option value="">— sem vínculo —</option>` + DB.clientes.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).map(c => `<option value="${c.id}" ${c.id===sel?"selected":""}>${esc(c.nome)}</option>`).join(""); }
-function pvGuardar(tipo, titulo, clienteId, entrada, blocos){
-  const reg = {id:uid(), tipo, titulo, clienteId:clienteId||"", entrada, blocos, em:new Date().toISOString(), por:USU?USU.nome:""};
-  DB.calculos.unshift(reg); registrar("calculo", `Cálculo salvo: ${titulo}`); salvar(); return reg;
-}
-/* =========================================================
-   Aposentadorias: comparativo das regras (EC 103/2019, LC 142/2013)
-   ========================================================= */
-function pvCoefEC103(tcDias, sexo){ const base = sexo==="F" ? 15 : 20; const anos = Math.floor(tcDias/360); return Math.min(100, 60 + 2*Math.max(0, anos - base)); }
-function pvRegrasApos(e){
-  const S = e.sexo, F = S==="F", ref = e.ref, pers = e.periodos, filiadoAntes = pers.some(p => p.ini && p.ini <= REFORMA);
-  const anoRef = +ref.slice(0,4);
-  const prof = pers.filter(p => p.tipo==="prof");
-  const espDe = k => pers.filter(p => p.tipo==="esp"+k);
-  const regras = [];
-  // função que avalia em uma data futura supondo contribuição contínua (comum) a partir de ref
-  const tcEm = (data, converter) => { const ext = data > ref && e.continuar ? [{ini:addDias(ref,1), fim:data, tipo:"comum"}] : []; return pvTempoComum(pers.concat(ext), S, data, converter); };
-  const tc2019 = pvTempoComum(pers, S, REFORMA, true);
-  const projetar = teste => { for(let k=0; k<=12*40; k++){ const d = k===0 ? ref : pvAddMeses(ref, k); if(teste(d)) return d; if(k>0 && !e.continuar) break; } return null; };
-  const anos = d => d/360;
-  const add = (nome, base, req, teste, coefFn, obs) => { const em = projetar(teste); regras.push({nome, base, req, cumpreHoje: teste(ref), em, coef: em ? coefFn(em) : null, obs}); };
-  // 1) Idade
-  if(filiadoAntes) add("Aposentadoria por idade · transição", "EC 103/2019, art. 18", F ? "Mulher: 62 anos (em 2023 em diante) + 15 anos de contribuição + 180 meses de carência" : "Homem: 65 anos + 15 anos de contribuição + 180 meses de carência",
-    d => anos(pvIdade(e.nasc, d)) >= (F ? Math.min(62, 60 + 0.5*Math.max(0, +d.slice(0,4)-2019)) : 65) && anos(tcEm(d,false)) >= 15 && (pvMesesCarencia(pers) + (d>ref && e.continuar ? Math.round(difDias(ref,d)/30.4) : 0)) >= 180,
-    d => pvCoefEC103(tcEm(d,false), S), "Coeficiente: 60% da média + 2% por ano acima de 15 (mulher) ou 20 (homem) anos de contribuição (EC 103, art. 26).");
-  else add("Aposentadoria por idade · regra permanente", "EC 103/2019, art. 19", F ? "Mulher: 62 anos + 15 anos de contribuição" : "Homem: 65 anos + 20 anos de contribuição",
-    d => anos(pvIdade(e.nasc, d)) >= (F?62:65) && anos(tcEm(d,false)) >= (F?15:20), d => pvCoefEC103(tcEm(d,false), S), "Coeficiente conforme EC 103, art. 26.");
-  if(filiadoAntes){
-    // 2) pontos
-    const ptsReq = a => F ? Math.min(100, 86 + Math.max(0, a-2019)) : Math.min(105, 96 + Math.max(0, a-2019));
-    add("Transição por pontos", "EC 103/2019, art. 15", `${F?"Mulher":"Homem"}: ${F?30:35} anos de contribuição + pontos (idade + tempo). Em ${anoRef}: ${ptsReq(anoRef)} pontos; sobe 1 ponto por ano até ${F?100:105}.`,
-      d => { const tc = tcEm(d,true); return anos(tc) >= (F?30:35) && anos(tc + pvIdade(e.nasc, d)) >= ptsReq(+d.slice(0,4)); }, d => pvCoefEC103(tcEm(d,true), S), "Coeficiente conforme EC 103, art. 26.");
-    // 3) idade progressiva
-    const idReq = a => F ? Math.min(62, 56 + 0.5*Math.max(0, a-2019)) : Math.min(65, 61 + 0.5*Math.max(0, a-2019));
-    add("Transição por idade mínima progressiva", "EC 103/2019, art. 16", `${F?"Mulher":"Homem"}: ${F?30:35} anos de contribuição + idade mínima. Em ${anoRef}: ${String(idReq(anoRef)).replace(".5"," anos e 6 meses").replace(/^(\d+)$/,"$1 anos")}; sobe 6 meses por ano até ${F?62:65}.`,
-      d => anos(tcEm(d,true)) >= (F?30:35) && anos(pvIdade(e.nasc, d)) >= idReq(+d.slice(0,4)), d => pvCoefEC103(tcEm(d,true), S), "Coeficiente conforme EC 103, art. 26.");
-    // 4) pedágio 50%
-    const reqTC = (F?30:35)*360, falta = Math.max(0, reqTC - tc2019);
-    if(tc2019 >= reqTC) regras.push({nome:"Direito adquirido até 13/11/2019 · tempo de contribuição", base:"EC 103/2019, art. 3º", req:`Em 13/11/2019 já havia ${pvFmtT(tc2019)} de contribuição (mínimo ${F?30:35} anos). Pode ser calculada pelas regras anteriores à reforma: média dos 80% maiores salários desde 07/1994 com fator previdenciário, ou sem fator se atingidos ${F?86:96} pontos naquela data (Lei 8.213/91, art. 29-C). Simule o valor com o histórico completo.`, cumpreHoje:true, em:REFORMA, coef:"fator"});
-    if(falta <= 720) add("Transição com pedágio de 50%", "EC 103/2019, art. 17", `Faltavam ${pvFmtT(falta)} em 13/11/2019 (até 2 anos). Exige ${F?30:35} anos + pedágio de 50% do que faltava (${pvFmtT(falta*0.5)}). Sem idade mínima.`,
-      d => tcEm(d,true) >= reqTC + falta*0.5, () => "fator", "Valor: média × fator previdenciário (depende da expectativa de sobrevida da tábua do IBGE vigente na data).");
-    else regras.push({nome:"Transição com pedágio de 50%", base:"EC 103/2019, art. 17", req:`Não se aplica: em 13/11/2019 faltavam ${pvFmtT(falta)} (mais de 2 anos).`, naoAplica:true});
-    // 5) pedágio 100%
-    add("Transição com pedágio de 100%", "EC 103/2019, art. 20", `${F?"Mulher: 57":"Homem: 60"} anos + ${F?30:35} anos de contribuição + pedágio de 100% do que faltava em 13/11/2019 (${pvFmtT(falta)}).`,
-      d => anos(pvIdade(e.nasc, d)) >= (F?57:60) && tcEm(d,true) >= reqTC + falta, () => 100, "Coeficiente: 100% da média.");
-  }
-  // 6) professor
-  if(prof.length){
-    const tProf = d => pvSomar(pvCortar(prof.concat(d>ref && e.continuar && e.continuarProf ? [{ini:addDias(ref,1), fim:d}] : []), d));
-    if(filiadoAntes){
-      const pr = a => F ? Math.min(92, 81 + Math.max(0,a-2019)) : Math.min(100, 91 + Math.max(0,a-2019));
-      add("Professor(a) · transição por pontos", "EC 103/2019, art. 15, § 3º", `${F?25:30} anos de magistério na educação infantil/ensino fundamental/médio + ${pr(anoRef)} pontos em ${anoRef}.`,
-        d => anos(tProf(d)) >= (F?25:30) && anos(tProf(d) + pvIdade(e.nasc,d)) >= pr(+d.slice(0,4)), d => pvCoefEC103(tcEm(d,true), S), "Coeficiente conforme EC 103, art. 26.");
-      const ir = a => F ? Math.min(57, 51 + 0.5*Math.max(0,a-2019)) : Math.min(60, 56 + 0.5*Math.max(0,a-2019));
-      add("Professor(a) · idade mínima progressiva", "EC 103/2019, art. 16, § 2º", `${F?25:30} anos de magistério + idade mínima (${ir(anoRef)} em ${anoRef}).`,
-        d => anos(tProf(d)) >= (F?25:30) && anos(pvIdade(e.nasc,d)) >= ir(+d.slice(0,4)), d => pvCoefEC103(tcEm(d,true), S), "Coeficiente conforme EC 103, art. 26.");
-      const tp19 = pvSomar(pvCortar(prof, REFORMA)), fp = Math.max(0, (F?25:30)*360 - tp19);
-      add("Professor(a) · pedágio de 100%", "EC 103/2019, art. 20, § 1º", `${F?"52":"55"} anos + ${F?25:30} anos de magistério + pedágio de 100% (${pvFmtT(fp)}).`,
-        d => anos(pvIdade(e.nasc,d)) >= (F?52:55) && tProf(d) >= (F?25:30)*360 + fp, () => 100, "Coeficiente: 100% da média.");
-    } else add("Professor(a) · regra permanente", "EC 103/2019, art. 19, § 1º, II", `${F?57:60} anos + 25 anos de magistério.`,
-      d => anos(pvIdade(e.nasc,d)) >= (F?57:60) && anos(tProf(d)) >= 25, d => pvCoefEC103(tcEm(d,true), S), "Coeficiente conforme EC 103, art. 26.");
-  }
-  // 7) especial
-  [15,20,25].forEach(k => { const ps = espDe(k); if(!ps.length) return; const tEsp = d => pvSomar(pvCortar(ps, d));
-    const pts = {15:66, 20:76, 25:86}[k];
-    if(filiadoAntes) add(`Especial ${k} anos · transição por pontos`, "EC 103/2019, art. 21", `${k} anos de efetiva exposição + ${pts} pontos (idade + tempo de contribuição).`,
-      d => anos(tEsp(d)) >= k && anos(tcEm(d,false) + pvIdade(e.nasc,d)) >= pts, d => Math.min(100, 60 + 2*Math.max(0, Math.floor(tcEm(d,false)/360) - (k===15 ? 15 : 20))), "Coeficiente: 60% + 2% por ano acima de 20 anos (15 anos na atividade de 15). Exposição deve ser comprovada (PPP/LTCAT).");
-    add(`Especial ${k} anos · regra permanente`, "EC 103/2019, art. 19, § 1º, I", `${k} anos de efetiva exposição + idade mínima de ${({15:55,20:58,25:60})[k]} anos.`,
-      d => anos(tEsp(d)) >= k && anos(pvIdade(e.nasc,d)) >= ({15:55,20:58,25:60})[k], d => Math.min(100, 60 + 2*Math.max(0, Math.floor(tcEm(d,false)/360) - (k===15 ? 15 : 20))), "Exposição deve ser comprovada (PPP/LTCAT).");
-  });
-  // 8) PcD (LC 142/2013)
-  if(e.pcd){
-    const tPcd = d => pvSomar(pvCortar(pers.filter(p => p.pcd).concat(d>ref && e.continuar ? [{ini:addDias(ref,1), fim:d}] : []), d));
-    const req = {grave:{M:25,F:20}, moderada:{M:29,F:24}, leve:{M:33,F:28}}[e.pcd][S];
-    add(`Pessoa com deficiência · por tempo (grau ${e.pcd})`, "LC 142/2013, art. 3º, I a III", `${req} anos de contribuição na condição de pessoa com deficiência (grau ${e.pcd}).`,
-      d => anos(tPcd(d)) >= req, () => 100, "Coeficiente: 100% do salário de benefício. O grau é definido em avaliação biopsicossocial do INSS.");
-    add("Pessoa com deficiência · por idade", "LC 142/2013, art. 3º, IV", `${F?55:60} anos + 15 anos de contribuição na condição de pessoa com deficiência.`,
-      d => anos(pvIdade(e.nasc,d)) >= (F?55:60) && anos(tPcd(d)) >= 15, d => Math.min(100, 70 + Math.floor(tPcd(d)/360)), "Coeficiente: 70% + 1% por grupo de 12 contribuições, até 100%.");
-  }
-  return {regras, filiadoAntes, tc2019, tcHoje: pvTempoComum(pers, S, ref, true), tcSemConv: pvTempoComum(pers, S, ref, false), carencia: pvMesesCarencia(pvCortar(pers, ref)), idade: pvIdade(e.nasc, ref)};
-}
-function pvFator(tcDias, idadeDias, es, sexo, prof){ // Lei 8.213, art. 29, § 7º e § 9º
-  let tc = tcDias/360 + (sexo==="F" ? 5 : 0) + (prof ? (sexo==="F" ? 10 : 5) : 0); const id = idadeDias/360, a = 0.31;
-  return (tc*a/es) * (1 + (id + tc*a)/100);
-}
-function pvMedia(salarios){ const v = salarios.map(s => s.v).filter(x => x > 0); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : NaN; }
-function pvLerSalarios(txt){ // "MM/AAAA;valor" ou "MM/AAAA valor" por linha
-  const out = [], erros = [];
-  String(txt||"").split(/\n/).map(l => l.trim()).filter(Boolean).forEach((l, i) => {
-    const m = l.match(/^(\d{1,2})\/(\d{4})[\s;,\t]+(?:R\$\s*)?([\d.,]+)/); if(!m){ erros.push(i+1); return; }
-    out.push({c:`${m[2]}-${pad(+m[1])}`, v:pvNum(m[3])});
-  });
-  return {salarios:out.filter(s => s.c >= "1994-07"), erros, antes94: out.filter(s => s.c < "1994-07").length};
-}
-
-let PV_ABA = "apos";
-function telaCalculos(c){
-  pvGarantir();
-  const abas = [["apos","Aposentadorias"],["beneficios","Outros benefícios"],["atrasados","Atrasados e atualização"],["revisao","Revisão"],["salvos","Cálculos salvos"],["parametros","Parâmetros oficiais"]];
-  c.innerHTML = `<div class="cab"><div><h1 class="tit">Calculadoras previdenciárias</h1><div class="fio"></div><div class="sub">Simulações com metodologia, legislação e data de referência · resultados são estimativas</div></div><div class="acoes"><a class="btn" href="#bpc">BPC/LOAS</a></div></div>
-  <div class="aviso alerta" style="cursor:default"><span class="ponto"></span><span>${esc(PV_AVISO)}</span></div>
-  <div class="abas">${abas.map(([k,t]) => `<button data-pv="${k}" class="${PV_ABA===k?"ativo":""}">${t}</button>`).join("")}</div><div id="pv-corpo"></div>`;
-  c.querySelectorAll("[data-pv]").forEach(b => b.onclick = () => { PV_ABA = b.dataset.pv; telaCalculos(c); });
-  const corpo = c.querySelector("#pv-corpo");
-  ({apos:pvTelaApos, beneficios:pvTelaBeneficios, atrasados:pvTelaAtrasados, revisao:pvTelaRevisao, salvos:pvTelaSalvos, parametros:pvTelaParametros})[PV_ABA](corpo);
-}
-function pvResultado(el, titulo, blocos, salvarInfo){
-  el.innerHTML = `<div class="cartao pv-res"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h3 style="margin:0">${esc(titulo)}</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-r="pdf">Baixar PDF</button>${salvarInfo?`<button class="btn btn-sm btn-pri" data-r="salvar">Salvar no sistema</button>`:""}</div></div>${pvBlocosHTML(blocos)}</div>`;
-  el.querySelector('[data-r="pdf"]').onclick = () => pvBaixarPDF(`${titulo.replace(/[^\wÀ-ú]+/g,"-").toLowerCase()}-${hojeStr()}.pdf`, titulo, salvarInfo && salvarInfo.sub || "", blocos);
-  const sv = el.querySelector('[data-r="salvar"]'); if(sv) sv.onclick = () => { pvGuardar(salvarInfo.tipo, titulo, salvarInfo.clienteId, salvarInfo.entrada, blocos); toast("Cálculo salvo."); sv.disabled = true; sv.textContent = "Salvo"; };
-  el.scrollIntoView({behavior:"smooth", block:"start"});
-}
-/* ---------- tela: aposentadorias ---------- */
-let PV_APOS = null;
-function pvTelaApos(corpo){
-  if(!PV_APOS) PV_APOS = {clienteId:"", nome:"", sexo:"F", nasc:"", ref:hojeStr(), continuar:true, continuarProf:false, pcd:"", es:"", periodos:[{ini:"", fim:"", tipo:"comum", pcd:false, desc:""}], salarios:""};
-  const e = PV_APOS;
-  const linhaP = (p, i) => `<tr data-i="${i}"><td><input type="date" data-k="ini" value="${p.ini}"></td><td><input type="date" data-k="fim" value="${p.fim}"></td><td><select data-k="tipo">${[["comum","Comum"],["esp25","Especial 25 anos"],["esp20","Especial 20 anos"],["esp15","Especial 15 anos"],["prof","Magistério (professor)"]].map(([v,t]) => `<option value="${v}" ${p.tipo===v?"selected":""}>${t}</option>`).join("")}</select></td><td style="text-align:center"><input type="checkbox" data-k="pcd" ${p.pcd?"checked":""}></td><td><input data-k="desc" value="${esc(p.desc||"")}" placeholder="empresa, vínculo, CNIS"></td><td><button class="btn btn-sm btn-perigo" data-del="${i}">×</button></td></tr>`;
-  corpo.innerHTML = `<div class="cartao"><h3 style="margin-top:0">Dados da pessoa</h3>
-  <div class="campos"><label>Cliente<select id="pa-cli">${pvClienteOpts(e.clienteId)}</select></label><label>Nome (se não for cliente)<input id="pa-nome" value="${esc(e.nome)}"></label>
-  <label>Sexo<select id="pa-sexo"><option value="F" ${e.sexo==="F"?"selected":""}>Feminino</option><option value="M" ${e.sexo==="M"?"selected":""}>Masculino</option></select></label>
-  <label>Data de nascimento *<input type="date" id="pa-nasc" value="${e.nasc}"></label><label>Data de referência (DER ou hoje)<input type="date" id="pa-ref" value="${e.ref}"></label>
-  <label>Pessoa com deficiência<select id="pa-pcd"><option value="">Não / não avaliado</option>${["leve","moderada","grave"].map(g => `<option value="${g}" ${e.pcd===g?"selected":""}>Sim · grau ${g}</option>`).join("")}</select></label></div>
-  <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="pa-cont" ${e.continuar?"checked":""}> Projetar contribuição contínua após a data de referência</label><label class="chk"><input type="checkbox" id="pa-contp" ${e.continuarProf?"checked":""}> A projeção é em magistério</label></div>
-  <h3>Períodos de contribuição</h3><p class="sub" style="margin-top:-6px">Informe os períodos do CNIS ou da CTPS. Períodos concomitantes contam uma vez. Especial anterior a 13/11/2019 é convertido nas regras comuns (EC 103, art. 25, § 2º); depois disso a conversão é vedada.</p>
-  <div class="tabela-wrap"><table class="pv-per"><thead><tr><th>Início</th><th>Fim</th><th>Tipo</th><th>PcD</th><th>Descrição</th><th></th></tr></thead><tbody>${e.periodos.map(linhaP).join("")}</tbody></table></div>
-  <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sm" id="pa-add">+ Período</button><button class="btn btn-sm" id="pa-colar">Colar períodos (texto do CNIS)</button></div>
-  <details style="margin-top:14px"><summary><b>Valor estimado (opcional)</b> · salários de contribuição já atualizados</summary>
-  <p class="sub">Cole uma linha por competência no formato <code>MM/AAAA;valor</code>, com valores <b>já corrigidos</b> pela tabela oficial de atualização dos salários de contribuição (o sistema não inventa índices). Desde a EC 103, a média considera 100% dos salários desde 07/1994.</p>
-  <textarea id="pa-sal" style="min-height:110px;width:100%">${esc(e.salarios)}</textarea>
-  <label style="max-width:320px;display:block;margin-top:8px">Expectativa de sobrevida (tábua IBGE vigente) · só para pedágio de 50%<input id="pa-es" value="${esc(e.es)}" placeholder="ex.: informe da tábua oficial"></label></details>
-  <div style="margin-top:14px"><button class="btn btn-pri" id="pa-calc">Calcular e comparar regras</button></div></div><div id="pa-res" style="margin-top:14px"></div>`;
-  const ler = () => {
-    e.clienteId = corpo.querySelector("#pa-cli").value; e.nome = corpo.querySelector("#pa-nome").value.trim(); e.sexo = corpo.querySelector("#pa-sexo").value;
-    e.nasc = corpo.querySelector("#pa-nasc").value; e.ref = corpo.querySelector("#pa-ref").value || hojeStr(); e.pcd = corpo.querySelector("#pa-pcd").value;
-    e.continuar = corpo.querySelector("#pa-cont").checked; e.continuarProf = corpo.querySelector("#pa-contp").checked; e.salarios = corpo.querySelector("#pa-sal").value; e.es = corpo.querySelector("#pa-es").value;
-    corpo.querySelectorAll(".pv-per tbody tr").forEach(tr => { const p = e.periodos[+tr.dataset.i]; tr.querySelectorAll("[data-k]").forEach(el => p[el.dataset.k] = el.type==="checkbox" ? el.checked : el.value); });
-  };
-  corpo.querySelector("#pa-cli").onchange = ev => { const cl = DB.clientes.find(x => x.id===ev.target.value); if(cl){ ler(); if(cl.nascimento) e.nasc = cl.nascimento; if(cl.genero) e.sexo = /^f/i.test(cl.genero) ? "F" : "M"; e.nome = ""; pvTelaApos(corpo); } };
-  corpo.querySelector("#pa-add").onclick = () => { ler(); e.periodos.push({ini:"", fim:"", tipo:"comum", pcd:false, desc:""}); pvTelaApos(corpo); };
-  corpo.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { ler(); e.periodos.splice(+b.dataset.del, 1); if(!e.periodos.length) e.periodos.push({ini:"",fim:"",tipo:"comum"}); pvTelaApos(corpo); });
-  corpo.querySelector("#pa-colar").onclick = async () => {
-    const r = await modal("Colar períodos", `<p class="sub">Cole linhas que contenham duas datas (início e fim), como no extrato do CNIS. Cada linha com duas datas vira um período comum; ajuste o tipo depois.</p><textarea id="cp-t" style="min-height:160px;width:100%"></textarea>`, [{t:"Cancelar",v:null},{t:"Importar", cls:"btn-pri", acao: f => f.querySelector("#cp-t").value}]);
-    if(!r) return; ler(); const toISO = s => { const [d,m,y] = s.split("/"); return `${y}-${pad(+m)}-${pad(+d)}`; };
-    let n = 0; r.split(/\n/).forEach(l => { const ds = l.match(/\d{2}\/\d{2}\/\d{4}/g); if(ds && ds.length >= 2){ e.periodos.push({ini:toISO(ds[0]), fim:toISO(ds[1]), tipo:"comum", pcd:false, desc:l.replace(/\d{2}\/\d{2}\/\d{4}/g,"").replace(/\s+/g," ").trim().slice(0,60)}); n++; } else if(ds && ds.length===1 && /^\d{2}\/\d{4}/.test(l.trim())===false){ /* linha sem fim */ } });
-    e.periodos = e.periodos.filter(p => p.ini || p.fim); if(!e.periodos.length) e.periodos.push({ini:"",fim:"",tipo:"comum"});
-    toast(n ? `${n} período(s) importado(s). Confira as datas.` : "Nenhuma linha com duas datas (dd/mm/aaaa) foi encontrada.", !n); pvTelaApos(corpo);
-  };
-  corpo.querySelector("#pa-calc").onclick = () => {
-    ler(); const faltam = [];
-    if(!e.nasc) faltam.push("data de nascimento");
-    const validos = e.periodos.filter(p => p.ini && p.fim);
-    if(!validos.length) faltam.push("ao menos um período com início e fim");
-    if(e.periodos.some(p => (p.ini && !p.fim) || (!p.ini && p.fim))) faltam.push("início e fim de todos os períodos");
-    if(validos.some(p => p.fim < p.ini)) faltam.push("datas de fim posteriores às de início");
-    if(faltam.length){ toast("Para calcular, preciso de: " + faltam.join(", ") + ".", true); return; }
-    const r = pvRegrasApos({...e, periodos:validos});
-    const nome = e.clienteId ? (DB.clientes.find(x=>x.id===e.clienteId)||{}).nome : (e.nome || "Simulação");
-    const sal = pvLerSalarios(e.salarios), media = pvMedia(sal.salarios);
-    const p = pvParam(+e.ref.slice(0,4));
-    const valor = coef => { if(!(media>0) || !p) return "—"; let v = coef==="fator" ? (pvNum(e.es)>0 ? media*pvFator(r.tcHoje, r.idade, pvNum(e.es), e.sexo, false) : NaN) : media*coef/100; if(!(v>0)) return "informe a expectativa de sobrevida"; if(p.teto) v = Math.min(v, p.teto); v = Math.max(v, p.sm); return pvR(v); };
-    const linhas = r.regras.map(g => [g.nome, g.naoAplica ? "não se aplica" : g.cumpreHoje ? "cumpre na data de referência" : g.em ? `a partir de ${fmtData(g.em).slice(3)} (projeção)` : e.continuar ? "não alcança em 40 anos" : "não cumpre (sem projeção)", g.naoAplica ? "—" : g.coef==="fator" ? "fator previdenciário" : g.coef!==null ? g.coef+"%" : "—", g.naoAplica ? "—" : g.em ? valor(g.coef) : "—"]);
-    const melhor = r.regras.filter(g => g.em).sort((a,b) => a.em.localeCompare(b.em))[0];
-    const blocos = [
-      {h:"Identificação e data de referência", kv:[["Pessoa", nome], ["Sexo", e.sexo==="F"?"Feminino":"Masculino"], ["Nascimento", fmtData(e.nasc)], ["Data de referência", fmtData(e.ref)], ["Idade na referência", pvFmtT(r.idade)], ["Filiação ao RGPS antes de 13/11/2019", r.filiadoAntes ? "Sim (tem direito às regras de transição)" : "Não (regras permanentes)"]]},
-      {h:"Tempo apurado", kv:[["Tempo de contribuição (com conversão de especial até 13/11/2019)", pvFmtT(r.tcHoje)], ["Tempo de contribuição sem conversão", pvFmtT(r.tcSemConv)], ["Tempo em 13/11/2019 (para pedágios)", pvFmtT(r.tc2019)], ["Meses de carência (estimativa)", `${r.carencia} meses`]]},
-      {cols:[["Início",.16],["Fim",.16],["Tipo",.2],["Duração",.16],["Descrição",.32]], linhas: validos.map(q => [fmtData(q.ini), fmtData(q.fim), ({comum:"Comum",esp25:"Especial 25",esp20:"Especial 20",esp15:"Especial 15",prof:"Magistério"})[q.tipo]+(q.pcd?" · PcD":""), pvFmtT(pvDias(pvYMD(q.ini,q.fim))), q.desc||""])},
-      {h:"Comparativo das regras", cols:[["Regra",.36],["Situação",.3],["Coef.",.14],["Valor estimado",.2,"r"]], linhas},
-      ...(melhor ? [{p:`**Primeira data em que algum requisito é alcançado (projeção):** ${fmtData(melhor.em)} · ${melhor.nome}. A regra mais vantajosa depende também do valor; compare as linhas acima.`}] : []),
-      {h:"Requisitos considerados em cada regra", kv: r.regras.map(g => [g.nome + " (" + g.base + ")", g.req + (g.obs ? " " + g.obs : "")])},
-      ...(media > 0 ? [{h:"Média dos salários de contribuição", kv:[["Competências consideradas (desde 07/1994)", String(sal.salarios.length)], ["Média aritmética (100%)", pvR(media)], ["Piso e teto aplicados", p ? `${pvR(p.sm)} (${p.fonteSM})${p.teto?` · teto ${pvR(p.teto)} (${p.fonteTeto})`:" · teto não cadastrado para o ano"}` : "parâmetros não cadastrados"], ...(sal.antes94 ? [["Competências anteriores a 07/1994 ignoradas", String(sal.antes94)]] : []), ...(sal.erros.length ? [["Linhas não lidas", sal.erros.join(", ")]] : [])]}] : [{p:"Valor não estimado: para estimar a renda mensal, informe os salários de contribuição já atualizados (opcional)."}]),
-      {h:"Metodologia", p:"Tempo contado em anos, meses e dias (mês de 30 dias, ano de 360 dias), incluindo o dia final de cada período; períodos concomitantes contados uma vez. Pontos = idade + tempo de contribuição, apurados em dias. A projeção supõe contribuição contínua a partir da data de referência, quando marcada. Carência estimada pelos meses com algum período registrado — recolhimentos em atraso, abaixo do mínimo ou sem validação no CNIS podem não contar."},
-      {h:"Legislação", p:"Constituição Federal, art. 201; Emenda Constitucional nº 103/2019 (arts. 15 a 21, 25 e 26); Lei nº 8.213/1991; Decreto nº 3.048/1999; Lei Complementar nº 142/2013 (pessoa com deficiência)."},
-      {h:"Aviso", p:PV_AVISO, cor:"0.45 0.38 0.32"}
-    ];
-    pvResultado(corpo.querySelector("#pa-res"), `Simulação de aposentadoria · ${nome}`, blocos, {tipo:"aposentadoria", clienteId:e.clienteId, entrada:JSON.parse(JSON.stringify(e)), sub:`Data de referência ${fmtData(e.ref)}`});
-  };
-}
-/* ---------- parâmetros oficiais ---------- */
-function pvTelaParametros(corpo){
-  const tp = pvGarantir();
-  corpo.innerHTML = `<div class="cartao"><h3 style="margin-top:0">Salário mínimo e teto do RGPS</h3><p class="sub">Os cálculos só usam valores cadastrados aqui, sempre com a fonte. Conferido em ${fmtData(tp.conferidoEm)}. Inclua novos anos quando os atos oficiais forem publicados.</p>
-  <div class="tabela-wrap"><table><thead><tr><th>Ano</th><th class="num">Salário mínimo</th><th>Fonte</th><th class="num">Teto</th><th>Fonte</th><th></th></tr></thead><tbody>${tp.linhas.slice().sort((a,b)=>b.ano-a.ano).map(l => `<tr><td>${l.ano}</td><td class="num">${pvR(l.sm)}</td><td>${esc(l.fonteSM)}</td><td class="num">${l.teto?pvR(l.teto):"—"}</td><td>${esc(l.fonteTeto||"")}</td><td><button class="btn btn-sm" data-ed="${l.ano}">Editar</button></td></tr>`).join("")}</tbody></table></div>
-  <div style="margin-top:10px"><button class="btn btn-sm" id="pp-novo">+ Ano</button></div>
-  <p class="sub" style="margin-top:14px">Fatores de atualização monetária, índices de correção e juros <b>não</b> vêm prontos: em cada cálculo você informa os índices e a fonte (por exemplo, tabela do CJF/Justiça Federal ou do INSS), e o relatório registra de onde vieram.</p></div>`;
-  const editar = async ano => {
-    const l = tp.linhas.find(x => x.ano===ano) || {ano:new Date().getFullYear()+1, sm:"", teto:"", fonteSM:"", fonteTeto:""};
-    const r = await modal("Parâmetros do ano", `<form class="campos"><label>Ano<input name="ano" type="number" value="${l.ano}"></label><label>Salário mínimo<input name="sm" value="${l.sm}"></label><label class="largo">Fonte do salário mínimo *<input name="fonteSM" value="${esc(l.fonteSM)}"></label><label>Teto do RGPS<input name="teto" value="${l.teto||""}"></label><label class="largo">Fonte do teto<input name="fonteTeto" value="${esc(l.fonteTeto||"")}"></label></form>`,
-      [{t:"Cancelar",v:null},{t:"Salvar",cls:"btn-pri",acao:f => { const v = lerForm(f.querySelector("form")); if(!(pvNum(v.sm)>0) || !v.fonteSM){ toast("Informe o valor e a fonte.", true); return false; } return v; }}]);
-    if(!r) return; tp.linhas = tp.linhas.filter(x => x.ano!==ano && x.ano!==+r.ano); tp.linhas.push({ano:+r.ano, sm:pvNum(r.sm), teto:pvNum(r.teto)>0?pvNum(r.teto):null, fonteSM:r.fonteSM, fonteTeto:r.fonteTeto}); tp.conferidoEm = hojeStr(); salvar(); pvTelaParametros(corpo);
-  };
-  corpo.querySelectorAll("[data-ed]").forEach(b => b.onclick = () => editar(+b.dataset.ed)); corpo.querySelector("#pp-novo").onclick = () => editar(null);
-}
-/* ---------- cálculos salvos ---------- */
-function pvTelaSalvos(corpo){
-  const ls = DB.calculos.filter(x => x.blocos);
-  corpo.innerHTML = `<div class="tabela-wrap"><table><thead><tr><th>Data</th><th>Cálculo</th><th>Cliente</th><th></th></tr></thead><tbody>${ls.length ? ls.map(x => `<tr><td>${new Date(x.em).toLocaleDateString("pt-BR")}</td><td>${esc(x.titulo)}</td><td>${esc((DB.clientes.find(c_=>c_.id===x.clienteId)||{}).nome||"—")}</td><td style="white-space:nowrap"><button class="btn btn-sm" data-ver="${x.id}">Abrir</button> <button class="btn btn-sm" data-pdf="${x.id}">PDF</button> ${pode("excluir")?`<button class="btn btn-sm btn-perigo" data-del="${x.id}">Excluir</button>`:""}</td></tr>`).join("") : `<tr><td colspan="4" class="vazio">Nenhum cálculo salvo. Use “Salvar no sistema” depois de calcular.</td></tr>`}</tbody></table></div><div id="ps-ver" style="margin-top:14px"></div>`;
-  const ach = id => DB.calculos.find(x => x.id===id);
-  corpo.querySelectorAll("[data-ver]").forEach(b => b.onclick = () => { const x = ach(b.dataset.ver); pvResultado(corpo.querySelector("#ps-ver"), x.titulo, x.blocos, null); });
-  corpo.querySelectorAll("[data-pdf]").forEach(b => b.onclick = () => { const x = ach(b.dataset.pdf); pvBaixarPDF(`calculo-${x.em.slice(0,10)}.pdf`, x.titulo, "", x.blocos); });
-  corpo.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { if(await confirmar("Excluir cálculo","Excluir este cálculo salvo?","Excluir",true)){ DB.calculos = DB.calculos.filter(x => x.id!==b.dataset.del); salvar(); pvTelaSalvos(corpo); } });
-}
-
-/* =========================================================
-   PREVIDENCIÁRIO · outros benefícios, atrasados, atualização, revisão
-   ========================================================= */
-let PV_BEN = "maternidade";
-function pvCampo(id, rot, val, extra){ return `<label>${rot}<input id="${id}" value="${esc(val??"")}" ${extra||""}></label>`; }
-function pvTelaBeneficios(corpo){
-  const tipos = [["maternidade","Salário-maternidade"],["pensao","Pensão por morte"],["incapacidade","Auxílio por incapacidade / aposentadoria por incapacidade"],["acidente","Auxílio-acidente"],["rmi","RMI pela média"]];
-  corpo.innerHTML = `<div class="pv-chips">${tipos.map(([k,t]) => `<button class="pill ${PV_BEN===k?"ativo":""}" data-b="${k}">${t}</button>`).join("")}</div><div class="cartao" id="pb-form" style="margin-top:12px"></div><div id="pb-res" style="margin-top:14px"></div>`;
-  corpo.querySelectorAll("[data-b]").forEach(b => b.onclick = () => { PV_BEN = b.dataset.b; pvTelaBeneficios(corpo); });
-  const f = corpo.querySelector("#pb-form"), res = corpo.querySelector("#pb-res");
-  const cli = `<label>Cliente<select id="pb-cli">${pvClienteOpts("")}</select></label>`;
-  const ano = () => +((corpo.querySelector("#pb-data")||{}).value || hojeStr()).slice(0,4);
-  const P = () => pvParam(ano());
-  const limitar = v => { const p = P(); if(!p) return v; if(p.teto) v = Math.min(v, p.teto); return Math.max(v, p.sm); };
-  const fim = (titulo, blocos, tipo, entrada) => pvResultado(res, titulo, blocos.concat([{h:"Aviso", p:PV_AVISO, cor:"0.45 0.38 0.32"}]), {tipo, clienteId:(corpo.querySelector("#pb-cli")||{}).value, entrada, sub:`Data de referência ${fmtData((corpo.querySelector("#pb-data")||{}).value||hojeStr())}`});
-  const paramTxt = () => { const p = P(); return p ? `Salário mínimo ${pvR(p.sm)} (${p.fonteSM})${p.teto?`; teto ${pvR(p.teto)} (${p.fonteTeto})`:"; teto não cadastrado para o ano"}` : "Parâmetros oficiais não cadastrados para o ano"; };
-  if(PV_BEN==="maternidade"){
-    f.innerHTML = `<h3 style="margin-top:0">Salário-maternidade</h3><div class="campos">${cli}<label>Data do fato gerador (parto, adoção ou guarda)<input type="date" id="pb-data" value="${hojeStr()}"></label>
-    <label>Categoria<select id="pb-cat"><option value="empregada">Empregada / trabalhadora avulsa</option><option value="domestica">Empregada doméstica</option><option value="ci">Contribuinte individual, facultativa ou MEI</option><option value="especial">Segurada especial (rural)</option><option value="desempregada">Desempregada em período de graça</option></select></label>
-    ${pvCampo("pb-v1","Remuneração mensal integral / último salário de contribuição","")}<label class="largo">Últimos salários de contribuição (contribuinte individual/facultativa/desempregada) · um por linha <code>MM/AAAA;valor</code><textarea id="pb-sal" style="min-height:90px"></textarea></label></div>
-    <div style="margin-top:12px"><button class="btn btn-pri" id="pb-calc">Calcular</button></div>`;
-    f.querySelector("#pb-calc").onclick = () => {
-      const cat = f.querySelector("#pb-cat").value, v1 = pvNum(f.querySelector("#pb-v1").value), data = f.querySelector("#pb-data").value, p = P();
-      if(!p){ toast("Cadastre o salário mínimo do ano em Parâmetros oficiais.", true); return; }
-      let valor, metodo, falta = "";
-      if(cat==="empregada"){ if(!(v1>0)) falta = "remuneração mensal integral"; valor = v1; metodo = "Remuneração integral da segurada empregada (Lei 8.213/91, art. 72), paga pela empresa e compensada com o INSS. Pode haver limite ao subsídio dos Ministros do STF (CF, art. 37, XI) em remunerações muito altas."; }
-      else if(cat==="domestica"){ if(!(v1>0)) falta = "último salário de contribuição"; valor = limitar(v1); metodo = "Valor do último salário de contribuição, respeitados piso e teto (Lei 8.213/91, art. 73, I)."; }
-      else if(cat==="especial"){ valor = p.sm; metodo = "Um salário mínimo para a segurada especial (Lei 8.213/91, art. 39, parágrafo único, e art. 73, III)."; }
-      else { const s = pvLerSalarios(f.querySelector("#pb-sal").value).salarios; if(!s.length) falta = "salários de contribuição dos últimos meses"; const soma = s.slice(-12).reduce((a,b)=>a+b.v,0); valor = limitar(soma/12); metodo = `1/12 da soma dos ${Math.min(12,s.length)} último(s) salário(s) de contribuição informados, apurados em período não superior a 15 meses (Lei 8.213/91, art. 73, III), respeitados piso e teto.`; }
-      if(falta){ toast("Falta informar: " + falta + ".", true); return; }
-      fim("Salário-maternidade (estimativa)", [
-        {h:"Resultado", kv:[["Categoria", f.querySelector("#pb-cat").selectedOptions[0].text], ["Fato gerador", fmtData(data)], ["Renda mensal estimada", pvR(valor)], ["Duração", "120 dias (Lei 8.213/91, art. 71); casos de prorrogação dependem de lei ou decisão específica"], ["Total estimado (4 meses)", pvR(valor*4)]]},
-        {h:"Metodologia", p:metodo + " " + paramTxt() + "."},
-        {h:"Carência", p:"Empregada, doméstica e avulsa: sem carência. Contribuinte individual, facultativa e segurada especial: a Lei 8.213/91 (art. 25, III) previa 10 contribuições; o STF, nas ADIs 2.110 e 2.111, afastou essa exigência. Confira como o INSS está aplicando na data do requerimento."},
-        {h:"Legislação", p:"Lei nº 8.213/1991, arts. 71 a 73; Decreto nº 3.048/1999, arts. 93 a 103."}], "maternidade", {cat, v1});
-    };
-  }
-  if(PV_BEN==="pensao"){
-    f.innerHTML = `<h3 style="margin-top:0">Pensão por morte</h3><div class="campos">${cli}<label>Data do óbito<input type="date" id="pb-data" value="${hojeStr()}"></label>
-    <label>Base de cálculo<select id="pb-base"><option value="apos">O falecido era aposentado (valor da aposentadoria)</option><option value="media">Não era aposentado (aposentadoria por incapacidade que teria direito)</option></select></label>
-    ${pvCampo("pb-v1","Valor da aposentadoria do falecido","")}${pvCampo("pb-media","Média dos salários de contribuição (se não era aposentado)","")}${pvCampo("pb-tc","Anos de contribuição do falecido","", 'type="number" min="0"')}
-    <label>Sexo do falecido<select id="pb-sx"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
-    ${pvCampo("pb-dep","Número de dependentes","1",'type="number" min="1"')}<label>Há dependente inválido ou com deficiência intelectual, mental ou grave?<select id="pb-inv"><option value="n">Não</option><option value="s">Sim</option></select></label>
-    ${pvCampo("pb-idc","Idade do cônjuge/companheiro(a) na data do óbito","",'type="number" min="0"')}<label>Casamento/união com 2 anos ou mais e 18+ contribuições?<select id="pb-2a"><option value="s">Sim</option><option value="n">Não</option></select></label>
-    <label>Óbito por acidente/doença do trabalho?<select id="pb-ac"><option value="n">Não</option><option value="s">Sim</option></select></label></div>
-    <div style="margin-top:12px"><button class="btn btn-pri" id="pb-calc">Calcular</button></div>`;
-    f.querySelector("#pb-calc").onclick = () => {
-      const base = f.querySelector("#pb-base").value, ac = f.querySelector("#pb-ac").value==="s", sx = f.querySelector("#pb-sx").value; let ref, mt;
-      if(base==="apos"){ ref = pvNum(f.querySelector("#pb-v1").value); if(!(ref>0)){ toast("Informe o valor da aposentadoria do falecido.", true); return; } mt = "Base: valor da aposentadoria recebida pelo falecido."; }
-      else { const m = pvNum(f.querySelector("#pb-media").value), tc = +f.querySelector("#pb-tc").value; if(!(m>0) || !(tc>=0) || f.querySelector("#pb-tc").value===""){ toast("Informe a média e os anos de contribuição do falecido.", true); return; } const coef = ac ? 100 : Math.min(100, 60 + 2*Math.max(0, tc - (sx==="F"?15:20))); ref = m*coef/100; mt = `Base: aposentadoria por incapacidade permanente a que teria direito = média ${pvR(m)} × ${coef}%${ac?" (acidentária: 100%)":""} (EC 103, art. 26, § 2º, III e § 3º, II).`; }
-      const dep = Math.max(1, +f.querySelector("#pb-dep").value||1), inv = f.querySelector("#pb-inv").value==="s";
-      const cota = Math.min(100, 50 + 10*dep); let valor = inv ? (P() && P().teto ? Math.min(ref, P().teto) : ref) : ref*cota/100; valor = limitar(valor);
-      const idc = f.querySelector("#pb-idc").value, dois = f.querySelector("#pb-2a").value==="s";
-      let dur = "—"; if(idc!==""){ const i = +idc; dur = !dois && !ac ? "4 meses (casamento/união com menos de 2 anos ou menos de 18 contribuições)" : i < 22 ? "3 anos" : i <= 27 ? "6 anos" : i <= 30 ? "10 anos" : i <= 41 ? "15 anos" : i <= 44 ? "20 anos" : "vitalícia"; }
-      fim("Pensão por morte (estimativa)", [
-        {h:"Resultado", kv:[["Data do óbito", fmtData(f.querySelector("#pb-data").value)], ["Valor de referência", pvR(ref)], ["Cota familiar", inv ? "100% (dependente inválido ou com deficiência), até o teto" : `${cota}% (50% + 10% por dependente, até 100%)`], ["Pensão estimada (total do grupo)", pvR(valor)], ["Duração para cônjuge/companheiro(a)", dur]]},
-        {h:"Metodologia", p:`${mt} Cotas de 50% + 10% por dependente, não reversíveis (EC 103/2019, art. 23). Valor final respeita piso e teto. ${paramTxt()}.`},
-        {h:"Duração (cônjuge/companheiro)", p:"Lei 8.213/91, art. 77, § 2º, V (redação da Lei 13.135/2015), com idades atualizadas pela Portaria ME nº 424/2020: menos de 22 anos, 3 anos; 22 a 27, 6 anos; 28 a 30, 10 anos; 31 a 41, 15 anos; 42 a 44, 20 anos; 45 ou mais, vitalícia. Se o óbito ocorrer sem 18 contribuições ou com menos de 2 anos de casamento/união, 4 meses (salvo acidente ou doença do trabalho). Confira se houve nova portaria de atualização das idades."},
-        {h:"Legislação", p:"EC nº 103/2019, art. 23; Lei nº 8.213/1991, arts. 16, 74 a 79."}], "pensao", {base, ref, dep, inv});
-    };
-  }
-  if(PV_BEN==="incapacidade"){
-    f.innerHTML = `<h3 style="margin-top:0">Benefícios por incapacidade</h3><div class="campos">${cli}<label>Data de início (DIB) estimada<input type="date" id="pb-data" value="${hojeStr()}"></label>
-    ${pvCampo("pb-media","Média de todos os salários de contribuição desde 07/1994 (já atualizados)","")}${pvCampo("pb-m12","Média dos últimos 12 salários de contribuição","")}${pvCampo("pb-tc","Anos de contribuição","",'type="number" min="0"')}
-    <label>Sexo<select id="pb-sx"><option value="F">Feminino</option><option value="M">Masculino</option></select></label><label>Origem<select id="pb-ac"><option value="n">Comum (previdenciária)</option><option value="s">Acidente de trabalho / doença ocupacional</option></select></label></div>
-    <p class="sub">A existência de incapacidade é definida pela perícia médica; este cálculo apenas estima valores.</p><div style="margin-top:12px"><button class="btn btn-pri" id="pb-calc">Calcular</button></div>`;
-    f.querySelector("#pb-calc").onclick = () => {
-      const m = pvNum(f.querySelector("#pb-media").value), m12 = pvNum(f.querySelector("#pb-m12").value), tcS = f.querySelector("#pb-tc").value, tc = +tcS, sx = f.querySelector("#pb-sx").value, ac = f.querySelector("#pb-ac").value==="s";
-      if(!(m>0) || tcS===""){ toast("Informe a média de todos os salários e os anos de contribuição.", true); return; }
-      let aux = m*0.91; const lim12 = m12>0 ? Math.min(aux, m12) : aux; const coef = ac ? 100 : Math.min(100, 60 + 2*Math.max(0, tc - (sx==="F"?15:20)));
-      fim("Benefícios por incapacidade (estimativa)", [
-        {h:"Resultado", kv:[["Auxílio por incapacidade temporária", `${pvR(limitar(lim12))} (91% da média${m12>0 && lim12<aux?", limitado à média dos 12 últimos salários":""})`], ["Aposentadoria por incapacidade permanente", `${pvR(limitar(m*coef/100))} (${coef}% da média)`]]},
-        {h:"Metodologia", p:`Auxílio temporário: 91% do salário de benefício (Lei 8.213/91, art. 61), sem exceder a média aritmética dos 12 últimos salários de contribuição (art. 29, § 10). Aposentadoria por incapacidade permanente: 60% + 2% por ano acima de ${sx==="F"?15:20} anos; 100% se decorrente de acidente de trabalho, doença profissional ou do trabalho (EC 103/2019, art. 26, § 2º, III, e § 3º, II). Piso e teto aplicados. ${paramTxt()}.`},
-        {h:"Carência e qualidade de segurado", p:"Em regra, 12 contribuições (Lei 8.213/91, art. 25, I), dispensadas em acidente de qualquer natureza e nas doenças da lista do art. 26, II, e da portaria interministerial. É preciso manter a qualidade de segurado (art. 15)."},
-        {h:"Legislação", p:"Lei nº 8.213/1991, arts. 25, 26, 29, 42 a 47 e 59 a 63; EC nº 103/2019, art. 26."}], "incapacidade", {m, m12, tc, ac});
-    };
-  }
-  if(PV_BEN==="acidente"){
-    f.innerHTML = `<h3 style="margin-top:0">Auxílio-acidente</h3><div class="campos">${cli}<label>Data de referência<input type="date" id="pb-data" value="${hojeStr()}"></label>${pvCampo("pb-media","Salário de benefício (média dos salários de contribuição)","")}</div>
-    <p class="sub">Indenização por redução permanente da capacidade para o trabalho habitual após consolidação de lesões de acidente de qualquer natureza (definida em perícia).</p><div style="margin-top:12px"><button class="btn btn-pri" id="pb-calc">Calcular</button></div>`;
-    f.querySelector("#pb-calc").onclick = () => { const m = pvNum(f.querySelector("#pb-media").value); if(!(m>0)){ toast("Informe o salário de benefício.", true); return; }
-      fim("Auxílio-acidente (estimativa)", [{h:"Resultado", kv:[["Valor estimado", pvR(m*0.5)], ["Percentual", "50% do salário de benefício"]]}, {h:"Metodologia", p:"50% do salário de benefício (Lei 8.213/91, art. 86, § 1º). Pode ser inferior ao salário mínimo, por ter natureza indenizatória; é cumulável com salário e cessa com a aposentadoria. Não exige carência (art. 26, I)."}, {h:"Legislação", p:"Lei nº 8.213/1991, arts. 26 e 86."}], "acidente", {m}); };
-  }
-  if(PV_BEN==="rmi"){
-    f.innerHTML = `<h3 style="margin-top:0">RMI pela média (EC 103)</h3><div class="campos">${cli}<label>Data de início do benefício (DIB)<input type="date" id="pb-data" value="${hojeStr()}"></label>${pvCampo("pb-tc","Anos de contribuição","",'type="number" min="0"')}<label>Sexo<select id="pb-sx"><option value="F">Feminino</option><option value="M">Masculino</option></select></label>
-    <label>Coeficiente<select id="pb-coef"><option value="ec103">EC 103: 60% + 2% por ano excedente</option><option value="100">100% da média</option></select></label>
-    <label class="largo">Salários de contribuição já atualizados · <code>MM/AAAA;valor</code><textarea id="pb-sal" style="min-height:120px"></textarea></label></div><div style="margin-top:12px"><button class="btn btn-pri" id="pb-calc">Calcular</button></div>`;
-    f.querySelector("#pb-calc").onclick = () => { const s = pvLerSalarios(f.querySelector("#pb-sal").value), m = pvMedia(s.salarios), tcS = f.querySelector("#pb-tc").value, sx = f.querySelector("#pb-sx").value;
-      if(!(m>0) || tcS===""){ toast("Informe os salários (já atualizados) e os anos de contribuição.", true); return; }
-      const coef = f.querySelector("#pb-coef").value==="100" ? 100 : Math.min(100, 60 + 2*Math.max(0, +tcS - (sx==="F"?15:20)));
-      fim("RMI pela média (estimativa)", [{h:"Resultado", kv:[["Competências (desde 07/1994)", String(s.salarios.length)], ["Média (100% dos salários)", pvR(m)], ["Coeficiente", coef+"%"], ["RMI estimada", pvR(limitar(m*coef/100))]]},
-        {cols:[["Competência",.3],["Salário (informado, já atualizado)",.7,"r"]], linhas: s.salarios.map(x => [x.c.split("-").reverse().join("/"), pvR(x.v)])},
-        {h:"Metodologia", p:`Média aritmética simples de 100% dos salários de contribuição desde 07/1994 (EC 103/2019, art. 26, caput), multiplicada pelo coeficiente. Os salários devem estar previamente atualizados pelos índices oficiais (o sistema não aplica índices não informados). ${paramTxt()}.`}], "rmi", {coef});
-    };
-  }
-}
-/* ---------- atrasados e atualização monetária ---------- */
-function pvLerIndices(txt){ const m = {}; let n = 0; String(txt||"").split(/\n/).forEach(l => { const x = l.trim().match(/^(\d{1,2})\/(\d{4})[\s;,\t]+(-?[\d.,]+)\s*(%?)/); if(x){ m[`${x[2]}-${pad(+x[1])}`] = {v:pvNum(x[3]), pct:!!x[4]}; n++; } }); return {m, n}; }
-function pvTelaAtrasados(corpo){
-  corpo.innerHTML = `<div class="grade2" style="margin-top:0"><div class="cartao"><h3 style="margin-top:0">Atrasados (parcelas vencidas)</h3>
-  <div class="campos"><label>Cliente<select id="at-cli">${pvClienteOpts("")}</select></label><label>DIB (início do benefício)<input type="date" id="at-dib"></label><label>Data final (DIP ou cálculo)<input type="date" id="at-fim" value="${hojeStr()}"></label>
-  ${pvCampo("at-rmi","Renda mensal na DIB","")}<label>Pagamentos já recebidos no período (valor mensal, se houver)<input id="at-pago" placeholder="0"></label>
-  <label>Abono anual (13º)<select id="at-13"><option value="s">Incluir</option><option value="n">Não incluir</option></select></label>
-  <label class="largo">Reajustes anuais da renda · <code>MM/AAAA;percentual%</code> (ex.: 01/2026;3,90%)<textarea id="at-reaj" style="min-height:70px" placeholder="Informe os percentuais oficiais de reajuste dos benefícios"></textarea></label>
-  <label class="largo">Fator de atualização acumulado por competência até a data final · <code>MM/AAAA;fator</code><textarea id="at-fat" style="min-height:90px" placeholder="ex.: 03/2024;1,1234 (copiado da tabela oficial)"></textarea></label>
-  <label class="largo">Fonte dos índices (obrigatória se informar fatores)<input id="at-fonte" placeholder="ex.: Tabela de correção da Justiça Federal (CJF), mês/ano"></label></div>
-  <div style="margin-top:12px"><button class="btn btn-pri" id="at-calc">Calcular atrasados</button></div></div>
-  <div class="cartao"><h3 style="margin-top:0">Atualização monetária de um valor</h3><div class="campos">${pvCampo("am-v","Valor original","")}<label>Data-base<input type="date" id="am-ini"></label><label>Atualizar até<input type="date" id="am-fim" value="${hojeStr()}"></label>
-  <label class="largo">Índices mensais · <code>MM/AAAA;percentual%</code> (um por mês, na ordem)<textarea id="am-idx" style="min-height:110px"></textarea></label><label class="largo">Fonte dos índices *<input id="am-fonte" placeholder="ex.: IBGE/SIDRA – INPC, série histórica"></label></div>
-  <div style="margin-top:12px"><button class="btn btn-pri" id="am-calc">Atualizar</button></div>
-  <p class="sub">O sistema não traz índices prontos para não correr o risco de usar números errados. Copie os percentuais da fonte oficial; meses faltantes são apontados.</p></div></div><div id="at-res" style="margin-top:14px"></div>`;
-  const $c = s => corpo.querySelector(s), res = $c("#at-res");
-  $c("#at-calc").onclick = () => {
-    const dib = $c("#at-dib").value, fimD = $c("#at-fim").value, rmi = pvNum($c("#at-rmi").value), pago = pvNum($c("#at-pago").value)||0;
-    const faltam = []; if(!dib) faltam.push("DIB"); if(!fimD) faltam.push("data final"); if(!(rmi>0)) faltam.push("renda mensal na DIB"); if(dib && fimD && fimD < dib) faltam.push("data final posterior à DIB");
-    const reaj = pvLerIndices($c("#at-reaj").value).m, fat = pvLerIndices($c("#at-fat").value), fonte = $c("#at-fonte").value.trim();
-    if(fat.n && !fonte) faltam.push("fonte dos fatores de atualização");
-    if(faltam.length){ toast("Falta: " + faltam.join(", ") + ".", true); return; }
-    const linhas = []; let renda = rmi, tot = 0, totAt = 0, semFator = 0, c_ = dib.slice(0,7);
-    const ultimo = fimD.slice(0,7);
-    while(c_ <= ultimo){
-      if(c_ !== dib.slice(0,7) && reaj[c_]) renda = renda * (1 + reaj[c_].v/100);
-      const [y,m] = c_.split("-").map(Number); const diasMes = new Date(Date.UTC(y, m, 0)).getUTCDate();
-      let prop = 1; if(c_===dib.slice(0,7)) prop = (diasMes - (+dib.slice(8)) + 1)/diasMes; if(c_===ultimo) prop = Math.min(prop, (+fimD.slice(8) - (c_===dib.slice(0,7) ? +dib.slice(8) - 1 : 0))/diasMes);
-      const dev = renda*prop - pago*prop; const f = fat.m[c_] ? fat.m[c_].v : null; if(fat.n && f===null) semFator++;
-      linhas.push([c_.split("-").reverse().join("/"), "parcela", pvR(renda*prop), pvR(pago*prop), pvR(dev), f!==null ? f.toFixed(6).replace(".",",") : "—", pvR(f!==null ? dev*f : dev)]); tot += dev; totAt += f!==null ? dev*f : dev;
-      if(m===12 && $c("#at-13").value==="s"){ const meses = linhas.filter(l => l[1]==="parcela" && l[0].endsWith("/"+y)).length; const ab = (renda - pago) * meses/12; const fa = fat.m[c_] ? fat.m[c_].v : null; linhas.push([`13º/${y}`, "abono", pvR(renda*meses/12), pvR(pago*meses/12), pvR(ab), fa!==null?fa.toFixed(6).replace(".",","):"—", pvR(fa!==null?ab*fa:ab)]); tot += ab; totAt += fa!==null?ab*fa:ab; }
-      const nx = new Date(Date.UTC(y, m, 1)); c_ = `${nx.getUTCFullYear()}-${pad(nx.getUTCMonth()+1)}`;
-    }
-    const p = pvParam(+fimD.slice(0,4)), alc = p ? p.sm*60 : null;
-    const blocos = [
-      {h:"Resumo", kv:[["Período", `${fmtData(dib)} a ${fmtData(fimD)}`], ["Renda mensal na DIB", pvR(rmi)], ["Total das diferenças sem atualização", pvR(tot)], ["Total com os fatores informados", fat.n ? pvR(totAt) : "não informado"], ...(semFator ? [["Competências sem fator informado", `${semFator} (somadas sem atualização)`]] : []), ...(alc ? [["Referência: 60 salários mínimos (alçada do JEF, Lei 10.259/2001, art. 3º)", pvR(alc)]] : [])]},
-      {h:"Memória de cálculo", cols:[["Competência",.13],["Tipo",.09],["Devido",.15,"r"],["Recebido",.15,"r"],["Diferença",.15,"r"],["Fator",.13,"r"],["Atualizado",.2,"r"]], linhas, total:["Total","", "", "", pvR(tot), "", pvR(totAt)]},
-      {h:"Metodologia", p:"Parcelas mensais da DIB até a data final, proporcionais aos dias no primeiro e no último mês; reajustes aplicados na competência informada; abono anual proporcional aos meses do ano. A diferença de cada competência é multiplicada pelo fator acumulado informado. Juros de mora não estão incluídos: dependem do título e da decisão aplicável (ex.: taxa SELIC a partir de 12/2021, EC 113/2021, art. 3º, em condenações da Fazenda Pública) e devem ser calculados com a fonte oficial. Observar a prescrição das parcelas anteriores aos 5 anos que antecedem o requerimento ou a ação (Lei 8.213/91, art. 103, parágrafo único)."},
-      {h:"Fonte dos índices", p: fonte || "Nenhum fator informado."}];
-    pvResultado(res, "Cálculo de atrasados (estimativa)", blocos.concat([{h:"Aviso", p:PV_AVISO, cor:"0.45 0.38 0.32"}]), {tipo:"atrasados", clienteId:$c("#at-cli").value, entrada:{dib, fimD, rmi}, sub:`${fmtData(dib)} a ${fmtData(fimD)}`});
-  };
-  $c("#am-calc").onclick = () => {
-    const v = pvNum($c("#am-v").value), ini = $c("#am-ini").value, fimD = $c("#am-fim").value, fonte = $c("#am-fonte").value.trim(), idx = pvLerIndices($c("#am-idx").value);
-    const faltam = []; if(!(v>0)) faltam.push("valor"); if(!ini) faltam.push("data-base"); if(!fonte) faltam.push("fonte dos índices"); if(!idx.n) faltam.push("índices mensais");
-    if(faltam.length){ toast("Falta: " + faltam.join(", ") + ".", true); return; }
-    let f = 1; const linhas = [], ausentes = []; let c_ = pvAddMeses(ini.slice(0,7)+"-01", 1).slice(0,7); const ult = fimD.slice(0,7);
-    while(c_ <= ult){ const i = idx.m[c_]; if(i){ f *= 1 + i.v/100; linhas.push([c_.split("-").reverse().join("/"), (i.v.toFixed(4)+"%").replace(".",","), f.toFixed(6).replace(".",","), pvR(v*f)]); } else ausentes.push(c_.split("-").reverse().join("/")); c_ = pvAddMeses(c_+"-01", 1).slice(0,7); }
-    pvResultado(res, "Atualização monetária", [
-      {h:"Resultado", kv:[["Valor original", `${pvR(v)} em ${fmtData(ini)}`], ["Fator acumulado", f.toFixed(6).replace(".",",")], ["Valor atualizado", `${pvR(v*f)} até ${fmtData(fimD)}`], ...(ausentes.length ? [["ATENÇÃO · meses sem índice informado (tratados como 0%)", ausentes.join(", ")]] : [])]},
-      {cols:[["Competência",.25],["Índice",.25,"r"],["Fator acumulado",.25,"r"],["Valor",.25,"r"]], linhas},
-      {h:"Metodologia", p:"Correção composta: fator = produto de (1 + índice mensal) das competências posteriores à data-base até a competência final. Não inclui juros."},
-      {h:"Fonte dos índices", p:fonte}, {h:"Aviso", p:PV_AVISO, cor:"0.45 0.38 0.32"}], {tipo:"atualizacao", clienteId:"", entrada:{v, ini, fimD}, sub:fonte});
-  };
-}
-/* ---------- revisão ---------- */
-function pvTelaRevisao(corpo){
-  corpo.innerHTML = `<div class="cartao"><h3 style="margin-top:0">Revisão: comparação da RMI concedida com a recalculada</h3><div class="campos"><label>Cliente<select id="rv-cli">${pvClienteOpts("")}</select></label>
-  <label>DIB<input type="date" id="rv-dib"></label><label>Data do primeiro pagamento (para decadência)<input type="date" id="rv-pp"></label><label>Data do pedido de revisão / ação (para prescrição)<input type="date" id="rv-ped" value="${hojeStr()}"></label>
-  ${pvCampo("rv-c","RMI concedida","")}${pvCampo("rv-n","RMI recalculada (do seu cálculo)","")}<label class="largo">Fundamento da revisão (descrição)<input id="rv-fund" placeholder="ex.: inclusão de período rural não computado; salários de contribuição faltantes no CNIS"></label></div>
-  <div style="margin-top:12px"><button class="btn btn-pri" id="rv-calc">Comparar</button></div><p class="sub">Para o valor das diferenças com reajustes e fatores, use a aba “Atrasados e atualização” informando a RMI recalculada e o que foi recebido.</p></div><div id="rv-res" style="margin-top:14px"></div>`;
-  const $c = s => corpo.querySelector(s);
-  $c("#rv-calc").onclick = () => {
-    const dib = $c("#rv-dib").value, pp = $c("#rv-pp").value, ped = $c("#rv-ped").value, c1 = pvNum($c("#rv-c").value), n1 = pvNum($c("#rv-n").value);
-    const faltam = []; if(!dib) faltam.push("DIB"); if(!(c1>0)) faltam.push("RMI concedida"); if(!(n1>0)) faltam.push("RMI recalculada"); if(!ped) faltam.push("data do pedido");
-    if(faltam.length){ toast("Falta: " + faltam.join(", ") + ".", true); return; }
-    let dec = "Informe a data do primeiro pagamento para verificar a decadência.";
-    if(pp){ const [y,m] = pp.split("-").map(Number); const ini = `${m===12?y+1:y}-${pad(m===12?1:m+1)}-01`; const lim = `${+ini.slice(0,4)+10}${ini.slice(4)}`; dec = ped >= lim ? `ATENÇÃO: prazo de 10 anos possivelmente esgotado (contado de ${fmtData(ini)}, término em ${fmtData(addDias(lim,-1))}). Há exceções (ex.: matéria não apreciada no ato de concessão); verificar com profissional habilitado.` : `Dentro do prazo de 10 anos (contado de ${fmtData(ini)}; término em ${fmtData(addDias(lim,-1))}).`; }
-    const presc = `${+ped.slice(0,4)-5}${ped.slice(4)}`;
-    pvResultado($c("#rv-res"), "Revisão de benefício · comparação", [
-      {h:"Resultado", kv:[["RMI concedida", pvR(c1)], ["RMI recalculada", pvR(n1)], ["Diferença mensal na DIB", `${pvR(n1-c1)} (${((n1/c1-1)*100).toFixed(2).replace(".",",")}%)`], ["Fundamento informado", $c("#rv-fund").value || "—"]]},
-      {h:"Prazos", kv:[["Decadência (Lei 8.213/91, art. 103, caput)", dec], ["Prescrição quinquenal (art. 103, parágrafo único)", `Parcelas anteriores a ${fmtData(presc)} tendem a estar prescritas (5 anos antes do pedido em ${fmtData(ped)}).`]]},
-      {h:"Metodologia", p:"Comparação direta entre a renda mensal inicial concedida e a recalculada pelos dados informados. A viabilidade jurídica da revisão deve ser analisada por advogado(a)."},
-      {h:"Aviso", p:PV_AVISO, cor:"0.45 0.38 0.32"}], {tipo:"revisao", clienteId:$c("#rv-cli").value, entrada:{dib, c1, n1}, sub:`DIB ${fmtData(dib)}`});
-  };
-}
-
-/* =========================================================
-   PREVIDENCIÁRIO · BPC/LOAS (Lei 8.742/1993)
-   O sistema calcula a renda per capita e organiza a prova.
-   Não decide elegibilidade: a deficiência e a avaliação social
-   são feitas pelo INSS (perícia médica e serviço social).
-   ========================================================= */
-const BPC_PARENT = [["requerente","Requerente"],["conjuge","Cônjuge ou companheiro(a)"],["pai_mae","Pai ou mãe"],["padrasto","Madrasta ou padrasto (na ausência de pai/mãe)"],["irmao","Irmão(ã) solteiro(a)"],["filho","Filho(a) ou enteado(a) solteiro(a)"],["tutelado","Menor tutelado(a)"],["outro","Outro parente ou pessoa (avô/avó, tio(a), filho(a) casado(a), genro/nora…)"]];
-const BPC_ORIG = [["sem","Sem renda"],["formal","Trabalho com carteira / servidor"],["informal","Trabalho informal / autônomo"],["previd","Aposentadoria ou pensão do INSS"],["bpc","BPC/LOAS"],["pbf","Bolsa Família / programa de transferência de renda"],["estagio","Estágio ou aprendizagem"],["alimentos","Pensão alimentícia"],["seguro","Seguro-desemprego"],["outros","Outros rendimentos"]];
-const BPC_DESP = ["Medicamentos não fornecidos pelo SUS","Fraldas","Alimentação especial / dieta","Consultas e terapias particulares","Transporte para tratamento","Equipamentos (cadeira, órtese, etc.)","Aluguel","Outra"];
-let BPC_CASO = null;
-function bpcNovo(clienteId){
-  const cl = DB.clientes.find(c => c.id===clienteId);
-  const caso = {id:uid(), clienteId:clienteId||"", ref:hojeStr(), tipo:"idoso", membros:[], despesas:[], cadUnico:"", biometria:"", deficiencia:{impedimentos:"", inicio:"", documentos:"", cid:""}, social:{moradia:"", condicoes:"", acessos:"", rede:"", obs:""}, obs:"", criadoEm:new Date().toISOString()};
-  caso.membros.push({id:uid(), nome:cl ? cl.nome : "", parentesco:"requerente", nasc:cl && cl.nascimento || "", mora:true, pcd:false, renda:"", origem:"sem"});
-  if(cl) DB.familiares.filter(f => f.clienteId===clienteId && /integrante|dependente/i.test(f.tipo||"")).forEach(f => {
-    const v = (f.vinculo||"").toLowerCase(); const par = /c[oô]njuge|companheir|espos|marido|mulher/.test(v) ? "conjuge" : /^(m[aã]e|pai)/.test(v) ? "pai_mae" : /madrast|padrast/.test(v) ? "padrasto" : /irm[aã]/.test(v) ? "irmao" : /filh|entead/.test(v) ? "filho" : /tutel/.test(v) ? "tutelado" : "outro";
-    caso.membros.push({id:uid(), nome:f.nome, parentesco:par, nasc:f.nascimento||"", mora:true, pcd:false, renda:f.renda||"", origem: +f.renda>0 ? "outros" : "sem"});
-  });
-  return caso;
-}
-function bpcIdade(nasc, ref){ return nasc ? Math.floor(pvIdade(nasc, ref)/360) : null; }
-function bpcCalcular(caso){
-  const p = pvParam(+caso.ref.slice(0,4)); if(!p) return {erro:"Cadastre o salário mínimo do ano em Calculadoras → Parâmetros oficiais."};
-  const linhas = []; let renda = 0, n = 0;
-  caso.membros.forEach(m => {
-    const idade = bpcIdade(m.nasc, caso.ref), v = pvNum(m.renda) || 0;
-    let integra = m.mora && m.parentesco!=="outro", motivoG = !m.mora ? "não vive sob o mesmo teto (LOAS, art. 20, § 1º)" : m.parentesco==="outro" ? "parentesco fora do rol do art. 20, § 1º" : "";
-    let conta = integra, motivoR = "";
-    if(integra && v>0){
-      if(m.origem==="pbf"){ conta = false; motivoR = "programa de transferência de renda não entra no cálculo (Decreto 6.214/2007, art. 4º, § 2º)"; }
-      else if(m.origem==="estagio"){ conta = false; motivoR = "estágio/aprendizagem não entra no cálculo (LOAS, art. 20, § 9º)"; }
-      else if((m.origem==="bpc" || m.origem==="previd") && v <= p.sm + 0.005 && m.parentesco!=="requerente" && ((idade!==null && idade >= 65) || m.pcd)){ conta = false; motivoR = "benefício de até 1 salário mínimo de idoso(a) 65+ ou pessoa com deficiência da família (LOAS, art. 20, § 14)"; }
-    }
-    if(integra) n++;
-    if(integra && conta) renda += v;
-    linhas.push({m, idade, v, integra, conta: integra && conta, motivo: motivoG || motivoR});
-  });
-  const pc = n ? renda/n : 0, q = p.sm/4, meio = p.sm/2;
-  const desp = caso.despesas.reduce((t,d) => t + (pvNum(d.valor)||0), 0), despSaude = caso.despesas.filter(d => d.saude!==false && !/aluguel/i.test(d.desc)).reduce((t,d) => t + (pvNum(d.valor)||0), 0);
-  const pcDesp = n ? Math.max(0, renda - despSaude)/n : 0;
-  const req = caso.membros.find(m => m.parentesco==="requerente"); const idReq = req ? bpcIdade(req.nasc, caso.ref) : null;
-  const alertas = [];
-  if(caso.tipo==="idoso" && (idReq===null || idReq < 65)) alertas.push(idReq===null ? "Informe a data de nascimento do(a) requerente." : `O(a) requerente tem ${idReq} anos: o BPC ao idoso exige 65 anos ou mais (LOAS, art. 20, caput).`);
-  if(!caso.cadUnico) alertas.push("Informe a data da última atualização do CadÚnico: a inscrição é obrigatória e deve estar atualizada nos últimos 24 meses.");
-  else if(difDias(caso.cadUnico, caso.ref) > 730) alertas.push(`CadÚnico atualizado em ${fmtData(caso.cadUnico)}: mais de 24 meses. Oriente a atualização no CRAS antes do requerimento.`);
-  if(caso.biometria!=="sim") alertas.push("Cadastro biométrico (CNH, título de eleitor com biometria ou CIN) exigido pela Lei 15.077/2024: confirme se o(a) requerente possui.");
-  if(caso.membros.some(m => m.mora && m.parentesco!=="outro" && !m.nasc)) alertas.push("Há integrantes sem data de nascimento: ela é usada para aplicar o art. 20, § 14.");
-  if(caso.tipo==="pcd" && !caso.deficiencia.impedimentos) alertas.push("Descreva os impedimentos de longo prazo e os documentos médicos (sem diagnóstico pelo sistema: transcreva o que consta nos laudos).");
-  return {p, linhas, renda, n, pc, q, meio, desp, despSaude, pcDesp, idReq, alertas};
-}
-function bpcBlocos(caso, r){
-  const cl = DB.clientes.find(c => c.id===caso.clienteId); const req = caso.membros.find(m => m.parentesco==="requerente") || {};
-  const par = k => (BPC_PARENT.find(x => x[0]===k)||["",k])[1], ori = k => (BPC_ORIG.find(x => x[0]===k)||["",k])[1];
-  const sit = r.pc < r.q ? "ABAIXO de ¼ do salário mínimo" : r.pc <= r.meio ? "acima de ¼ e até ½ salário mínimo" : "ACIMA de ½ salário mínimo";
-  return [
-    {h:"Identificação", kv:[["Requerente", req.nome || (cl && cl.nome) || "—"], ["Modalidade", caso.tipo==="idoso" ? "Pessoa idosa (65 anos ou mais)" : "Pessoa com deficiência"], ["Idade na data de referência", r.idReq!==null ? r.idReq + " anos" : "—"], ["Data de referência", fmtData(caso.ref)], ["CadÚnico atualizado em", caso.cadUnico ? fmtData(caso.cadUnico) : "não informado"], ["Biometria", caso.biometria==="sim" ? "possui" : caso.biometria==="nao" ? "não possui" : "não informado"]]},
-    {h:"Grupo familiar e rendas", cols:[["Nome",.22],["Parentesco",.18],["Idade",.07,"r"],["Origem da renda",.18],["Renda",.11,"r"],["No cálculo?",.24]], linhas: r.linhas.map(l => [l.m.nome||"—", par(l.m.parentesco), l.idade!==null ? String(l.idade) : "—", ori(l.m.origem), pvR(l.v), !l.integra ? "fora do grupo: " + l.motivo : l.conta ? "sim" : "renda excluída: " + l.motivo])},
-    {h:"Cálculo da renda per capita", kv:[["Renda familiar considerada", pvR(r.renda)], ["Integrantes do grupo familiar", String(r.n)], ["Renda per capita", pvR(r.pc)], ["¼ do salário mínimo", `${pvR(r.q)} (salário mínimo ${pvR(r.p.sm)}, ${r.p.fonteSM})`], ["½ do salário mínimo", pvR(r.meio)], ["Situação pelo critério objetivo", sit]]},
-    {h:"Cenários", kv:[
-      ["Cenário 1 · critério legal (art. 20, § 3º)", r.pc < r.q ? `Renda per capita ${pvR(r.pc)}, inferior a ¼ do salário mínimo.` : `Renda per capita ${pvR(r.pc)}, não inferior a ¼ do salário mínimo: o critério objetivo não é atendido.`],
-      ["Cenário 2 · descontando despesas de saúde comprovadas", r.despSaude > 0 ? `Despesas informadas: ${pvR(r.despSaude)}/mês. Per capita após descontá-las: ${pvR(r.pcDesp)} (${r.pcDesp < r.q ? "abaixo" : "acima"} de ¼). Elementos como gastos com tratamento, fraldas, alimentação especial e medicamentos não fornecidos pelo SUS são previstos no art. 20-B da LOAS (Lei 14.176/2021) para avaliar a ampliação do critério.` : "Nenhuma despesa informada."],
-      ["Cenário 3 · até ½ salário mínimo", `${r.pc <= r.meio ? "A renda per capita está" : "A renda per capita NÃO está"} até ½ salário mínimo (${pvR(r.meio)}). O art. 20, § 11-A, da LOAS (Lei 14.176/2021) prevê a possibilidade de ampliação até ½ salário mínimo conforme regulamento e os critérios do art. 20-B; verifique a regulamentação vigente.`],
-      ["Miserabilidade por outros meios", "O STF (RE 567.985 e RE 580.963, julgados em 2013) admitiu que a situação de miserabilidade seja aferida por outros elementos além do critério de ¼; a avaliação concreta depende das provas e de análise profissional."]]},
-    ...(caso.despesas.length ? [{h:"Despesas informadas", cols:[["Despesa",.5],["Valor mensal",.2,"r"],["Comprovante",.3]], linhas: caso.despesas.map(d => [d.desc, pvR(pvNum(d.valor)||0), d.comprovante||"—"]), total:["Total", pvR(r.desp), ""]}] : []),
-    ...(caso.tipo==="pcd" ? [{h:"Deficiência (informações documentais)", kv:[["Impedimentos de longo prazo descritos", caso.deficiencia.impedimentos || "—"], ["Desde quando (segundo documentos)", caso.deficiencia.inicio ? fmtData(caso.deficiencia.inicio) : "—"], ["CID constante em laudo (transcrição)", caso.deficiencia.cid || "—"], ["Documentos médicos", caso.deficiencia.documentos || "—"], ["Observação", "Impedimento de longo prazo é o que produz efeitos por no mínimo 2 anos (LOAS, art. 20, §§ 2º e 10). A deficiência é avaliada pelo INSS em avaliação biopsicossocial (perícia médica e avaliação social); este relatório não faz diagnóstico nem conclui sobre a elegibilidade."]]}] : []),
-    {h:"Informações sociais", kv:[["Moradia", caso.social.moradia||"—"], ["Condições da residência", caso.social.condicoes||"—"], ["Acesso a serviços (saúde, transporte, escola)", caso.social.acessos||"—"], ["Rede de apoio", caso.social.rede||"—"], ["Observações", caso.social.obs||"—"]]},
-    ...(r.alertas.length ? [{h:"Pendências e alertas", p:r.alertas.map(a => "• " + a).join("  ")}] : []),
-    {h:"Documentos a reunir", p:"• Documento com foto e CPF de todos os integrantes  • Comprovante de inscrição/atualização do CadÚnico (até 24 meses)  • Documento com biometria do(a) requerente  • Comprovante de residência  • Comprovantes de renda de todos  • " + (caso.tipo==="pcd" ? "Laudos, exames, receitas e relatórios médicos recentes, com data de início dos impedimentos  • " : "") + "Comprovantes das despesas informadas  • Termo de curatela/procuração, se houver representante."},
-    {h:"Metodologia", p:"Grupo familiar: requerente, cônjuge/companheiro(a), pais (ou madrasta/padrasto na ausência deles), irmãos solteiros, filhos e enteados solteiros e menores tutelados, desde que vivam sob o mesmo teto (LOAS, art. 20, § 1º). Renda per capita = soma das rendas consideradas ÷ número de integrantes. Excluídos: programas de transferência de renda (como o Bolsa Família), estágio e aprendizagem (art. 20, § 9º) e benefício de até 1 salário mínimo de idoso(a) 65+ ou pessoa com deficiência do grupo (art. 20, § 14)."},
-    {h:"Legislação", p:"Constituição Federal, art. 203, V; Lei nº 8.742/1993 (LOAS), arts. 20, 20-B e 21; Decreto nº 6.214/2007; Lei nº 14.176/2021; Lei nº 15.077/2024."},
-    {h:"Aviso", p:"Este relatório organiza informações para apoio administrativo e documental. Não decide sobre direito ao benefício: a concessão depende do INSS (análise da renda, avaliação biopsicossocial e documentos). " + PV_AVISO, cor:"0.45 0.38 0.32"}
-  ];
-}
-function telaBPC(c){
-  pvGarantir();
-  if(BPC_CASO){ bpcEditor(c, BPC_CASO); return; }
-  c.innerHTML = `<div class="cab"><div><h1 class="tit">BPC/LOAS</h1><div class="fio"></div><div class="sub">Grupo familiar, renda per capita, despesas, informações sociais e relatório em PDF</div></div><div class="acoes"><button class="btn btn-pri" id="bpc-novo">Nova análise</button></div></div>
-  <div class="tabela-wrap"><table><thead><tr><th>Requerente</th><th>Modalidade</th><th class="num">Per capita</th><th>Atualizado</th><th></th></tr></thead><tbody>${DB.bpc.length ? DB.bpc.map(x => { const r = bpcCalcular(x); const req = x.membros.find(m=>m.parentesco==="requerente")||{}; return `<tr><td>${esc(req.nome||"—")}</td><td>${x.tipo==="idoso"?"Idoso(a)":"Pessoa com deficiência"}</td><td class="num">${r.erro?"—":pvR(r.pc)}</td><td>${fmtData((x.atualizadoEm||x.criadoEm).slice(0,10))}</td><td style="white-space:nowrap"><button class="btn btn-sm" data-ab="${x.id}">Abrir</button> ${pode("excluir")?`<button class="btn btn-sm btn-perigo" data-del="${x.id}">Excluir</button>`:""}</td></tr>`; }).join("") : `<tr><td colspan="5" class="vazio">Nenhuma análise de BPC. Clique em “Nova análise”.</td></tr>`}</tbody></table></div>`;
-  c.querySelector("#bpc-novo").onclick = async () => {
-    const r = await modal("Nova análise de BPC/LOAS", `<form class="campos"><label class="largo">Cliente (os familiares cadastrados na ficha entram no grupo)<select name="cli">${pvClienteOpts("")}</select></label></form>`, [{t:"Cancelar",v:null},{t:"Começar",cls:"btn-pri",acao:f => lerForm(f.querySelector("form"))}]);
-    if(!r) return; BPC_CASO = bpcNovo(r.cli); telaBPC(c);
-  };
-  c.querySelectorAll("[data-ab]").forEach(b => b.onclick = () => { BPC_CASO = JSON.parse(JSON.stringify(DB.bpc.find(x => x.id===b.dataset.ab))); telaBPC(c); });
-  c.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { if(await confirmar("Excluir análise","Excluir esta análise de BPC?","Excluir",true)){ DB.bpc = DB.bpc.filter(x => x.id!==b.dataset.del); salvar(); telaBPC(c); } });
-}
-function bpcEditor(c, caso){
-  const opt = (lista, v) => lista.map(([k,t]) => `<option value="${k}" ${v===k?"selected":""}>${t}</option>`).join("");
-  c.innerHTML = `<div class="cab"><div><div class="sub"><a href="#bpc" id="bpc-voltar">BPC/LOAS</a> /</div><h1 class="tit">Análise de BPC/LOAS</h1><div class="fio"></div></div><div class="acoes"><button class="btn" id="bpc-pdf">Baixar PDF</button><button class="btn btn-pri" id="bpc-salvar">Salvar</button></div></div>
-  <div class="cartao"><div class="campos"><label>Cliente<select id="b-cli">${pvClienteOpts(caso.clienteId)}</select></label><label>Modalidade<select id="b-tipo"><option value="idoso" ${caso.tipo==="idoso"?"selected":""}>Pessoa idosa (65+)</option><option value="pcd" ${caso.tipo==="pcd"?"selected":""}>Pessoa com deficiência</option></select></label>
-  <label>Data de referência<input type="date" id="b-ref" value="${caso.ref}"></label><label>CadÚnico atualizado em<input type="date" id="b-cad" value="${caso.cadUnico}"></label><label>Biometria do(a) requerente<select id="b-bio"><option value="">Não informado</option><option value="sim" ${caso.biometria==="sim"?"selected":""}>Possui (CNH, título ou CIN)</option><option value="nao" ${caso.biometria==="nao"?"selected":""}>Não possui</option></select></label></div></div>
-  <div class="secao-tit">Grupo familiar</div><p class="sub" style="margin-top:-6px">Inclua todas as pessoas da casa. O sistema aplica sozinho quem entra no grupo (art. 20, § 1º) e quais rendas são excluídas.</p>
-  <div class="tabela-wrap"><table class="pv-per" id="b-mem"><thead><tr><th>Nome</th><th>Parentesco</th><th>Nascimento</th><th>Mora junto</th><th>PcD</th><th>Origem da renda</th><th>Renda bruta mensal</th><th></th></tr></thead><tbody>${caso.membros.map((m,i) => `<tr data-i="${i}"><td><input data-k="nome" value="${esc(m.nome)}"></td><td><select data-k="parentesco">${opt(BPC_PARENT, m.parentesco)}</select></td><td><input type="date" data-k="nasc" value="${m.nasc||""}"></td><td style="text-align:center"><input type="checkbox" data-k="mora" ${m.mora?"checked":""}></td><td style="text-align:center"><input type="checkbox" data-k="pcd" ${m.pcd?"checked":""}></td><td><select data-k="origem">${opt(BPC_ORIG, m.origem)}</select></td><td><input data-k="renda" value="${esc(m.renda)}" placeholder="0,00"></td><td>${m.parentesco==="requerente"?"":`<button class="btn btn-sm btn-perigo" data-dm="${i}">×</button>`}</td></tr>`).join("")}</tbody></table></div>
-  <div style="margin-top:8px"><button class="btn btn-sm" id="b-addm">+ Pessoa da casa</button></div>
-  <div class="secao-tit">Despesas mensais</div><div class="tabela-wrap"><table class="pv-per" id="b-desp"><thead><tr><th>Despesa</th><th>Valor mensal</th><th>Comprovante</th><th></th></tr></thead><tbody>${caso.despesas.map((d,i) => `<tr data-i="${i}"><td><input data-k="desc" list="b-dl" value="${esc(d.desc)}"></td><td><input data-k="valor" value="${esc(d.valor)}"></td><td><input data-k="comprovante" value="${esc(d.comprovante||"")}" placeholder="nota, receita, recibo"></td><td><button class="btn btn-sm btn-perigo" data-dd="${i}">×</button></td></tr>`).join("") || `<tr><td colspan="4" class="vazio">Nenhuma despesa.</td></tr>`}</tbody></table></div><datalist id="b-dl">${BPC_DESP.map(d => `<option value="${esc(d)}">`).join("")}</datalist>
-  <div style="margin-top:8px"><button class="btn btn-sm" id="b-addd">+ Despesa</button></div>
-  <div class="grade2"><div class="cartao" id="b-def" ${caso.tipo==="pcd"?"":'style="display:none"'}><h3 style="margin-top:0">Deficiência · informações dos documentos</h3><p class="sub">Transcreva o que consta nos laudos. O sistema não faz diagnóstico nem decide se há deficiência.</p>
-  <label style="display:block">Impedimentos de longo prazo descritos<textarea id="b-imp" style="min-height:70px;width:100%">${esc(caso.deficiencia.impedimentos)}</textarea></label><div class="campos"><label>Desde quando (segundo documentos)<input type="date" id="b-ini" value="${caso.deficiencia.inicio}"></label><label>CID constante em laudo<input id="b-cid" value="${esc(caso.deficiencia.cid)}"></label></div>
-  <label style="display:block">Documentos médicos disponíveis<textarea id="b-docs" style="min-height:60px;width:100%">${esc(caso.deficiencia.documentos)}</textarea></label></div>
-  <div class="cartao"><h3 style="margin-top:0">Informações sociais</h3>${[["moradia","Moradia (própria, alugada, cedida; nº de cômodos)"],["condicoes","Condições da residência"],["acessos","Acesso a saúde, transporte, escola"],["rede","Rede de apoio (quem ajuda, como)"],["obs","Observações"]].map(([k,t]) => `<label style="display:block">${t}<textarea data-s="${k}" style="min-height:44px;width:100%">${esc(caso.social[k])}</textarea></label>`).join("")}</div></div>
-  <div style="margin-top:14px"><button class="btn btn-pri" id="b-calc">Calcular renda per capita</button></div><div id="b-res" style="margin-top:14px"></div>`;
-  const $c = s => c.querySelector(s);
-  const ler = () => {
-    caso.clienteId = $c("#b-cli").value; caso.tipo = $c("#b-tipo").value; caso.ref = $c("#b-ref").value || hojeStr(); caso.cadUnico = $c("#b-cad").value; caso.biometria = $c("#b-bio").value;
-    c.querySelectorAll("#b-mem tbody tr").forEach(tr => { const m = caso.membros[+tr.dataset.i]; tr.querySelectorAll("[data-k]").forEach(el => m[el.dataset.k] = el.type==="checkbox" ? el.checked : el.value); });
-    c.querySelectorAll("#b-desp tbody tr[data-i]").forEach(tr => { const d = caso.despesas[+tr.dataset.i]; tr.querySelectorAll("[data-k]").forEach(el => d[el.dataset.k] = el.value); });
-    caso.deficiencia = {impedimentos:$c("#b-imp").value, inicio:$c("#b-ini").value, cid:$c("#b-cid").value, documentos:$c("#b-docs").value};
-    c.querySelectorAll("[data-s]").forEach(el => caso.social[el.dataset.s] = el.value);
-  };
-  $c("#bpc-voltar").onclick = ev => { ev.preventDefault(); BPC_CASO = null; telaBPC(c); };
-  $c("#b-tipo").onchange = () => { $c("#b-def").style.display = $c("#b-tipo").value==="pcd" ? "" : "none"; };
-  $c("#b-cli").onchange = async () => { const id = $c("#b-cli").value; if(id && await confirmar("Trocar cliente", "Carregar o requerente e os familiares cadastrados na ficha deste cliente? As pessoas já digitadas serão substituídas.", "Carregar")){ const n = bpcNovo(id); ler(); caso.membros = n.membros; caso.clienteId = id; bpcEditor(c, caso); } };
-  $c("#b-addm").onclick = () => { ler(); caso.membros.push({id:uid(), nome:"", parentesco:"filho", nasc:"", mora:true, pcd:false, renda:"", origem:"sem"}); bpcEditor(c, caso); };
-  $c("#b-addd").onclick = () => { ler(); caso.despesas.push({desc:"", valor:"", comprovante:""}); bpcEditor(c, caso); };
-  c.querySelectorAll("[data-dm]").forEach(b => b.onclick = () => { ler(); caso.membros.splice(+b.dataset.dm, 1); bpcEditor(c, caso); });
-  c.querySelectorAll("[data-dd]").forEach(b => b.onclick = () => { ler(); caso.despesas.splice(+b.dataset.dd, 1); bpcEditor(c, caso); });
-  const validar = () => { ler(); const r = bpcCalcular(caso); if(r.erro){ toast(r.erro, true); return null; } const semNome = caso.membros.filter(m => !m.nome.trim()).length; if(semNome){ toast("Preencha o nome de todas as pessoas da casa.", true); return null; } return r; };
-  $c("#b-calc").onclick = () => { const r = validar(); if(!r) return; const req = caso.membros.find(m=>m.parentesco==="requerente"); pvResultado($c("#b-res"), `BPC/LOAS · ${req.nome}`, bpcBlocos(caso, r), null); };
-  $c("#bpc-pdf").onclick = () => { const r = validar(); if(!r) return; const req = caso.membros.find(m=>m.parentesco==="requerente"); pvBaixarPDF(`bpc-${(req.nome||"analise").split(" ")[0].toLowerCase()}-${hojeStr()}.pdf`, `Análise de BPC/LOAS · ${req.nome}`, `Data de referência ${fmtData(caso.ref)}`, bpcBlocos(caso, r)); };
-  $c("#bpc-salvar").onclick = () => { ler(); if(!caso.membros.find(m=>m.parentesco==="requerente").nome.trim()){ toast("Informe o nome do(a) requerente.", true); return; } caso.atualizadoEm = new Date().toISOString(); const i = DB.bpc.findIndex(x => x.id===caso.id); const copia = JSON.parse(JSON.stringify(caso)); if(i>=0) DB.bpc[i] = copia; else DB.bpc.unshift(copia); registrar("calculo", "Análise de BPC salva"); salvar(); toast("Análise salva."); };
-}
-
-/* =========================================================
-   PERÍCIAS E QUESITOS
-   Banco de quesitos neutros, checklists de documentos, cronologia
-   documental e preparação da perícia. Sem diagnósticos.
-   ========================================================= */
-const PE_BENEF = [["inc","Benefício por incapacidade (temporária ou permanente)"],["bpc","BPC/LOAS · pessoa com deficiência"],["acid","Auxílio-acidente"],["pcd","Aposentadoria da pessoa com deficiência (grau)"],["dep","Dependente inválido ou com deficiência (pensão)"],["social","Avaliação social"]];
-const PE_QUESITOS = {
-  inc:["A parte periciada apresenta alguma doença, lesão ou sequela? Em caso positivo, qual a descrição e a classificação (CID) segundo o exame pericial?","Essa condição causa incapacidade para o trabalho ou para a atividade habitual da parte periciada? Qual é a atividade habitual considerada?","A incapacidade, se existente, é total ou parcial? É temporária ou permanente?","Qual a data provável de início da doença (DID) e a data provável de início da incapacidade (DII)? Em quais documentos ou elementos o(a) perito(a) se baseou para fixá-las?","Houve agravamento ou progressão da doença ou lesão? Em caso positivo, a partir de quando?","Se a incapacidade for temporária, qual o prazo estimado para recuperação da capacidade?","A parte periciada pode ser reabilitada para outra atividade que lhe garanta o sustento, considerando idade, escolaridade e experiência profissional?","A parte periciada necessita da assistência permanente de outra pessoa para as atividades da vida diária?","A doença ou lesão decorre de acidente de qualquer natureza, de acidente do trabalho ou de doença ocupacional?","A parte periciada está em tratamento? Qual? O tratamento está disponível pelo SUS?","Os documentos médicos apresentados foram considerados? Há divergência entre eles e a conclusão pericial? Por quê?"],
-  bpc:["A parte periciada possui impedimento de natureza física, mental, intelectual ou sensorial? Qual?","Esse impedimento é de longo prazo, ou seja, produz efeitos pelo prazo mínimo de 2 anos (Lei 8.742/93, art. 20, § 10)?","Desde quando existe o impedimento, segundo os elementos disponíveis?","O impedimento, em interação com barreiras, pode obstruir a participação plena e efetiva da parte periciada na sociedade em igualdade de condições com as demais pessoas?","Quais atividades e funções da vida diária, de autocuidado, de mobilidade, de comunicação e de vida comunitária estão limitadas? Em que grau?","A parte periciada depende de terceiros para atividades da vida diária?","Há necessidade de uso de medicamentos, órteses, próteses, fraldas ou dieta especial? Há fornecimento pelo SUS?","No caso de criança ou adolescente, o impedimento gera limitação no desempenho de atividades e restrição na participação social compatíveis com a idade?"],
-  acid:["A parte periciada sofreu acidente de qualquer natureza? Quando e como, segundo os documentos?","Há sequela consolidada decorrente do acidente? Qual?","A sequela implica redução da capacidade para o trabalho que habitualmente exercia? Em que consiste essa redução?","A sequela exige maior esforço para o desempenho da mesma atividade exercida à época do acidente?","Desde quando as lesões estão consolidadas?"],
-  pcd:["A parte periciada é pessoa com deficiência? Qual o impedimento de longo prazo identificado?","Qual o grau da deficiência (leve, moderada ou grave), segundo a avaliação biopsicossocial (LC 142/2013)?","Desde quando a parte periciada é pessoa com deficiência? Houve variação do grau ao longo do tempo? Em quais períodos?","Quais domínios de atividades e participação estão comprometidos e em que intensidade?","Quais documentos foram considerados para fixar a data de início e o grau?"],
-  dep:["O(A) dependente apresenta invalidez ou deficiência intelectual, mental ou grave? Qual a condição identificada?","Desde quando existe essa condição? Ela é anterior ao óbito do(a) segurado(a)?","A condição é permanente?","O(A) dependente é capaz de prover o próprio sustento?","Os documentos médicos apresentados foram considerados? Quais?"],
-  social:["Qual a composição do grupo familiar que vive sob o mesmo teto?","Quais as condições da moradia (tipo, cômodos, saneamento, acessibilidade)?","Quais as rendas e despesas do grupo familiar, inclusive com saúde?","Há acesso a serviços públicos de saúde, transporte, educação e assistência na região?","Quais barreiras ambientais e sociais limitam a participação da parte avaliada?","Há rede de apoio familiar ou comunitária?"]
-};
-const PE_CHECK = {
-  inc:["Documento com foto e CPF","Laudos e relatórios médicos recentes (com CID, data e assinatura/CRM)","Exames de imagem e laboratoriais","Receitas e comprovantes de tratamento","Atestados de afastamento","CTPS / comprovantes da atividade habitual","Comunicação de Acidente de Trabalho (CAT), se houver","Comunicado de decisão do INSS (indeferimento ou cessação)","Prontuário de internação, se houver"],
-  bpc:["Documento com foto e CPF do(a) requerente e do grupo familiar","Comprovante do CadÚnico atualizado","Laudos e relatórios médicos com data de início","Relatórios escolares, de terapias (fonoaudiologia, psicologia, terapia ocupacional)","Receitas e comprovantes de despesas com saúde","Comprovante de residência","Termo de curatela ou representação, se houver"],
-  acid:["Boletim de ocorrência ou registro do acidente","CAT, se acidente de trabalho","Prontuário de atendimento e cirurgias","Laudos com descrição da sequela consolidada","Documentos da atividade exercida na época"],
-  pcd:["Documentos médicos de todo o período em que se alega a deficiência","Relatórios funcionais (terapias, reabilitação)","Documentos de adaptações no trabalho, se houver","CNIS e documentos dos vínculos"],
-  dep:["Certidão de óbito do(a) segurado(a)","Documentos médicos do(a) dependente anteriores ao óbito","Termo de curatela, se houver","Comprovantes de dependência econômica, quando exigidos"],
-  social:["Comprovante de residência","Comprovantes de renda e despesas","Fotografias da moradia, se pertinente","Contatos da rede de apoio","Relatórios do CRAS/CREAS, se houver"]
-};
-const PE_EVENTOS = ["Início dos sintomas (segundo documento)","Consulta médica","Exame","Internação","Cirurgia","Afastamento do trabalho","Acidente","CAT emitida","Requerimento no INSS (DER)","Perícia do INSS","Decisão / indeferimento","Cessação do benefício","Recurso","Ação judicial","Perícia judicial","Outro"];
-function peGarantir(){ if(!Array.isArray(DB.pericias)) DB.pericias = []; if(!DB.config.quesitosProprios) DB.config.quesitosProprios = {}; }
-function peQuesitos(b){ peGarantir(); return PE_QUESITOS[b].map((t,i) => ({id:`p-${b}-${i}`, t})).concat((DB.config.quesitosProprios[b]||[]).map(q => ({...q, proprio:true}))); }
-let PE_ATUAL = null, PE_ABA = "casos";
-function telaPericias(c){
-  peGarantir();
-  if(PE_ATUAL){ peEditor(c, PE_ATUAL); return; }
-  const abas = [["casos","Perícias"],["banco","Banco de quesitos"],["checklists","Checklists"]];
-  c.innerHTML = `<div class="cab"><div><h1 class="tit">Perícias e quesitos</h1><div class="fio"></div><div class="sub">Preparação documental, quesitos, cronologia e checklists · sem diagnósticos</div></div><div class="acoes"><button class="btn btn-pri" id="pe-novo">Nova perícia</button></div></div>
-  <div class="aviso alerta" style="cursor:default"><span class="ponto"></span><span>Este módulo organiza documentos e perguntas. Ele não faz diagnóstico nem avalia a condição de saúde. A formulação de quesitos em processo judicial e a estratégia do caso são atos de advogado(a) inscrito(a) na OAB ou da Defensoria Pública.</span></div>
-  <div class="abas">${abas.map(([k,t]) => `<button data-pa="${k}" class="${PE_ABA===k?"ativo":""}">${t}</button>`).join("")}</div><div id="pe-corpo"></div>`;
-  c.querySelectorAll("[data-pa]").forEach(b => b.onclick = () => { PE_ABA = b.dataset.pa; telaPericias(c); });
-  c.querySelector("#pe-novo").onclick = async () => {
-    const r = await modal("Nova perícia", `<form class="campos"><label class="largo">Cliente<select name="cli">${pvClienteOpts("")}</select></label><label class="largo">Benefício<select name="b">${PE_BENEF.map(([k,t]) => `<option value="${k}">${t}</option>`).join("")}</select></label></form>`, [{t:"Cancelar",v:null},{t:"Criar",cls:"btn-pri",acao:f => lerForm(f.querySelector("form"))}]);
-    if(!r) return; PE_ATUAL = {id:uid(), clienteId:r.cli, beneficio:r.b, tipo:"inss", data:"", hora:"", local:"", quesitos:peQuesitos(r.b).filter(q=>!q.proprio).map(q => q.id), extras:[], cronologia:[], check:{}, notas:"", criadoEm:new Date().toISOString()}; telaPericias(c);
-  };
-  const corpo = c.querySelector("#pe-corpo");
-  if(PE_ABA==="casos"){
-    corpo.innerHTML = `<div class="tabela-wrap"><table><thead><tr><th>Cliente</th><th>Benefício</th><th>Perícia</th><th>Checklist</th><th></th></tr></thead><tbody>${DB.pericias.length ? DB.pericias.map(x => { const lst = PE_CHECK[x.beneficio]; const ok = lst.filter((_,i) => x.check[i]).length; return `<tr><td>${esc((DB.clientes.find(k=>k.id===x.clienteId)||{}).nome||"—")}</td><td>${esc((PE_BENEF.find(b=>b[0]===x.beneficio)||[])[1])}</td><td>${x.data?fmtData(x.data)+(x.hora?" "+x.hora:""):"sem data"}</td><td>${ok}/${lst.length}</td><td style="white-space:nowrap"><button class="btn btn-sm" data-ab="${x.id}">Abrir</button> ${pode("excluir")?`<button class="btn btn-sm btn-perigo" data-del="${x.id}">Excluir</button>`:""}</td></tr>`; }).join("") : `<tr><td colspan="5" class="vazio">Nenhuma perícia cadastrada.</td></tr>`}</tbody></table></div>`;
-    corpo.querySelectorAll("[data-ab]").forEach(b => b.onclick = () => { PE_ATUAL = JSON.parse(JSON.stringify(DB.pericias.find(x => x.id===b.dataset.ab))); telaPericias(c); });
-    corpo.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { if(await confirmar("Excluir","Excluir esta perícia?","Excluir",true)){ DB.pericias = DB.pericias.filter(x => x.id!==b.dataset.del); salvar(); telaPericias(c); } });
-  }
-  if(PE_ABA==="banco"){
-    corpo.innerHTML = PE_BENEF.map(([k,t]) => `<div class="cartao" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">${t}</h3><button class="btn btn-sm" data-add="${k}">+ Quesito próprio</button></div><ol style="margin:10px 0 0;padding-left:20px">${peQuesitos(k).map(q => `<li style="margin-bottom:6px">${esc(q.t)} ${q.proprio?`<span class="pill">próprio</span> <button class="btn btn-sm btn-perigo" data-dq="${k}|${q.id}">×</button>`:""}</li>`).join("")}</ol></div>`).join("") + `<p class="sub">Os quesitos padrão são perguntas neutras, usadas para que o(a) perito(a) responda com base no exame. Adapte cada lista ao caso concreto com orientação profissional.</p>`;
-    corpo.querySelectorAll("[data-add]").forEach(b => b.onclick = async () => { const r = await modal("Novo quesito", `<label style="display:block">Texto<textarea id="nq" style="min-height:90px;width:100%"></textarea></label>`, [{t:"Cancelar",v:null},{t:"Adicionar",cls:"btn-pri",acao:f => f.querySelector("#nq").value.trim() || false}]); if(!r) return; (DB.config.quesitosProprios[b.dataset.add] = DB.config.quesitosProprios[b.dataset.add]||[]).push({id:"u-"+uid(), t:r}); salvar(); telaPericias(c); });
-    corpo.querySelectorAll("[data-dq]").forEach(b => b.onclick = () => { const [k,id] = b.dataset.dq.split("|"); DB.config.quesitosProprios[k] = DB.config.quesitosProprios[k].filter(q => q.id!==id); salvar(); telaPericias(c); });
-  }
-  if(PE_ABA==="checklists"){
-    corpo.innerHTML = `<div class="grade2" style="margin-top:0;grid-template-columns:1fr 1fr">${PE_BENEF.map(([k,t]) => `<div class="cartao"><h3 style="margin-top:0">${t}</h3><ul style="padding-left:18px;margin:0">${PE_CHECK[k].map(i => `<li>${esc(i)}</li>`).join("")}</ul></div>`).join("")}</div>`;
-  }
-}
-function peBlocos(x){
-  const cl = DB.clientes.find(k => k.id===x.clienteId) || {}; const qs = peQuesitos(x.beneficio).filter(q => x.quesitos.includes(q.id)).concat(x.extras.map(t => ({t})));
-  const crono = x.cronologia.slice().sort((a,b) => (a.data||"").localeCompare(b.data||""));
-  return {cl, qs, crono, blocos:[
-    {h:"Dados", kv:[["Pessoa", cl.nome||"—"], ["Benefício", (PE_BENEF.find(b=>b[0]===x.beneficio)||[])[1]], ["Perícia", `${x.tipo==="judicial"?"Judicial":"Administrativa (INSS)"} · ${x.data?fmtData(x.data):"data a definir"}${x.hora?" às "+x.hora:""}`], ["Local", x.local||"—"]]},
-    {h:"Cronologia documental", cols:[["Data",.14],["Evento",.3],["Descrição (segundo o documento)",.38],["Documento",.18]], linhas: crono.map(e => [e.data?fmtData(e.data):"—", e.evento, e.desc||"", e.doc||""])},
-    {h:"Quesitos"}, ...qs.map((q,i) => ({p:`${i+1}. ${q.t}`})),
-    {h:"Checklist de documentos", p: PE_CHECK[x.beneficio].map((t,i) => `[${x.check[i]?"x":" "}] ${t}`).join("   ")},
-    ...(x.notas ? [{h:"Observações", p:x.notas}] : []),
-    {h:"Aviso", p:"Documento de organização e apoio. Não contém diagnóstico nem avaliação médica: as informações de saúde foram transcritas dos documentos apresentados. Quesitos em processo judicial devem ser apresentados por advogado(a) ou pela Defensoria Pública.", cor:"0.45 0.38 0.32"}]};
-}
-function peEditor(c, x){
-  const qs = peQuesitos(x.beneficio);
-  c.innerHTML = `<div class="cab"><div><div class="sub"><a href="#pericias" id="pe-voltar">Perícias e quesitos</a> /</div><h1 class="tit">${esc((DB.clientes.find(k=>k.id===x.clienteId)||{}).nome||"Perícia")}</h1><div class="fio"></div><div class="sub">${esc((PE_BENEF.find(b=>b[0]===x.beneficio)||[])[1])}</div></div><div class="acoes"><button class="btn" id="pe-pdfq">PDF dos quesitos</button><button class="btn" id="pe-pdf">PDF completo</button><button class="btn btn-pri" id="pe-salvar">Salvar</button></div></div>
-  <div class="cartao"><div class="campos"><label>Tipo<select id="pe-tipo"><option value="inss" ${x.tipo==="inss"?"selected":""}>Administrativa (INSS)</option><option value="judicial" ${x.tipo==="judicial"?"selected":""}>Judicial</option></select></label><label>Data<input type="date" id="pe-data" value="${x.data}"></label><label>Hora<input type="time" id="pe-hora" value="${x.hora}"></label><label class="largo">Local<input id="pe-local" value="${esc(x.local)}"></label></div>
-  <label class="chk" style="margin-top:10px"><input type="checkbox" id="pe-agenda"> Lançar na Agenda e prazos ao salvar</label></div>
-  <div class="grade2"><div class="cartao"><h3 style="margin-top:0">Quesitos</h3><p class="sub" style="margin-top:-6px">Marque os que entram neste caso.</p>${qs.map(q => `<label class="chk" style="align-items:flex-start;margin-bottom:6px"><input type="checkbox" data-q="${q.id}" ${x.quesitos.includes(q.id)?"checked":""}> <span>${esc(q.t)}</span></label>`).join("")}
-  <div style="margin-top:8px"><b style="font-size:13px">Quesitos específicos deste caso</b>${x.extras.map((t,i) => `<div style="display:flex;gap:6px;margin-top:6px"><textarea data-ex="${i}" style="flex:1;min-height:44px">${esc(t)}</textarea><button class="btn btn-sm btn-perigo" data-dex="${i}">×</button></div>`).join("")}<div><button class="btn btn-sm" id="pe-addex" style="margin-top:6px">+ Quesito específico</button></div></div></div>
-  <div><div class="cartao"><h3 style="margin-top:0">Checklist de documentos</h3>${PE_CHECK[x.beneficio].map((t,i) => `<label class="chk" style="margin-bottom:5px"><input type="checkbox" data-ck="${i}" ${x.check[i]?"checked":""}> ${esc(t)}</label>`).join("")}</div>
-  <div class="cartao" style="margin-top:14px"><h3 style="margin-top:0">Observações</h3><textarea id="pe-notas" style="min-height:80px;width:100%">${esc(x.notas)}</textarea></div></div></div>
-  <div class="secao-tit">Cronologia documental</div><p class="sub" style="margin-top:-6px">Registre o que cada documento diz, com a data. A ordem é automática.</p>
-  <div class="tabela-wrap"><table class="pv-per" id="pe-cr"><thead><tr><th>Data</th><th>Evento</th><th>Descrição (segundo o documento)</th><th>Documento</th><th></th></tr></thead><tbody>${x.cronologia.map((e,i) => `<tr data-i="${i}"><td><input type="date" data-k="data" value="${e.data||""}"></td><td><select data-k="evento">${PE_EVENTOS.map(v => `<option ${e.evento===v?"selected":""}>${v}</option>`).join("")}</select></td><td><input data-k="desc" value="${esc(e.desc||"")}"></td><td><input data-k="doc" value="${esc(e.doc||"")}" placeholder="ex.: laudo Dr(a). X"></td><td><button class="btn btn-sm btn-perigo" data-dc="${i}">×</button></td></tr>`).join("") || `<tr><td colspan="5" class="vazio">Nenhum evento.</td></tr>`}</tbody></table></div>
-  <div style="margin-top:8px"><button class="btn btn-sm" id="pe-addc">+ Evento</button></div>`;
-  const $c = s => c.querySelector(s);
-  const ler = () => {
-    x.tipo = $c("#pe-tipo").value; x.data = $c("#pe-data").value; x.hora = $c("#pe-hora").value; x.local = $c("#pe-local").value; x.notas = $c("#pe-notas").value;
-    x.quesitos = [...c.querySelectorAll("[data-q]")].filter(el => el.checked).map(el => el.dataset.q);
-    x.extras = [...c.querySelectorAll("[data-ex]")].map(el => el.value);
-    c.querySelectorAll("[data-ck]").forEach(el => x.check[el.dataset.ck] = el.checked);
-    c.querySelectorAll("#pe-cr tbody tr[data-i]").forEach(tr => { const e = x.cronologia[+tr.dataset.i]; tr.querySelectorAll("[data-k]").forEach(el => e[el.dataset.k] = el.value); });
-  };
-  $c("#pe-voltar").onclick = ev => { ev.preventDefault(); PE_ATUAL = null; telaPericias(c); };
-  $c("#pe-addex").onclick = () => { ler(); x.extras.push(""); peEditor(c, x); };
-  c.querySelectorAll("[data-dex]").forEach(b => b.onclick = () => { ler(); x.extras.splice(+b.dataset.dex,1); peEditor(c, x); });
-  $c("#pe-addc").onclick = () => { ler(); x.cronologia.push({data:"", evento:PE_EVENTOS[0], desc:"", doc:""}); peEditor(c, x); };
-  c.querySelectorAll("[data-dc]").forEach(b => b.onclick = () => { ler(); x.cronologia.splice(+b.dataset.dc,1); peEditor(c, x); });
-  $c("#pe-pdf").onclick = () => { ler(); const r = peBlocos(x); pvBaixarPDF(`pericia-${hojeStr()}.pdf`, `Preparação de perícia · ${r.cl.nome||""}`, (PE_BENEF.find(b=>b[0]===x.beneficio)||[])[1], r.blocos); };
-  $c("#pe-pdfq").onclick = async () => { ler(); const r = peBlocos(x); if(!r.qs.length){ toast("Nenhum quesito marcado.", true); return; }
-    try{ const blob = await gerarPDF({titulo:"QUESITOS", paragrafos:[`Referente a: ${r.cl.nome||"—"} · ${(PE_BENEF.find(b=>b[0]===x.beneficio)||[])[1]}.`, ...r.qs.map((q,i) => `${i+1}. ${q.t}`)], local:"", assinantes:[], marcaDagua:false}); await salvarArquivo(`quesitos-${hojeStr()}.pdf`, blob, "application/pdf"); } catch(e){ toast("Erro ao gerar PDF: " + e.message, true); } };
-  $c("#pe-salvar").onclick = () => { ler(); x.cronologia = x.cronologia.filter(e => e.data || e.desc);
-    const i = DB.pericias.findIndex(k => k.id===x.id); const cp = JSON.parse(JSON.stringify(x)); if(i>=0) DB.pericias[i] = cp; else DB.pericias.unshift(cp);
-    if($c("#pe-agenda").checked){ if(!x.data){ toast("Informe a data para lançar na agenda.", true); return; } DB.compromissos.push({id:uid(), criadoPor:USU.nome, clienteId:x.clienteId, processoId:"", tipo: x.beneficio==="social" ? "Perícia social" : "Perícia médica", titulo:`Perícia · ${(DB.clientes.find(k=>k.id===x.clienteId)||{}).nome||""}`, data:x.data, hora:x.hora||"", duracao:60, local:x.local, responsavel:USU.nome, status:"agendado"}); }
-    registrar("cadastro", "Perícia salva"); salvar(); toast("Perícia salva."); peEditor(c, x); };
-}
-
-/* =========================================================
-   VERSÃO HOSPEDADA (Netlify + Supabase)
-   Ativa somente quando window.JV_NUVEM existe (link novo).
-   - Dados: tabela "armazem" (já cifrados aqui no navegador).
-   - Instagram: a chave fica só no servidor; o painel envia as
-     artes aprovadas para a fila do servidor, que publica no
-     horário, mesmo com o computador desligado.
-   ========================================================= */
-const ARM_SUPA = (() => {
-  let sb = null, uid = null; const PARTE = 400000;
-  function serial(v){ return JSON.stringify(v, (k, x) => x instanceof ArrayBuffer ? {__ab:b64(new Uint8Array(x))} : (x instanceof Uint8Array ? {__ab:b64(x)} : x)); }
-  function desserial(t){ return JSON.parse(t, (k, x) => x && typeof x==="object" && typeof x.__ab==="string" ? unb64(x.__ab) : x); }
-  async function lib(){
-    if(window.supabase && window.supabase.createClient) return;
-    await new Promise((ok, no) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"; s.onload = ok; s.onerror = () => no(new Error("Sem conexão com o servidor. Verifique a internet e recarregue a página.")); document.head.appendChild(s); });
-  }
-  function telaEntrar(modo, msg){
-    return new Promise(res => {
-      const cad = modo==="criar", rec = modo==="nova";
-      mostrarLogin(`<p class="sub" style="margin-top:18px">${rec ? "Crie a nova senha de acesso ao painel." : cad ? "Primeiro acesso: crie o seu acesso ao painel na nuvem." : "Entre no seu painel."}</p>
-      ${msg ? `<div class="aviso ${/enviad|confirm/i.test(msg)?"ok":"alerta"}" style="cursor:default;text-align:left"><span>${esc(msg)}</span></div>` : ""}
-      <form id="nv-f" autocomplete="on">${rec ? "" : `<label>E-mail<input id="nv-email" type="email" required autocomplete="username"></label>`}
-      <label>${rec ? "Nova senha" : "Senha"}<input id="nv-senha" type="password" required minlength="8" autocomplete="${cad||rec?"new-password":"current-password"}"></label>
-      <button class="btn btn-pri" style="width:100%;margin-top:10px">${rec ? "Salvar nova senha" : cad ? "Criar acesso" : "Entrar"}</button></form>
-      ${rec ? "" : `<p class="sub" style="margin-top:14px;text-align:center">${cad ? `<a href="#" id="nv-ir-entrar">Já tenho acesso</a>` : `<a href="#" id="nv-esqueci">Esqueci a senha</a> · <a href="#" id="nv-ir-criar">Primeiro acesso</a>`}</p>`}`);
-      const f = $("#nv-f");
-      f.onsubmit = async e => {
-        e.preventDefault(); const bt = f.querySelector("button"); bt.disabled = true; bt.textContent = "Aguarde…";
-        const email = rec ? null : $("#nv-email").value.trim(), senha = $("#nv-senha").value;
-        let r;
-        if(rec) r = await sb.auth.updateUser({password:senha});
-        else if(cad) r = await sb.auth.signUp({email, password:senha, options:{emailRedirectTo:location.origin + location.pathname}});
-        else r = await sb.auth.signInWithPassword({email, password:senha});
-        if(r.error){ res(telaEntrar(modo, traduzirAuth(r.error.message))); return; }
-        if(cad && !r.data.session){ res(telaEntrar("entrar", "Enviamos um e-mail de confirmação. Abra o e-mail, clique no link e depois entre aqui.")); return; }
-        res(true);
-      };
-      const lk = (id, fn) => { const a = $(id); if(a) a.onclick = ev => { ev.preventDefault(); fn(); }; };
-      lk("#nv-ir-criar", () => res(telaEntrar("criar")));
-      lk("#nv-ir-entrar", () => res(telaEntrar("entrar")));
-      lk("#nv-esqueci", async () => { const em = ($("#nv-email").value||"").trim(); if(!em){ res(telaEntrar("entrar", "Digite o seu e-mail no campo acima e clique de novo em “Esqueci a senha”.")); return; }
-        const r = await sb.auth.resetPasswordForEmail(em, {redirectTo:location.origin + location.pathname}); res(telaEntrar("entrar", r.error ? traduzirAuth(r.error.message) : "Enviamos um e-mail com o link para criar uma nova senha.")); });
-    });
-  }
-  function traduzirAuth(m){
-    if(/Invalid login credentials/i.test(m)) return "E-mail ou senha incorretos.";
-    if(/Email not confirmed/i.test(m)) return "Confirme o seu e-mail antes de entrar (veja a caixa de entrada e o spam).";
-    if(/already registered|already been registered/i.test(m)) return "Este e-mail já tem acesso. Use “Já tenho acesso”.";
-    if(/Signups not allowed|signup.*disabled/i.test(m)) return "Novos cadastros estão desativados neste painel.";
-    if(/Password should be at least/i.test(m)) return "A senha precisa ter pelo menos 8 caracteres.";
-    if(/rate limit|too many/i.test(m)) return "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
-    if(/network|fetch/i.test(m)) return "Sem conexão com o servidor. Verifique a internet.";
-    return "Não foi possível entrar: " + m;
-  }
-  async function abrir(){
-    try{
-      await lib();
-      sb = window.supabase.createClient(window.JV_NUVEM.url, window.JV_NUVEM.chave, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true}});
-      const recuperando = /type=recovery/.test(location.hash);
-      await new Promise(r => setTimeout(r, 300));
-      let {data} = await sb.auth.getSession();
-      if(recuperando && data.session){ await telaEntrar("nova"); history.replaceState(null, "", location.pathname); }
-      else if(!data.session) await telaEntrar("entrar");
-      ({data} = await sb.auth.getSession()); uid = data.session.user.id;
-      mostrarLogin(`<p class="sub" style="margin-top:18px">Abrindo o seu painel…</p>`);
-      return true;
-    }catch(e){ mostrarLogin(`<div class="aviso alerta" style="cursor:default"><span>${esc(e.message)}</span></div>`); return false; }
-  }
-  const tab = () => sb.from("armazem");
-  async function put(st, k, v){
-    const t = serial(v), n = Math.max(1, Math.ceil(t.length / PARTE)), linhas = [];
-    for(let i=0;i<n;i++) linhas.push({user_id:uid, store:st+"#p", chave:`${k}#${i}`, valor:t.slice(i*PARTE, (i+1)*PARTE)});
-    for(const l of linhas){ const r = await tab().upsert(l); if(r.error) throw new Error(r.error.message); }
-    const r = await tab().upsert({user_id:uid, store:st, chave:String(k), valor:JSON.stringify({n, em:new Date().toISOString()})}); if(r.error) throw new Error(r.error.message);
-    await tab().delete().eq("store", st+"#p").like("chave", `${String(k).replace(/[%_]/g, m => "\\"+m)}#%`).not("chave", "in", `(${linhas.map(l => `"${l.chave}"`).join(",")})`);
-  }
-  async function get(st, k){
-    const {data, error} = await tab().select("valor").eq("store", st).eq("chave", String(k)).maybeSingle(); if(error) throw new Error(error.message); if(!data) return undefined;
-    const md = JSON.parse(data.valor); let t = "";
-    for(let i=0;i<md.n;i++){ const p = await tab().select("valor").eq("store", st+"#p").eq("chave", `${k}#${i}`).maybeSingle(); if(p.error || !p.data) return undefined; t += p.data.valor; }
-    return desserial(t);
-  }
-  async function del(st, k){ await tab().delete().eq("store", st).eq("chave", String(k)); await tab().delete().eq("store", st+"#p").like("chave", `${String(k).replace(/[%_]/g, m => "\\"+m)}#%`); }
-  async function chaves(st){ const {data} = await tab().select("chave").eq("store", st); return (data||[]).map(x => x.chave); }
-  async function limpar(st){ await tab().delete().eq("store", st); await tab().delete().eq("store", st+"#p"); }
-  return {abrir, put, get, del, chaves, limpar, modo:"nuvem", get disponivel(){ return !!sb; }, cliente:() => sb, usuario:() => uid,
-    sair: async () => { if(sb) await sb.auth.signOut(); location.reload(); }};
-})();
-
-/* ---------- Instagram pelo servidor ---------- */
-const NV = {conta:null, carregado:false, linhas:[], erroSync:null, sincronizando:false};
-const NV_ST = {agendado:"Na fila do servidor", publicando:"Publicando agora…", publicado:"Publicado", erro:"Erro", atrasado:"Horário perdido", cancelado:"Cancelado"};
-async function nvFn(acao, extra){
-  const sb = ARM_SUPA.cliente(); const {data:{session}} = await sb.auth.getSession();
-  if(!session) throw new Error("Sessão expirada. Entre de novo no painel.");
-  let r; try{ r = await fetch(`${window.JV_NUVEM.url}/functions/v1/ig`, {method:"POST", headers:{"Content-Type":"application/json", Authorization:`Bearer ${session.access_token}`, apikey:window.JV_NUVEM.chave}, body:JSON.stringify(Object.assign({acao}, extra||{}))}); }
-  catch(e){ throw new Error("Sem conexão com o servidor. Verifique a internet."); }
-  const j = await r.json().catch(() => ({ok:false, erro:"Resposta inválida do servidor."}));
-  if(!j.ok) throw new Error(j.erro || "Erro no servidor."); return j;
-}
-async function nvStatus(){
-  try{ const s = await nvFn("status"); NV.conta = s.conectado ? s : null; NV.carregado = true;
-    if(NV.conta && DB && DB.conteudo){ const c = ccCfg(); c.ig.username = NV.conta.username; c.ig.userId = NV.conta.ig_user_id; } }
-  catch(e){ NV.carregado = true; NV.conta = null; NV.erroStatus = e.message; }
-  return NV.conta;
-}
-function nvElegivel(i){ return i.status==="agendado" && i.design && i.aprovacao && i.aprovacao.hash===ccFeedAssinatura(i); }
-async function nvEnfileirar(i, quandoMs){
-  const sb = ARM_SUPA.cliente(), uid = ARM_SUPA.usuario(), h = ccFeedAssinatura(i);
-  let imagens = i.pub?.nvImgs && i.pub.nvHash===h ? i.pub.nvImgs : null;
-  if(!imagens){
-    await ccFontes(); imagens = []; const lote = uid + "/" + i.id + "-" + Date.now().toString(36);
-    for(let n=0;n<Math.min(10, i.slides.length);n++){
-      const caminho = `${lote}-${n+1}.jpg`, blob = await ccSlideBlob(i, n, "jpg");
-      const up = await sb.storage.from("midia").upload(caminho, blob, {contentType:"image/jpeg", upsert:false});
-      if(up.error) throw new Error("Não foi possível enviar a arte " + (n+1) + ": " + up.error.message);
-      imagens.push(sb.storage.from("midia").getPublicUrl(caminho).data.publicUrl);
-    }
-  }
-  const linha = {user_id:uid, item_id:i.id, titulo:i.titulo||"", legenda:ccFeedLegendaCompleta(i), imagens, agendar_para:new Date(quandoMs).toISOString(), aprovado_em:i.aprovacao.em || new Date().toISOString(), aprovado_hash:h, status:"agendado", tentativas:0, erro:null};
-  const r = await sb.from("publicacoes").upsert(linha, {onConflict:"user_id,item_id"}).select().single();
-  if(r.error) throw new Error(/row-level security/i.test(r.error.message) ? "Esta publicação já foi enviada ao Instagram ou está sendo publicada agora." : r.error.message);
-  i.pub = Object.assign({}, i.pub, {nvId:r.data.id, nvHash:h, nvImgs:imagens, nvQuando:quandoMs, status:"fila", erro:null}); salvar();
-  return r.data;
-}
-async function nvCancelar(itemId){ const sb = ARM_SUPA.cliente(); await sb.from("publicacoes").delete().eq("item_id", itemId).in("status", ["agendado","erro","atrasado","cancelado"]); }
-async function nvSincronizar(){
-  if(NV.sincronizando || !DB || !DB.conteudo || ARM!==ARM_SUPA) return; NV.sincronizando = true;
-  try{
-    const sb = ARM_SUPA.cliente(); const {data, error} = await sb.from("publicacoes").select("id,item_id,titulo,status,agendar_para,permalink,media_id,erro,publicado_em,tentativas").order("agendar_para", {ascending:false}).limit(200);
-    if(error) throw new Error(error.message); NV.linhas = data || [];
-    let mudou = false;
-    for(const l of NV.linhas){
-      const i = ccFeedItens().find(x => x.id===l.item_id); if(!i) continue;
-      if(l.status==="publicado" && i.status!=="publicado"){ ccPubSucesso(i, {mediaId:l.media_id, permalink:l.permalink, timestamp:l.publicado_em}); toast(`Publicado e confirmado pelo Instagram: ${i.titulo}`); mudou = true; continue; }
-      if(["erro","atrasado"].includes(l.status) && i.pub?.status!==l.status){ i.pub = Object.assign({}, i.pub, {status:l.status, erro:l.erro}); registrar("conteúdo", `Instagram (${NV_ST[l.status]}): ${i.titulo} — ${l.erro||""}`); mudou = true; }
-      if(["agendado","erro","atrasado"].includes(l.status) && !nvElegivel(i) && i.status!=="publicado"){ await nvCancelar(i.id); i.pub = Object.assign({}, i.pub, {status:null, nvId:null}); mudou = true; }
-    }
-    if(ccCfg().feed.pubAuto && NV.conta){
-      const pend = ccFeedItens().filter(i => nvElegivel(i) && !(i.pub?.nvHash===ccFeedAssinatura(i) && i.pub?.nvQuando===atQuando(i).getTime() && NV.linhas.some(l => l.item_id===i.id && l.status==="agendado")) && !NV.linhas.some(l => l.item_id===i.id && ["publicado","publicando"].includes(l.status)) && i.pub?.status!=="atrasado");
-      if(pend.length){ const i = pend[0]; try{ await nvEnfileirar(i, atQuando(i).getTime()); mudou = true; }catch(e){ i.pub = Object.assign({}, i.pub, {status:"erro", erro:e.message}); NV.erroSync = e.message; } }
-    }
-    NV.erroSync = null; if(mudou){ salvar(); ccRerenderSeguro(); }
-  }catch(e){ NV.erroSync = e.message; }
-  finally{ NV.sincronizando = false; }
-}
-if(window.JV_NUVEM){
-  ccPubCfg = function(){ const c = ccCfg(); return {token:NV.conta ? "servidor" : "", userId:NV.conta ? NV.conta.ig_user_id : "", cloud:"servidor", preset:"servidor", ativo:!!c.feed.pubAuto, atrasoMaxH:6, nuvem:true}; };
-  ccPubPronto = function(){ return !!NV.conta; };
-  ccAgendaCongelar = function(){};
-  ccPubAoEntrar = function(){ nvStatus().then(() => { nvSincronizar(); ccRerenderSeguro(); }); };
-  ccPubPrepararFundo = function(){};
-  ccPubTique = function(){ if(DB && DB.conteudo && ARM===ARM_SUPA) nvSincronizar(); };
-  ccPublicarItemAPI = async function(i){
-    if(!["agendado","aprovado"].includes(i.status) || !i.aprovacao) throw new Error("Sem aprovação expressa: nada foi publicado.");
-    if(!i.design) throw new Error("Publicação no visual antigo: use a publicação manual.");
-    if(i.aprovacao.hash !== ccFeedAssinatura(i)){ i.aprovacao = null; ccMudarStatus(i, "aprovacao", "Conteúdo diferente do aprovado: voltou para aprovação"); salvar(); throw new Error("A arte ou a legenda mudou depois da aprovação. Aprove de novo."); }
-    if(!NV.conta) throw new Error("Instagram não conectado. Conecte em Central de Conteúdo → Mais ferramentas → Integrações.");
-    i.pub = Object.assign({}, i.pub, {status:"publicando", inicio:new Date().toISOString()}); salvar();
-    try{
-      const linha = await nvEnfileirar(i, Date.now() + 86400000); // reservado: o servidor publica agora, por este pedido
-      const r = await nvFn("publicar", {id:linha.id});
-      if(!r.ok) throw new Error(r.erro || "Falha ao publicar.");
-      ccPubSucesso(i, {mediaId:r.media_id, permalink:r.permalink, timestamp:null});
-    }catch(e){
-      i.pub = Object.assign({}, i.pub, {status:"erro", erro:e.message, tentativas:(i.pub?.tentativas||0)+1, ultimaTentativa:new Date().toISOString()});
-      registrar("conteúdo", `Falha ao publicar "${i.titulo}": ${e.message}`); salvar();
-      if(i.status!=="agendado") await nvCancelar(i.id).catch(()=>{});
-      throw e;
-    }
-  };
-  ccTelaAjustesFeed = function(c){
-    ccTelaAjustes(c);
-    const cfg = ccCfg(), f = cfg.feed, conta = NV.conta;
-    const h2 = [...c.querySelectorAll("h2.secao-tit")].find(x => /Integrações/.test(x.textContent));
-    const box = document.createElement("div"); box.style.marginBottom = "16px";
-    const fila = NV.linhas.slice(0, 30);
-    box.innerHTML = `<div class="cartao at-destaque"><h3>Instagram · publicação direta pelo painel</h3>
-      ${conta ? `<div style="display:flex;gap:12px;align-items:center;margin:8px 0">${conta.foto?`<img src="${esc(conta.foto)}" alt="" style="width:48px;height:48px;border-radius:50%">`:""}<div><b>Conectado: @${esc(conta.username)}</b><div class="sub">${conta.publicacoes24h!=null?`${conta.publicacoes24h} publicação(ões) nas últimas 24 h (limite do Instagram: 50)`:""}${conta.token_expira?` · chave válida até ${new Date(conta.token_expira).toLocaleDateString("pt-BR")} (renovada sozinha)`:""}</div>${conta.aviso?`<div class="sub" style="color:var(--perigo)">${esc(conta.aviso)}</div>`:""}</div></div>`
-        : `<p style="margin-top:0">Status: <b>não conectado</b>${NV.erroStatus?` · ${esc(NV.erroStatus)}`:""}</p>
-        <ol class="passos sub"><li>Abra a <a href="https://developers.facebook.com/apps/1652434769599804/use_cases/customize/Unified-Login-API-Setup/?use_case_enum=INSTAGRAM_BUSINESS" target="_blank" rel="noopener">página do aplicativo na Meta</a> (com o Facebook que criou o aplicativo).</li>
-        <li>Em “2. Gerar tokens de acesso”, ao lado de <b>jessicavaliente_</b>, clique em <b>“Gerar token”</b> e depois em <b>copiar</b>.</li>
-        <li>Cole aqui embaixo e clique em <b>Conectar</b>. A chave vai direto para o servidor e não fica salva neste navegador.</li></ol>`}
-      <form id="nv-con" class="campos">${conta ? "" : `<label class="largo">Chave de acesso do Instagram<input name="token" type="password" autocomplete="off" placeholder="cole aqui a chave gerada na Meta"></label>
-        <label>ID da conta do Instagram (opcional)<input name="igId" value="17841400193371445" autocomplete="off"></label>`}
-        <label class="chk largo"><input type="checkbox" name="pubAuto" ${f.pubAuto?"checked":""}> Publicar automaticamente no dia e horário marcados (somente conteúdos aprovados por você)</label>
-        <label class="chk largo"><input type="checkbox" name="autoFila" ${f.autoFila!==false?"checked":""}> Ao aprovar, colocar na fila com data e horário sugeridos</label>
-        <label>Horário nos fins de semana<input type="time" name="horaFds" value="${esc(f.horaFds||"10:00")}"></label>
-        <label>Selo nas artes<input name="selo" value="${esc(f.selo||"")}" placeholder="${esc(atSemOAB() ? "CORRESPONDENTE JURÍDICA" : "")}"></label>
-        <div class="largo barra-acoes" style="margin:0">${conta ? "" : `<button type="button" class="btn btn-sm btn-pri" id="nv-conectar">Conectar</button>`}<button class="btn btn-sm">Salvar opções</button><button type="button" class="btn btn-sm" id="nv-testar">Testar conexão</button>${conta?`<button type="button" class="btn btn-sm btn-perigo" id="nv-desc">Desconectar</button>`:""}</div></form>
-      <div id="nv-r" class="sub" style="margin-top:6px"></div>
-      <p class="sub">O servidor confere a fila a cada 5 minutos e publica o que você aprovou, no horário marcado, mesmo com o computador desligado. Só é registrado como publicado quando o Instagram devolve o link da publicação. Limites do Instagram: até 10 imagens por carrossel, 2.200 caracteres na legenda e 30 hashtags.</p></div>
-      <div class="secao-tit" style="font-size:18px">Fila no servidor</div>
-      <div class="tabela-wrap"><table><thead><tr><th>Publicação</th><th>Data e horário</th><th>Situação</th><th></th></tr></thead><tbody>${fila.length ? fila.map(l => `<tr><td>${esc(l.titulo||"—")}</td><td>${new Date(l.agendar_para).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</td><td>${esc(NV_ST[l.status]||l.status)}${l.erro?`<div class="sub">${esc(l.erro)}</div>`:""}</td><td>${l.permalink?`<a href="${esc(l.permalink)}" target="_blank" rel="noopener">Ver no Instagram</a>`:""}</td></tr>`).join("") : `<tr><td colspan="4" class="vazio">Nada na fila do servidor.</td></tr>`}</tbody></table></div>`;
-    if(h2) h2.after(box); else c.prepend(box);
-    const out = $("#nv-r");
-    $("#nv-con").onsubmit = e => { e.preventDefault(); const v = lerForm(e.target); Object.assign(f, {pubAuto:v.pubAuto && !!NV.conta, autoFila:v.autoFila, horaFds:v.horaFds||"10:00", selo:v.selo}); if(v.pubAuto && !NV.conta) toast("Conecte o Instagram antes de ativar a publicação automática.", true); salvar(); toast("Opções salvas."); nvSincronizar(); ccRerender(); };
-    const bc = $("#nv-conectar"); if(bc) bc.onclick = async () => { const v = lerForm($("#nv-con")); if(!v.token){ toast("Cole a chave gerada na Meta.", true); return; }
-      bc.disabled = true; out.textContent = "Conectando…";
-      try{ const r = await nvFn("conectar", {token:v.token, igId:v.igId}); $("#nv-con").querySelector('[name="token"]').value = ""; await nvStatus(); toast(`Instagram conectado: @${r.username}`); ccRerender(); }
-      catch(e){ out.innerHTML = `<span style="color:var(--perigo)">${esc(e.message)}</span>`; bc.disabled = false; } };
-    $("#nv-testar").onclick = async () => { out.textContent = "Testando…"; const s = await nvStatus(); out.innerHTML = s ? `✓ Instagram @${esc(s.username)} conectado${s.aviso?` · <span style="color:var(--perigo)">${esc(s.aviso)}</span>`:" e com permissão de publicação."}` : `✗ Não conectado${NV.erroStatus?`: ${esc(NV.erroStatus)}`:""}.`; };
-    const bd = $("#nv-desc"); if(bd) bd.onclick = async () => { if(!(await confirmar("Desconectar o Instagram", "O servidor apaga a chave e nada mais será publicado até você conectar de novo. Continuar?", "Desconectar", true))) return; await nvFn("desconectar").catch(e => toast(e.message, true)); f.pubAuto = false; salvar(); await nvStatus(); ccRerender(); };
-  };
-}
-
-/* =========================================================
-   NOVOS ESTILOS DE CAPA (v4) — inspirados nas referências
-   enviadas pela Jéssica: premium escuro (couro e selo),
-   premium claro (papel e caneta), palavra manuscrita gigante,
-   colagem com recortes, bilhetes (post-its) e texto selecionado.
-   Sempre nas cores da marca: dourado, bege, nude e marrom.
-   Os estilos anteriores continuam todos disponíveis.
-   ========================================================= */
-const AT_SCRIPT = `"Pinyon Script", "Bodoni Moda", Georgia, serif`;
-const AT_CAPAS_V4 = {premium:"Premium escuro (couro e selo)", premiumclaro:"Premium claro (papel e caneta)", assinatura:"Palavra manuscrita gigante", colagem:"Colagem com recortes", lembretes:"Bilhetes (post-its)", selecao:"Texto selecionado (menu)"};
-Object.assign(AT_CAPAS, AT_CAPAS_V4);
-
-/* partes do título: antes do destaque, destaque (*...*) e depois */
-function atPartes(s){
-  let t = String(s.titulo || "").trim();
-  if(s.numero && !t.startsWith(String(s.numero))) t = s.numero + " " + t;
-  const m = t.match(/^([^*]*)\*([^*]+)\*(.*)$/);
-  if(!m){ const ws = t.replace(/\*/g,"").split(/\s+/); const n = ws.length > 4 ? 2 : 1; return {antes: ws.slice(0, -n).join(" "), dest: ws.slice(-n).join(" ").replace(/[.?!]+$/,""), depois: ""}; }
-  const dep = m[3].trim(); return {antes: m[1].trim(), dest: m[2].trim().replace(/[.]+$/,""), depois: /^[\s.!?…,;:]*$/.test(dep) ? "" : dep};
-}
-/* texto simples com quebra automática (sem destaque) */
-function atBloco(g, txt, o){ return atAjustar(g, String(txt||"").replace(/\*/g,""), Object.assign({peso:400, lh:1.12, min:30}, o)); }
-function atEscreverBloco(g, f, x, y, cor, alinh){ return atEscrever(g, f, x, y, {cor, alinh}); }
-/* palavra manuscrita (fonte cursiva) com ajuste de tamanho e até 2 linhas */
-function atScript(g, txt, cx, y, maxW, tam, fill, o){
-  o = o || {}; let t = tam, linhas;
-  const quebrar = sz => { g.font = `400 ${sz}px ${AT_SCRIPT}`; const ws = txt.split(/\s+/); if(g.measureText(txt).width <= maxW) return [txt];
-    let best = null; for(let n=1;n<ws.length;n++){ const a = ws.slice(0,n).join(" "), b = ws.slice(n).join(" "); const w = Math.max(g.measureText(a).width, g.measureText(b).width); if(!best || w < best.w) best = {w, l:[a,b]}; }
-    return best && best.w <= maxW ? best.l : null; };
-  while(t > (o.min || 60)){ linhas = quebrar(t); if(linhas && (o.uma ? linhas.length===1 : true)) break; t -= 4; }
-  if(!linhas) linhas = [txt];
-  g.font = `400 ${t}px ${AT_SCRIPT}`; g.textAlign = o.alinh || "center"; g.fillStyle = fill;
-  const lh = t * (o.lh || .92);
-  linhas.forEach((l, n) => { if(o.sombra){ g.save(); g.shadowColor = o.sombra; g.shadowBlur = 18; g.shadowOffsetY = 6; g.fillText(l, cx, y + t*.78 + n*lh); g.restore(); } else g.fillText(l, cx, y + t*.78 + n*lh); });
-  g.textAlign = "left"; return {alt: t*.78 + (linhas.length-1)*lh + t*.28, t, n: linhas.length};
-}
-function atSombra(g, cor, blur, dy){ g.shadowColor = cor; g.shadowBlur = blur; g.shadowOffsetX = 0; g.shadowOffsetY = dy; }
-function atSemSombra(g){ g.shadowColor = "transparent"; g.shadowBlur = 0; g.shadowOffsetY = 0; }
-
-/* ---------- texturas e objetos desenhados ---------- */
-function atCouro(g, W, H, seed, base){
-  const gr = g.createRadialGradient(W*.5, H*.42, 60, W*.5, H*.5, H*.85); gr.addColorStop(0, base[0]); gr.addColorStop(.6, base[1]); gr.addColorStop(1, base[2]);
-  g.fillStyle = gr; g.fillRect(0, 0, W, H);
-  const r = atRng(seed*13+5); g.save();
-  for(let n=0;n<9000;n++){ g.globalAlpha = .05*r(); g.fillStyle = r() > .5 ? "#000" : "#E9D9BC"; const s = .8 + r()*2.2; g.fillRect(r()*W, r()*H, s, s); }
-  g.globalAlpha = .07; g.strokeStyle = "#E9D9BC"; g.lineWidth = 1;
-  for(let n=0;n<26;n++){ g.beginPath(); let x = r()*W, y = r()*H; g.moveTo(x, y); for(let j=0;j<5;j++){ x += (r()-.5)*90; y += (r()-.5)*40; g.lineTo(x, y); } g.stroke(); }
-  g.restore();
-  const v = g.createRadialGradient(W/2, H/2, H*.3, W/2, H/2, H*.8); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(15,9,6,.55)"); g.fillStyle = v; g.fillRect(0,0,W,H);
-}
-function atPapel(g, x, y, w, h, ang, k, o){
-  o = o || {}; g.save(); g.translate(x + w/2, y + h/2); g.rotate(ang);
-  atSombra(g, "rgba(30,18,10,.45)", 40*k, 18*k); g.fillStyle = o.cor || "#FBF7F0"; g.fillRect(-w/2, -h/2, w, h); atSemSombra(g);
-  const gr = g.createLinearGradient(-w/2, -h/2, w/2, h/2); gr.addColorStop(0, "rgba(255,255,255,.35)"); gr.addColorStop(1, "rgba(120,90,60,.10)"); g.fillStyle = gr; g.fillRect(-w/2, -h/2, w, h);
-  const r = atRng(o.seed || 7); const mx = -w/2 + 70*k;
-  if(o.titulo){ g.font = `500 ${22*k}px ${AT_SANS}`; g.fillStyle = "rgba(90,64,50,.55)"; atEspacado(g, o.titulo, mx, -h/2 + 90*k, 6*k); }
-  g.fillStyle = "rgba(90,64,50,.16)";
-  for(let yy = -h/2 + (o.titulo ? 140 : 90)*k; yy < h/2 - 60*k; yy += 30*k){ const ww = (w - 140*k) * (.55 + r()*.45); g.fillRect(mx, yy, ww, 7*k); }
-  if(o.caixas){ g.strokeStyle = "rgba(90,64,50,.35)"; g.lineWidth = 2*k; for(let n=0;n<3;n++){ g.strokeRect(w/2 - 150*k, -h/2 + (150 + n*60)*k, 26*k, 26*k); } }
-  g.restore();
-}
-function atSeloCera(g, cx, cy, rad, k, escuro){
-  g.save(); atSombra(g, "rgba(20,12,8,.5)", 24*k, 10*k);
-  g.beginPath(); for(let n=0;n<=72;n++){ const a = n/72*Math.PI*2, rr = rad*(1 + .06*Math.sin(n*1.7) + .04*Math.sin(n*4.3)); g.lineTo(cx + Math.cos(a)*rr, cy + Math.sin(a)*rr); } g.closePath();
-  g.fillStyle = atOuro(g, cx - rad, cy - rad, cx + rad, cy + rad, true); g.fill(); atSemSombra(g);
-  g.strokeStyle = "rgba(90,64,40,.55)"; g.lineWidth = 2.5*k; g.beginPath(); g.arc(cx, cy, rad*.72, 0, Math.PI*2); g.stroke();
-  g.lineWidth = 1.2*k; g.beginPath(); g.arc(cx, cy, rad*.64, 0, Math.PI*2); g.stroke();
-  g.font = `italic 400 ${rad*.62}px ${AT_SERIF}`; g.fillStyle = "rgba(80,56,34,.85)"; g.textAlign = "center"; g.fillText("JV", cx, cy + rad*.2); g.textAlign = "left";
-  const gr = g.createRadialGradient(cx - rad*.35, cy - rad*.4, 2, cx, cy, rad); gr.addColorStop(0, "rgba(255,255,255,.45)"); gr.addColorStop(.4, "rgba(255,255,255,0)"); g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rad, 0, Math.PI*2); g.fill();
-  g.restore();
-}
-function atCaneta(g, x, y, comp, ang, k){
-  g.save(); g.translate(x, y); g.rotate(ang); atSombra(g, "rgba(40,25,15,.4)", 22*k, 14*k);
-  g.fillStyle = "#2E211B"; atRR(g, 0, -13*k, comp, 26*k, 13*k); g.fill(); atSemSombra(g);
-  const gr = g.createLinearGradient(0, -13*k, 0, 13*k); gr.addColorStop(0, "rgba(255,255,255,.25)"); gr.addColorStop(.5, "rgba(255,255,255,0)"); g.fillStyle = gr; atRR(g, 0, -13*k, comp, 26*k, 13*k); g.fill();
-  g.fillStyle = atOuro(g, comp*.62, -14*k, comp*.62, 14*k, true); g.fillRect(comp*.62, -13*k, 14*k, 26*k); g.fillRect(comp*.2, -15*k, comp*.3, 5*k);
-  g.fillStyle = atOuro(g, -60*k, -10*k, 0, 10*k, true); g.beginPath(); g.moveTo(0, -12*k); g.lineTo(-62*k, 0); g.lineTo(0, 12*k); g.closePath(); g.fill();
-  g.restore();
-}
-function atFita(g, x, y, w, h, ang, cor){ g.save(); g.translate(x, y); g.rotate(ang); g.globalAlpha = .78; g.fillStyle = cor; g.beginPath(); g.moveTo(-w/2, -h/2);
-  for(let n=0;n<=6;n++) g.lineTo(-w/2 + (n%2)*4, -h/2 + n*h/6); g.lineTo(w/2, h/2); for(let n=6;n>=0;n--) g.lineTo(w/2 - (n%2)*4, -h/2 + n*h/6); g.closePath(); g.fill();
-  g.globalAlpha = .18; g.fillStyle = "#fff"; g.fillRect(-w/2, -h/2, w, h*.35); g.restore(); }
-function atRasgado(g, x, y, w, h, ang, cor, seed, k){
-  const r = atRng(seed); g.save(); g.translate(x, y); g.rotate(ang); atSombra(g, "rgba(40,25,15,.28)", 14*k, 6*k); g.fillStyle = cor; g.beginPath();
-  g.moveTo(0, 0); for(let xx=0; xx<=w; xx+=14*k) g.lineTo(xx, (r()-.5)*7*k);
-  for(let yy=0; yy<=h; yy+=12*k) g.lineTo(w + (r()-.5)*9*k, yy);
-  for(let xx=w; xx>=0; xx-=14*k) g.lineTo(xx, h + (r()-.5)*7*k);
-  for(let yy=h; yy>=0; yy-=12*k) g.lineTo((r()-.5)*9*k, yy); g.closePath(); g.fill(); atSemSombra(g); g.restore(); }
-function atPostit(g, cx, cy, s, ang, cor, k){
-  g.save(); g.translate(cx, cy); g.rotate(ang); atSombra(g, "rgba(40,25,15,.32)", 22*k, 12*k);
-  g.fillStyle = cor; g.beginPath(); g.moveTo(-s/2, -s/2); g.lineTo(s/2, -s/2); g.lineTo(s/2, s/2 - 40*k); g.quadraticCurveTo(s/2 - 8*k, s/2 - 4*k, s/2 - 50*k, s/2); g.lineTo(-s/2, s/2); g.closePath(); g.fill(); atSemSombra(g);
-  const gr = g.createLinearGradient(0, -s/2, 0, -s/2 + 40*k); gr.addColorStop(0, "rgba(0,0,0,.08)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(-s/2, -s/2, s, 40*k);
-  g.restore();
-}
-function atPilula(g, txt, cx, y, k, cor, corTxt, cheio){
-  g.font = `500 ${19*k}px ${AT_SANS}`; const w = g.measureText(txt).width + 64*k, h = 48*k;
-  atRR(g, cx - w/2, y, w, h, h/2); if(cheio){ g.fillStyle = cor; g.fill(); } else { g.strokeStyle = cor; g.lineWidth = 1.6*k; g.stroke(); }
-  g.fillStyle = corTxt; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, cx, y + h/2 + 1*k); g.textAlign = "left"; g.textBaseline = "alphabetic"; return h;
-}
-function atArrobaRodape(g, W, y, k, cor){
-  const a = ccCfg().arroba || "@jessicavaliente_"; g.font = `500 ${21*k}px ${AT_SANS}`; const w = g.measureText(a).width; const x0 = W/2 - (w + 34*k)/2;
-  g.strokeStyle = cor; g.lineWidth = 2*k; atRR(g, x0, y - 19*k, 22*k, 22*k, 7*k); g.stroke(); g.beginPath(); g.arc(x0 + 11*k, y - 8*k, 5*k, 0, Math.PI*2); g.stroke();
-  g.fillStyle = cor; g.beginPath(); g.arc(x0 + 17*k, y - 14*k, 1.5*k, 0, Math.PI*2); g.fill(); g.fillText(a, x0 + 34*k, y);
-}
-async function atMarcaTopo(g, W, y, k, cor, esq){
-  const logo = await ccLogo(); const cx = esq ? 80*k + 30*k : W/2; if(logo) g.drawImage(logo, cx - 30*k, y, 60*k, 60*k);
-  g.font = `500 ${14*k}px ${AT_SANS}`; g.fillStyle = cor; atEspacado(g, (ccCfg().assinatura || "JÉSSICA VALIENTE").toUpperCase(), esq ? 80*k : W/2, y + (logo ? 88 : 20)*k, 4*k, esq ? "left" : "center");
-}
-function atCtaV4(i, total){ return total > 1 ? "Deslize para ler  →" : "Leia a legenda"; }
-
-/* ---------- capas v4 ---------- */
-async function atCapaV4(g, W, H, i, s, P, k, seed, idx, total, lay){
-  const pt = atPartes(s), olho = (s.rotulo || atAreaRot(i)).toUpperCase(), r = atRng(seed*3+1), d = i.design || {};
-  const foto = d.fotoId || s.imgId;
-  g.textAlign = "left"; g.textBaseline = "alphabetic";
-
-  if(lay==="premium" || lay==="premiumclaro"){
-    const escuro = lay==="premium";
-    const corT = escuro ? "#F7F2E9" : "#47322A", corM = escuro ? "#D9C092" : "#8F6E3E", corS = escuro ? "rgba(235,221,203,.85)" : "#735746";
-    if(escuro){
-      let ok = false; if(foto){ ok = await atFoto(g, foto, 0, 0, W, H); if(ok){ g.fillStyle = "rgba(40,28,22,.62)"; g.fillRect(0,0,W,H); } }
-      if(!ok) atCouro(g, W, H, seed, ["#5A4032", "#3E2B24", "#241812"]);
-      atPapel(g, 150*k, 1000*k, 760*k, 620*k, -.09, k, {titulo:"PROTOCOLO", seed});
-      atSeloCera(g, 820*k, 1070*k, 78*k, k, true);
-    } else {
-      g.fillStyle = "#F3EADD"; g.fillRect(0,0,W,H); atGrao(g, W, H, seed, false);
-      const v = g.createRadialGradient(W*.5, H*.35, 100, W*.5, H*.5, H*.9); v.addColorStop(0, "rgba(255,255,255,.55)"); v.addColorStop(1, "rgba(120,90,60,.18)"); g.fillStyle = v; g.fillRect(0,0,W,H);
-      let ok = false; if(foto){ g.save(); g.beginPath(); g.rect(0, 0, W, 560*k); g.clip(); ok = await atFoto(g, foto, 0, 0, W, 560*k); g.restore(); if(ok){ const gr = g.createLinearGradient(0, 380*k, 0, 560*k); gr.addColorStop(0, "rgba(243,234,221,0)"); gr.addColorStop(1, "#F3EADD"); g.fillStyle = gr; g.fillRect(0, 380*k, W, 180*k); } }
-      if(!ok){ atPapel(g, 420*k, -120*k, 640*k, 640*k, .16, k, {titulo:"ORIENTAÇÃO", seed, caixas:true}); atCaneta(g, 560*k, 470*k, 420*k, -.62, k); }
-    }
-    await atMarcaTopo(g, W, 60*k, k, corM, !escuro && !foto);
-    // bloco de texto
-    const larg = 860*k;
-    const fA = pt.antes ? atBloco(g, pt.antes, {fam:AT_SERIF, max:larg, maxAlt:300*k, tam:76*k, lh:1.1, min:44*k}) : null;
-    g.font = `500 ${18*k}px ${AT_SANS}`;
-    const topo = escuro ? 250*k : (foto ? 520*k : 560*k), fundo = escuro ? 960*k : 1180*k;
-    // mede o script sem desenhar
-    const medir = () => { g.save(); g.globalAlpha = 0; const m = atScript(g, pt.dest, W/2, 0, larg, 170*k, "#000", {min:70*k}); g.restore(); return m; };
-    const mS = medir(); const altTot = (fA ? fA.alt : 0) + mS.alt - 20*k + 60*k + 48*k + 56*k;
-    let y = topo + Math.max(0, (fundo - topo - altTot)/2);
-    if(fA){ y = atEscreverBloco(g, fA, W/2, y, corT, "center"); y += 6*k; }
-    const sc = atScript(g, pt.dest, W/2, y, larg, 170*k, atOuro(g, W/2 - 300*k, y, W/2 + 300*k, y + 160*k, escuro), {min:70*k, sombra: escuro ? "rgba(0,0,0,.35)" : null}); y += sc.alt + 22*k;
-    g.font = `500 ${18*k}px ${AT_SANS}`; g.fillStyle = corS; atEspacado(g, pt.depois ? pt.depois.toUpperCase() : olho, W/2, y + 18*k, 3.6*k, "center"); y += 52*k;
-    atPilula(g, atCtaV4(i, total), W/2, y, k, corM, corM, false);
-    if(escuro) atArrobaRodape(g, W, 1300*k, k, "#6E5230"); else atArrobaRodape(g, W, 1290*k, k, "#735746");
-    return;
-  }
-
-  if(lay==="assinatura"){
-    const escuro = P.escuro || true;
-    g.fillStyle = "#3E2B24"; g.fillRect(0,0,W,H);
-    let ok = false; if(foto){ ok = await atFoto(g, foto, 0, 0, W, H); if(ok){ const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, "rgba(46,32,25,.85)"); gr.addColorStop(.6, "rgba(46,32,25,.35)"); gr.addColorStop(1, "rgba(46,32,25,.15)"); g.fillStyle = gr; g.fillRect(0,0,W,H); } }
-    if(!ok){ const gr = g.createLinearGradient(0,0,0,H); gr.addColorStop(0, "#5A4032"); gr.addColorStop(1, "#2E201A"); g.fillStyle = gr; g.fillRect(0,0,W,H);
-      g.fillStyle = "#EBDDCB"; g.globalAlpha = .12; atArco(g, 560*k, 180*k, 440*k, 1300*k); g.fill(); g.globalAlpha = .2; g.strokeStyle = "#D9C092"; g.lineWidth = 2*k; atArco(g, 530*k, 150*k, 500*k, 1300*k); g.stroke(); g.globalAlpha = 1;
-      atGrao(g, W, H, seed, true); }
-    // círculo com a primeira parte
-    const cx = 250*k, cy = 250*k, cr = 245*k;
-    g.fillStyle = "#EBDDCB"; g.beginPath(); g.arc(cx, cy, cr, 0, Math.PI*2); g.fill();
-    if(pt.antes){ const f = atBloco(g, pt.antes, {fam:AT_SERIF, max:330*k, maxAlt:260*k, tam:46*k, lh:1.08, min:28*k}); atEscreverBloco(g, f, cx, cy - f.alt/2 + 10*k, "#47322A", "center"); }
-    // palavra manuscrita gigante, inclinada
-    g.save(); g.translate(W/2, 720*k); g.rotate(-.09);
-    atScript(g, pt.dest, 0, -170*k, 980*k, 300*k, atOuro(g, -400*k, -150*k, 400*k, 150*k, true), {min:110*k, lh:.82, sombra:"rgba(0,0,0,.45)"});
-    g.restore();
-    // caixa inferior
-    const bx = 560*k, bw = 440*k, by = 1010*k, bh = 230*k;
-    g.fillStyle = "#47322A"; g.globalAlpha = .92; g.fillRect(bx, by, bw, bh); g.globalAlpha = 1;
-    const txt = pt.depois || (s.sub ? s.sub : "Leia até o final.");
-    const f2 = atBloco(g, txt, {fam:AT_SERIF, max:bw - 80*k, maxAlt:bh - 70*k, tam:44*k, lh:1.1, min:26*k}); atEscreverBloco(g, f2, bx + bw - 40*k, by + (bh - f2.alt)/2 - 6*k, "#F7F2E9", "right");
-    g.font = `600 ${16*k}px ${AT_SANS}`; g.fillStyle = "#D9C092"; atEspacado(g, olho, 80*k, 1150*k, 3.4*k);
-    atArrobaRodape(g, W, 1305*k, k, "#C9B39A");
-    return;
-  }
-
-  if(lay==="colagem"){
-    g.fillStyle = "#E1CDA9"; g.fillRect(0,0,W,H);
-    const gr = g.createRadialGradient(W/2, H/2, 200, W/2, H/2, H*.8); gr.addColorStop(0, "rgba(255,255,255,.25)"); gr.addColorStop(1, "rgba(90,64,50,.25)"); g.fillStyle = gr; g.fillRect(0,0,W,H); atGrao(g, W, H, seed, false);
-    // recortes de fundo
-    atRasgado(g, -40*k, 150*k, 620*k, 420*k, -.05, "#EBDDCB", seed+1, k);
-    atRasgado(g, 560*k, 820*k, 600*k, 460*k, .06, "#5A4032", seed+2, k);
-    g.save(); g.globalAlpha = .5; g.strokeStyle = "#8F6E3E"; g.lineWidth = 1.4*k; for(let n=0;n<4;n++){ g.beginPath(); g.arc(860*k, 300*k, (90 + n*34)*k, 0, Math.PI*2); g.stroke(); } g.restore();
-    await atMarcaTopo(g, W, 52*k, k, "#6E5230");
-    // tiras com as palavras da primeira parte
-    const ws = (pt.antes || "").split(/\s+/).filter(Boolean); const lin = []; let cur = "";
-    ws.forEach(w => { const t = cur ? cur + " " + w : w; if(t.length > 17 && cur){ lin.push(cur); cur = w; } else cur = t; }); if(cur) lin.push(cur);
-    const linhas = lin.slice(0, 4); let y = 250*k + Math.max(0, (4 - linhas.length))*40*k;
-    const cores = [["#FBF7F0","#47322A"],["#47322A","#F7F2E9"],["#F7F2E9","#5A4032"],["#B8955F","#FFFFFF"]];
-    linhas.forEach((l, n) => { const serif = n % 2 === 0; const tam = (serif ? 64 : 50)*k; g.font = serif ? `italic 400 ${tam}px ${AT_SERIF}` : `600 ${tam}px ${AT_SANS}`;
-      const txt = serif ? l : l.toUpperCase(); const w = g.measureText(txt).width; const x = 110*k + (n % 2)*50*k; const [bg, fg] = cores[n % 4]; const ang = (r() - .5)*.06;
-      atRasgado(g, x - 26*k, y - tam*.95, w + 52*k, tam*1.3, ang, bg, seed + 10 + n, k);
-      g.save(); g.translate(x - 26*k, y - tam*.95); g.rotate(ang); g.fillStyle = fg; g.fillText(txt, 26*k, tam*.95); g.restore(); y += tam*1.45; });
-    // palavra do destaque em letras recortadas
-    const letras = [...pt.dest.replace(/\s+/g, " ").toUpperCase()]; const caixas = ["#47322A","#FBF7F0","#B8955F","#EBDDCB","#5A4032","#D9C092"];
-    const fontes = [l => `italic 400 ${l}px ${AT_SERIF}`, l => `600 ${l}px ${AT_SANS}`, l => `400 ${l}px ${AT_SERIF}`];
-    // quebra em linhas pelo tamanho
-    const maxW = 900*k; let tamL = 110*k; const medirLinhas = tl => { const out = [[]]; let w = 0; pt.dest.toUpperCase().split(/\s+/).forEach(pal => { const pw = pal.length * tl*.78; if(w && w + pw + tl*.4 > maxW){ out.push([]); w = 0; } out[out.length-1].push(pal); w += pw + tl*.4; }); return out; };
-    let ls = medirLinhas(tamL); while(ls.length > 3 && tamL > 60*k){ tamL -= 6*k; ls = medirLinhas(tamL); }
-    y += 40*k; let li = 0;
-    ls.forEach(pals => { let x = 90*k + (li % 2)*40*k; pals.forEach(pal => { [...pal].forEach((ch, j) => { const bgc = caixas[(j + li*2 + seed) % caixas.length]; const esc = ["#47322A","#5A4032","#B8955F"].includes(bgc);
-        const fs = fontes[(j + seed) % 3](tamL*(.78 + r()*.18)); g.font = fs; const cw = Math.max(g.measureText(ch).width + 22*k, tamL*.55); const ang = (r() - .5)*.22;
-        g.save(); g.translate(x + cw/2, y + tamL/2); g.rotate(ang); atSombra(g, "rgba(40,25,15,.3)", 8*k, 4*k); g.fillStyle = bgc; g.fillRect(-cw/2, -tamL*.58, cw, tamL*1.12); atSemSombra(g);
-        g.fillStyle = esc ? "#F7F2E9" : "#47322A"; g.textAlign = "center"; g.fillText(ch, 0, tamL*.3); g.textAlign = "left"; g.restore(); x += cw + 4*k; }); x += tamL*.35; }); y += tamL*1.25; li++; });
-    // etiqueta + fitas
-    g.save(); g.translate(150*k, Math.min(y + 30*k, 1120*k)); g.rotate(-.04); g.fillStyle = "#47322A"; g.font = `600 ${20*k}px ${AT_SANS}`; const tw = g.measureText(olho).width + olho.length*3.2*k + 48*k; g.fillRect(0, 0, tw, 52*k); g.fillStyle = "#F7F2E9"; atEspacado(g, olho, 24*k, 34*k, 3.2*k); g.restore();
-    atFita(g, 120*k, 170*k, 170*k, 44*k, -.5, "#D9C092"); atFita(g, 960*k, 1130*k, 190*k, 46*k, .6, "#EBDDCB");
-    atPilula(g, atCtaV4(i, total), W/2 + 230*k, 1200*k, k, "#EBDDCB", "#47322A", true);
-    atArrobaRodape(g, W, 1305*k, k, "#5A4032");
-    return;
-  }
-
-  if(lay==="lembretes"){
-    const escuro = P.escuro; const fundo = escuro ? "#4F382C" : "#EBDDCB";
-    g.fillStyle = fundo; g.fillRect(0,0,W,H);
-    let ok = false; if(foto){ ok = await atFoto(g, foto, 0, 0, W, H); if(ok){ g.fillStyle = escuro ? "rgba(46,32,25,.55)" : "rgba(235,221,203,.55)"; g.fillRect(0,0,W,H); } }
-    if(!ok){ const gr = g.createRadialGradient(W*.5, H*.55, 100, W*.5, H*.55, H*.75); gr.addColorStop(0, escuro ? "#6A4D3D" : "#F7F2E9"); gr.addColorStop(1, fundo); g.fillStyle = gr; g.fillRect(0,0,W,H); atGrao(g, W, H, seed, escuro); }
-    const corT = escuro ? "#F7F2E9" : "#47322A", corM = escuro ? "#D9C092" : "#8F6E3E";
-    await atMarcaTopo(g, W, 50*k, k, corM);
-    let y = 200*k;
-    g.font = `500 ${20*k}px ${AT_SANS}`; g.fillStyle = corM; atEspacado(g, olho, W/2, y, 4*k, "center"); y += 30*k;
-    if(pt.antes){ const f = atBloco(g, pt.antes, {fam:AT_SERIF, max:880*k, maxAlt:230*k, tam:64*k, lh:1.1, min:38*k}); y = atEscreverBloco(g, f, W/2, y, corT, "center"); }
-    const sc = atScript(g, pt.dest, W/2, y - 14*k, 900*k, 150*k, atOuro(g, 200*k, y, 880*k, y + 150*k, escuro), {min:70*k}); y += sc.alt + 10*k;
-    // bilhetes com os itens
-    const itens = (s.itens && s.itens.length ? s.itens : i.slides.filter(x => x.papel==="meio").map(x => String(x.titulo||"").replace(/\*/g,""))).slice(0, 3);
-    const cores = ["#F7F2E9","#E9D9BC","#D9C092"], pos = [[300, .0], [560, .0], [820, .0]];
-    const sz = 300*k, cy = Math.max(y + 200*k, 880*k);
-    itens.forEach((t, n) => { const cx = (210 + n*330)*k, ang = [-.08, .05, -.03][n], yy = cy + [0, 40, -10][n]*k;
-      atPostit(g, cx, yy, sz, ang, cores[n], k);
-      g.save(); g.translate(cx, yy); g.rotate(ang);
-      g.font = `400 ${30*k}px ${AT_SERIF}`; g.fillStyle = "#8F6E3E"; g.textAlign = "center"; g.fillText(String(n+1).padStart(2,"0"), 0, -sz/2 + 62*k); g.textAlign = "left";
-      const f = atBloco(g, t, {fam:AT_SERIF, ital:true, max:sz - 60*k, maxAlt:sz - 130*k, tam:40*k, lh:1.12, min:22*k}); atEscreverBloco(g, f, 0, -sz/2 + 90*k + Math.max(0, (sz - 150*k - f.alt)/2), "#47322A", "center");
-      g.restore();
-      atFita(g, cx + [ -30, 20, 0][n]*k, yy - sz/2 + 4*k, 120*k, 34*k, ang + [.3, -.25, .15][n], escuro ? "#B8955F" : "#C9B39A"); });
-    atPilula(g, atCtaV4(i, total), W/2, 1180*k, k, corM, escuro ? "#3E2B24" : "#F7F2E9", true);
-    atArrobaRodape(g, W, 1300*k, k, escuro ? "#C9B39A" : "#735746");
-    return;
-  }
-
-  // selecao: texto “selecionado” com o menu de opções por cima
-  const escuro = P.escuro !== false;
-  const base = escuro ? ["#5A4032", "#2E201A"] : ["#F3EADD", "#E1CDA9"];
-  g.fillStyle = base[1]; g.fillRect(0,0,W,H);
-  g.save(); g.filter = `blur(${46*k}px)`;
-  for(let n=0;n<14;n++){ g.globalAlpha = .35 + r()*.3; g.fillStyle = [base[0], escuro ? "#735746" : "#FBF7F0", escuro ? "#8F6E3E" : "#D9C092", base[1]][n % 4]; g.save(); g.translate(r()*W, r()*H); g.rotate(-.5 + r()*.2); g.fillRect(-500*k, -40*k, 1000*k, (60 + r()*120)*k); g.restore(); }
-  g.restore(); g.globalAlpha = 1; atGrao(g, W, H, seed, escuro);
-  const corT = escuro ? "#F7F2E9" : "#47322A", corM = escuro ? "#D9C092" : "#8F6E3E";
-  await atMarcaTopo(g, W, 60*k, k, escuro ? "#D9C092" : "#6E5230");
-  const fA = pt.antes ? atBloco(g, pt.antes, {fam:AT_SERIF, ital:true, max:880*k, maxAlt:260*k, tam:74*k, lh:1.08, min:40*k}) : null;
-  g.font = `600 ${110*k}px ${AT_SANS}`; let tD = 118*k; const dTxt = pt.dest.toLowerCase(); while(tD > 54*k){ g.font = `600 ${tD}px ${AT_SANS}`; if(g.measureText(dTxt).width <= 860*k) break; tD -= 4*k; }
-  const linhasD = g.measureText(dTxt).width > 860*k ? (() => { const ws = dTxt.split(" "), h = Math.ceil(ws.length/2); return [ws.slice(0,h).join(" "), ws.slice(h).join(" ")]; })() : [dTxt];
-  const altTot = 90*k + (fA ? fA.alt : 0) + linhasD.length*tD*1.1 + 120*k; let y = Math.max(250*k, (H - altTot)/2 - 40*k);
-  // menu
-  const itensM = ["Salvar","Copiar","Compartilhar","Enviar…"]; g.font = `500 ${20*k}px ${AT_SANS}`; const ws = itensM.map(t => g.measureText(t).width); const mw = ws.reduce((a,b)=>a+b,0) + itensM.length*44*k;
-  atSombra(g, "rgba(0,0,0,.3)", 20*k, 8*k); g.fillStyle = "#FBF7F0"; atRR(g, W/2 - mw/2, y, mw, 58*k, 14*k); g.fill(); atSemSombra(g);
-  let mx = W/2 - mw/2 + 22*k; itensM.forEach((t, n) => { g.fillStyle = "#47322A"; g.fillText(t, mx, y + 37*k); mx += ws[n] + 44*k; if(n < itensM.length-1){ g.fillStyle = "#D6C0A4"; g.fillRect(mx - 22*k, y + 16*k, 1.5*k, 26*k); } });
-  g.fillStyle = "#FBF7F0"; g.beginPath(); g.moveTo(W/2 - 12*k, y + 58*k); g.lineTo(W/2, y + 72*k); g.lineTo(W/2 + 12*k, y + 58*k); g.fill();
-  y += 110*k;
-  if(fA){ y = atEscreverBloco(g, fA, W/2, y, corT, "center"); y += 6*k; }
-  g.font = `600 ${tD}px ${AT_SANS}`;
-  linhasD.forEach((l, n) => { const w = g.measureText(l).width, x = W/2 - w/2, yy = y + tD*.86;
-    g.fillStyle = escuro ? "rgba(217,192,146,.35)" : "rgba(184,149,95,.30)"; g.fillRect(x - 10*k, y + 4*k, w + 20*k, tD*1.02);
-    g.fillStyle = corT; g.fillText(l, x, yy);
-    if(n===0){ g.fillStyle = corM; g.fillRect(x - 12*k, y - 6*k, 4*k, tD*1.12); g.beginPath(); g.arc(x - 10*k, y - 10*k, 9*k, 0, Math.PI*2); g.fill(); }
-    if(n===linhasD.length-1){ g.fillStyle = corM; g.fillRect(x + w + 8*k, y + 4*k, 4*k, tD*1.12); g.beginPath(); g.arc(x + w + 10*k, y + tD*1.18, 9*k, 0, Math.PI*2); g.fill(); }
-    y += tD*1.12; });
-  // etiqueta
-  y += 26*k; g.font = `600 ${21*k}px ${AT_SANS}`; const lw = g.measureText(olho).width + olho.length*3.2*k + 44*k;
-  g.save(); g.translate(W/2 + 120*k, y); g.rotate(-.025); g.fillStyle = escuro ? "#D9C092" : "#47322A"; g.fillRect(-lw/2, 0, lw, 50*k); g.fillStyle = escuro ? "#2E201A" : "#F7F2E9"; atEspacado(g, olho, 0, 33*k, 3.2*k, "center"); g.restore();
-  atPilula(g, atCtaV4(i, total), W/2, 1190*k, k, corM, corM, false);
-  atArrobaRodape(g, W, 1300*k, k, escuro ? "#C9B39A" : "#735746");
-}
-
-/* ---------- Posts motivacionais (poucos: cerca de 1 por semana) ----------
-   Frases próprias, sem citar pessoas reais, sem leis e sem promessa de resultado. */
-const AT_MOTIV = [
-  ["Nenhum passo é pequeno quando você *não desiste do caminho*.", "Cada pequena atitude conta. O importante é seguir em frente, no seu ritmo."],
-  ["Recomeçar também é *uma forma de coragem*.", "Não existe idade nem momento errado para começar de novo."],
-  ["Cuidar de você também *é prioridade*.", "Descansar, pedir ajuda e se organizar também fazem parte de quem segue em frente."],
-  ["Toda conquista começa com *a coragem de tentar*.", "O primeiro passo costuma ser o mais difícil. E também o mais importante."],
-  ["Dias difíceis também *fazem parte do caminho*.", "Se hoje está pesado, lembre de tudo o que você já superou até aqui."],
-  ["Persistência é continuar *mesmo quando ninguém vê*.", "O esforço silencioso de cada dia constrói grandes histórias."],
-  ["Informação é o primeiro passo para *conhecer o que é seu*.", "Quem se informa faz escolhas com mais segurança e tranquilidade."],
-  ["Respeite o seu tempo. *Ele também está trabalhando*.", "Nem tudo acontece na hora que a gente quer, mas cada etapa tem o seu valor."],
-  ["Seu esforço de hoje *é a sua história amanhã*.", "Continue. O que você planta agora vai fazer diferença lá na frente."],
-  ["Mulher que se informa *caminha mais segura*.", "Conhecimento é cuidado: com você, com a sua família e com o seu futuro."],
-  ["Grandes mudanças começam com *uma decisão de hoje*.", "Que tal dar hoje o primeiro passo daquilo que você vem adiando?"],
-  ["Você não precisa ter todas as respostas. *Só não pare de perguntar*.", "Tirar dúvidas é sinal de cuidado, não de fraqueza."]
-];
-const AT_MOTIV_LAYOUTS = ["assinatura","premium","frase","selecao","premiumclaro"];
-AT_ESTILOS.motivacional = "Motivacional";
-const _atFeedGerarBase = ccFeedGerar;
-ccFeedGerar = function(temaId, tipo, opc){
-  opc = opc || {}; if(opc.estilo !== "motivacional") return _atFeedGerarBase(temaId, tipo, opc);
-  const it = _atFeedGerarBase(temaId, "post", Object.assign({}, opc, {estilo:"frase"})); if(!it) return it;
-  const n = (ccDB().itens || []).filter(x => x.estilo==="motivacional").length + (opc.variacao || 0);
-  const [frase, comp] = AT_MOTIV[n % AT_MOTIV.length]; const lay = AT_MOTIV_LAYOUTS[n % AT_MOTIV_LAYOUTS.length];
-  const limpa = frase.replace(/\*/g, "");
-  it.estilo = "motivacional"; it.formato = "motivacional"; it.area = "bast"; it.titulo = "Motivacional: " + limpa; it.gancho = limpa;
-  it.slides = [{papel:"unico", layout:lay, titulo:frase, rotulo:"PARA LEMBRAR HOJE", sub:"Leia a legenda"}];
-  it.design.capa = lay; it.design.paleta = ["chocolate","areia","cafe","nude","champanhe"][n % 5];
-  it.legenda = `${limpa}\n\n${comp}\n\nSe essa mensagem fez sentido para você, salve e envie para alguém que precisa ler isso hoje. 🤍`;
-  it.hashtags = ["#motivação","#reflexão","#mulheresfortes","#persistência","#jessicavaliente","#dompedrito","#bagé"];
-  it.verificacao = {status:"confirmado", texto:"Mensagem motivacional: não cita leis, números nem promete resultados."};
-  return it;
-};
 
 
 iniciar();
