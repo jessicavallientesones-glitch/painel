@@ -189,6 +189,14 @@ ol.passos{padding-left:20px;margin:0}ol.passos>li{margin-bottom:14px;line-height
 .modal .aviso{cursor:default}
 .lista-mod{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
 /* ===== Central de Conteúdo ===== */
+.ccx{margin:0 0 16px;border-color:var(--ouro)}
+.ccx-topo{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.ccx-botoes{display:flex;gap:8px;flex-wrap:wrap}
+.ccx-cmd{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:flex-end}.ccx-cmd textarea{flex:1;min-width:240px;min-height:52px}
+.ccx-cmd-lado{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}.ccx-cmd-lado select{max-width:260px}
+.ccx-resp{margin-top:14px;padding-top:12px;border-top:1px solid var(--linha)}
+.ccx-paletas{display:flex;flex-wrap:wrap;gap:10px}.ccx-paletas span{display:inline-flex;gap:3px;align-items:center;font-size:12px}.ccx-paletas i{width:16px;height:16px;border-radius:50%;border:1px solid var(--linha);display:inline-block}
+
 .cc-abas{margin-top:4px}
 .cc-missao{background:var(--marrom);color:var(--creme);border-radius:12px;padding:18px 22px;margin-bottom:18px}
 .cc-missao-cab{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -3703,10 +3711,11 @@ function telaConteudo(c, id){
   ${sem ? `<div class="aviso alerta" data-cc-ir="editorial"><span class="ponto"></span><span><b>${sem} dia(s) nos próximos 7 sem conteúdo aprovado.</b> Abra o Calendário editorial.</span></div>` : ""}
   <div class="cc-grupo-abas"><span class="rot-atalhos">INSTAGRAM</span><div class="abas cc-abas">${CC_ABAS.slice(0, 9).map(btn).join("")}</div></div>
   <div class="cc-grupo-abas"><span class="rot-atalhos">MAIS FERRAMENTAS</span><div class="abas cc-abas cc-abas2">${CC_ABAS.slice(9).map(btn).join("")}</div></div>
+  ${CCX_ABAS.includes(CC_SUB) ? `<div id="ccx-painel"></div>` : ""}
   <div id="cc-corpo"></div>`;
   c.querySelectorAll("[data-cc-ir]").forEach(b => b.onclick = () => ir("conteudo-"+b.dataset.ccIr));
   $("#cc-novo").onclick = () => ir("conteudo-criar");
-  const corpo = $("#cc-corpo");
+  const corpo = $("#cc-corpo"); const ccxEl = $("#ccx-painel"); if(ccxEl) ccxPainel(ccxEl);
   ({criar:ccTelaCriarFeed, feed:ccTelaFeed, carrosseis:ccTelaCarrosseis, aguardando:ccTelaAguardando, aprovados:ccTelaAprovados, editorial:ccTelaEditorial, fila:ccTelaFila, publicados:ccTelaPublicados, ideias:ccTelaIdeiasFeed,
     hoje:ccTelaHoje, planejamento:ccTelaPlanejamento, producao:ccTelaProducao, edicao:ccTelaEdicao, posts:ccTelaPosts, stories:ccTelaStories,
     calendario:ccTelaCalendario, desempenho:ccTelaDesempenho, assistente:ccTelaAssistente, ajustes:ccTelaAjustesFeed})[CC_SUB](corpo, arg);
@@ -5164,6 +5173,7 @@ function atFundo(g, W, H, P, i, seed, k, estilo){
 function atPaleta(i, s){ const d = i.design || {}; let p = (s && s.paleta) || d.paleta || "areia"; return AT_PALETAS[p] || AT_PALETAS.areia; }
 function atInversa(P){ return P.escuro ? AT_PALETAS.areia : AT_PALETAS.cafe; }
 async function ccAtDesenhar(g, W, H, i, idx){
+  if(i.design && AT_PREMIUM[i.design.premium]) return apDesenhar(g, W, H, i, idx);
   const s = i.slides[idx] || {}, total = i.slides.length, k = W/1080, d = i.design || {}, seed = (d.seed||1) * 31 + idx*7;
   const papel = s.papel || (total===1 ? "unico" : idx===0 ? "capa" : idx===total-1 ? "final" : "meio");
   const lay = papel==="capa" ? (s.layout && AT_CAPAS[s.layout] ? s.layout : d.capa || "arco") : (s.layout || (papel==="final" ? "final" : papel==="unico" ? "unico" : "numero"));
@@ -5456,8 +5466,9 @@ function ccFeedGerar(temaId, tipo, opc){
   opc = opc || {}; const t = ccTema(temaId); if(!t) return null; const v = opc.variacao || 0;
   const seed = opc.seed || (1 + Math.floor(Math.random()*999999));
   const estilo = opc.estilo || (tipo==="post" ? "info" : "carrossel");
-  const slides = atMontarSlides(t, tipo, v, seed, estilo);
-  let capa = opc.capa; if(!capa || AT_CAPAS_LEGADO.includes(capa)){ const tt = slides[0].titulo.replace(/\*/g,"");
+  const slides = estilo==="motivacional" ? [{papel:"unico", layout:"motivacional", titulo:AP_MOTIVACIONAIS[(seed + v) % AP_MOTIVACIONAIS.length]}] : atMontarSlides(t, tipo, v, seed, estilo);
+  const premium = opc.premium !== undefined ? opc.premium : AT_PREMIUM[opc.capa] ? opc.capa : (opc.capa ? null : apFamiliaPorData(opc.data, seed));
+  let capa = AT_PREMIUM[opc.capa] ? null : opc.capa; if(!capa || AT_CAPAS_LEGADO.includes(capa)){ const tt = slides[0].titulo.replace(/\*/g,"");
     const pos = opc.data ? Math.floor(Math.floor(toUTC(opc.data)/86400000) / 3) : seed + v; let c = ["cartao","bilhete","roteiro","manchete","alerta","fichario","pergunta","fotofaixa"][pos % 8];
     if(c==="pergunta" && !/\?$/.test(tt)) c = "roteiro"; capa = t.lista ? "numero" : c; }
   const paleta = opc.paleta || (opc.data ? atPaletaPorData(opc.data) : [...AT_CLAROS, ...AT_ESCUROS][seed % 6]);
@@ -5465,9 +5476,11 @@ function ccFeedGerar(temaId, tipo, opc){
   const cta = AT_CTAS[(v + (tipo==="post"?1:0)) % AT_CTAS.length];
   const it = ccNovoItem({tipo, temaId, titulo:t.titulo.replace(/\*/g,""), area:t.area, formato: tipo==="post" ? (slides[0].layout==="mito" ? "mitos" : "educativo") : (t.mito ? "educativo" : "educativo"),
     objetivo:t.objetivo, publico:t.publico, gancho:slides[0].titulo.replace(/\*/g,""), slides, cta, legenda:atLegenda(t, tipo, v), hashtags:atHashtags(t),
-    plataformas:["feed"], design:{v:3, paleta, capa, seed, icone:atIconeDoTema(t), fotoId}, estilo, feed:true, versao:1, versoes:[],
+    plataformas:["feed"], design:{v: premium ? 4 : 3, paleta, capa, seed, icone:atIconeDoTema(t), fotoId, premium: premium || null}, estilo, feed:true, versao:1, versoes:[],
     status: opc.status || "aprovacao", variacao:v, verificacao:ccVerificacao(t), origem:"biblioteca"});
   if(["p-acidente","p-5situacoes","f-planejamento","f-poderfamiliar"].includes(t.id)) it.verificacao = t.conferir ? {status:"conferir", base:t.base, data:AT_CONFERIDO, texto:`Base conferida em ${fmtData(AT_CONFERIDO)}. ${t.conferir}`} : {status:"confirmado", base:t.base, data:AT_CONFERIDO, texto:`Base legal conferida em ${fmtData(AT_CONFERIDO)}: ${t.base}.`};
+  if(estilo==="motivacional"){ const fr = slides[0].titulo.replace(/\*/g,""); it.titulo = "Frase motivacional"; it.gancho = fr; it.area = "bast"; it.formato = "motivacional";
+    it.legenda = [fr, "", "Salve para lembrar nos dias em que precisar.", "", "Conteúdo informativo. " + CC_AVISO].join("\n"); it.hashtags = "#reflexao #informacao #direitos #conhecaseusdireitos #cidadania"; it.verificacao = {status:"na", texto:"Frase motivacional, sem informação jurídica."}; }
   if(opc.data){ it.dataPrevista = opc.data; it.hora = opc.hora || atHoraSugerida(opc.data); }
   it.numeroSerie = (ccDB().itens.filter(x => x.design).length + 1);
   return it;
@@ -5495,7 +5508,7 @@ function ccFeedAplicarPedido(i, pedido){
   else if(tem(/clar|bege|nude|creme|branc|champanhe|fundo claro|mais leve/)) trocarPaleta("claro");
   else if(tem(/\bcor(es)?\b|paleta|tonalidade/)) trocarPaleta();
   if(tem(/layout|design|visual|diagrama|composic|arte|diferente|modelo|capa|elegante|sofistic|bonit/)){
-    const op = Object.keys(AT_CAPAS_V3).filter(x => x!==d.capa); d.capa = op[Math.floor(Math.random()*op.length)]; d.seed = 1 + Math.floor(Math.random()*999999); d.v = 3; feito.push(`capa: ${AT_CAPAS[d.capa]}`); mexeu = true;
+    const op = Object.keys(AT_CAPAS_V3).filter(x => x!==d.capa); d.capa = op[Math.floor(Math.random()*op.length)]; d.seed = 1 + Math.floor(Math.random()*999999); if(AT_PREMIUM[d.premium]){ const opp = AP_ORDEM.filter(x => x!==d.premium); d.premium = opp[Math.floor(Math.random()*opp.length)]; feito.push(`modelo: ${AT_PREMIUM[d.premium]}`); } else { d.v = 3; feito.push(`capa: ${AT_CAPAS_V3[d.capa]||AT_CAPAS[d.capa]||d.capa}`); } mexeu = true;
     if(i.tipo==="carrossel"){ const lays = i.slides.filter(s => ["numero","icone"].includes(s.layout)); if(lays.length){ const nv = lays[0].layout==="numero" ? "icone" : "numero"; lays.forEach(s => s.layout = nv); feito.push(`slides internos: ${AT_LAYOUTS[nv]}`); } }
   }
   if(tem(/icone|ilustrac|desenho|figura|simbolo/)){ const op = Object.keys(AT_ICONES).filter(x => x!==d.icone && !["xis","check","salvar","enviar","comentar","alerta"].includes(x)); d.icone = op[Math.floor(Math.random()*op.length)]; feito.push(`ilustração: ${AT_ICONE_NOMES[d.icone]}`); mexeu = true; }
@@ -5523,8 +5536,8 @@ function ccFeedRestaurarVersao(i, n){
 }
 
 /* ---------- Planejamento de 30 dias ---------- */
-const AT_RITMO = ["carrossel","info","frase","carrossel","dica","info"]; // carrossel educativo · post informativo · frase · dica rápida
-const AT_ESTILOS = {carrossel:"Carrossel educativo", info:"Post informativo", frase:"Arte com frase", dica:"Dica rápida"};
+const AT_RITMO = ["carrossel","info","dica","carrossel","info","frase","carrossel","info","dica","carrossel","info","motivacional"]; // carrossel educativo · post informativo · frase · dica rápida
+const AT_ESTILOS = {carrossel:"Carrossel educativo", info:"Post informativo", frase:"Arte com frase", dica:"Dica rápida", motivacional:"Frase motivacional (poucas)"};
 function ccFeedMigrarV3(){ // refaz capas e ritmo das publicações ainda não aprovadas
   let n = 0;
   ccFeedItens().filter(i => i.design && (i.design.v||2) < 3 && ["aprovacao","ajustes"].includes(i.status) && !i.aprovacao && i.temaId && ccTema(i.temaId)).forEach(i => {
@@ -5541,7 +5554,7 @@ function ccFeedMigrarV3(){ // refaz capas e ritmo das publicações ainda não a
 function ccFeedMigrarEditorial(){ // novas capas editoriais nas publicações ainda não aprovadas
   const db = ccDB(); if(db.migrouEditorial) return 0; db.migrouEditorial = true; let n = 0;
   const novas = Object.keys(AT_CAPAS_ED), fotos = (db.imagens||[]).filter(x => x.marca);
-  ccFeedItens().filter(i => i.design && ["aprovacao","ajustes"].includes(i.status) && !i.aprovacao && !AT_CAPAS_ED[i.design.capa] && (i.tipo==="carrossel" || (i.slides?.length===1 && i.slides[0].layout==="unico")))
+  ccFeedItens().filter(i => i.design && !AT_PREMIUM[i.design.premium] && ["aprovacao","ajustes"].includes(i.status) && !i.aprovacao && !AT_CAPAS_ED[i.design.capa] && (i.tipo==="carrossel" || (i.slides?.length===1 && i.slides[0].layout==="unico")))
     .sort((a,b) => String(a.dataPrevista||"").localeCompare(String(b.dataPrevista||""))).forEach((i, j) => { if(j % 2) return;
       atGuardarVersao(i, "Antes das capas editoriais"); i.design.capa = novas[(j/2) % novas.length]; i.design.v = 3; if(i.slides[0]?.papel==="capa") delete i.slides[0].layout;
       if(fotos.length && !i.design.fotoId) i.design.fotoId = fotos[(i.design.seed||j) % fotos.length].id;
@@ -5696,7 +5709,7 @@ async function ccFeedVer(id, lista){
   const pintar = async () => { const cv = f.querySelector("#at-lb-cv"); if(!cv) return; await ccFontes(); const g = cv.getContext("2d"); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,1080,1350); await ccDesenharSlide(g, 1080, 1350, i, sel);
     f.querySelector("#at-lb-n").textContent = `${sel+1} / ${i.slides.length}`; f.querySelectorAll(".at-lb-th > div").forEach((x, n) => x.classList.toggle("ativo", n===sel)); };
   const desenhar = async () => {
-    i = ccItem(lista[pos]); if(!i){ fechar(); return; } if(!i.slides || !i.slides.length){ f.innerHTML = `<div class="modal"><h2>${esc(i.titulo)}</h2><p>Esta publicação não tem arte no sistema${i.link?` (<a href="${esc(i.link)}" target="_blank" rel="noopener">abrir no Instagram</a>)`:""}.</p><div class="rodape"><button class="btn" id="at-lb-x">Fechar</button></div></div>`; f.querySelector("#at-lb-x").onclick = fechar; return; }
+    i = ccItem(lista[pos]); if(!i){ fechar(); return; } CCX.vista = i.id; if(!i.slides || !i.slides.length){ f.innerHTML = `<div class="modal"><h2>${esc(i.titulo)}</h2><p>Esta publicação não tem arte no sistema${i.link?` (<a href="${esc(i.link)}" target="_blank" rel="noopener">abrir no Instagram</a>)`:""}.</p><div class="rodape"><button class="btn" id="at-lb-x">Fechar</button></div></div>`; f.querySelector("#at-lb-x").onclick = fechar; return; }
     sel = Math.min(sel, i.slides.length-1); const al = ccRevisar(i); const cap = ccFeedLegendaCompleta(i); const nh = (i.hashtags||"").split(/\s+/).filter(x => x.startsWith("#")).length;
     const podePub = ["aprovado","agendado"].includes(i.status) && i.aprovacao; const versoes = (i.versoes||[]).slice().reverse();
     f.innerHTML = `<div class="modal at-modal">
@@ -5836,7 +5849,7 @@ function ccTelaCriarFeed(c){
       <label>Formato<select name="tipo">${Object.entries(AT_ESTILOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label>
       <label>Data<input type="date" name="d" value="${atProximoDiaLivre()}"></label>
       <label>Paleta<select name="pal"><option value="">Pela harmonia do feed</option>${Object.entries(AT_PALETAS).map(([k, p]) => `<option value="${k}">${p.nome}</option>`).join("")}</select></label>
-      <label>Capa (carrossel)<select name="capa"><option value="">Automática</option>${Object.entries(AT_CAPAS_V3).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label>
+      <label>Modelo<select name="capa"><option value="">Automático (coleção premium)</option>${Object.entries(AT_PREMIUM).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}${Object.entries(AT_CAPAS_V3).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label>
       <div class="largo"><button class="btn btn-pri">Criar e ver a arte</button></div></form></div></div>
   <h2 class="secao-tit">Exemplos prontos para produzir</h2>
   <div class="cc-chips">${AT_EXEMPLOS.map((x, n) => `<button class="cc-chip" data-ex="${n}">${esc(x[0])}</button>`).join("")}</div>
@@ -5861,6 +5874,544 @@ function ccTelaCriarFeed(c){
   c.querySelectorAll("[data-ex]").forEach(b => b.onclick = () => { const [, t, tipo, o] = AT_EXEMPLOS[+b.dataset.ex]; const it = atCriarExemplo(t, tipo, o, atProximoDiaLivre()); salvar(); ccFeedVer(it.id); });
   $("#at-up-fotos").onchange = async e => { for(const fl of e.target.files){ const id = uid(); await ccGuardarArquivo(id, await fl.arrayBuffer()); ccDB().imagens.push({id, nome:fl.name, mime:fl.type, marca:true, criado:new Date().toISOString()}); } salvar(); toast("Fotos guardadas (cifradas neste computador)."); ccRerender(); };
   c.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => { if(!(await confirmar("Remover foto", "Remover esta foto do banco de imagens?", "Remover", true))) return; await ccApagarArquivo(b.dataset.rm); ccDB().imagens = ccDB().imagens.filter(x => x.id!==b.dataset.rm); ccDB().itens.forEach(i => { if(i.design?.fotoId===b.dataset.rm) i.design.fotoId = null; }); salvar(); ccRerender(); });
+}
+
+/* =========================================================
+   COLEÇÃO PREMIUM — artes com acabamento de pack profissional
+   5 famílias (Ateliê, Revista, Bloco, Clássico, Moderno), cada
+   uma com capa, páginas internas, página final e post único.
+   Cores: somente as paletas da marca (AT_PALETAS).
+   ========================================================= */
+const AT_PREMIUM = {atelier:"Premium · Ateliê (arco e ramos)", revista:"Premium · Revista (editorial)", bloco:"Premium · Bloco dividido", classico:"Premium · Clássico com moldura", moderno:"Premium · Moderno geométrico"};
+const AP_ORDEM = ["atelier","bloco","revista","classico","moderno"];
+const AP_MOTIVACIONAIS = [
+  "Conhecer seus direitos é o *primeiro passo* para cuidar do seu futuro.",
+  "Informação de qualidade *transforma decisões.*",
+  "Cada documento guardado hoje é *tranquilidade* amanhã.",
+  "Família também se cuida com *informação.*",
+  "Seu tempo de trabalho conta uma história. *Valorize cada capítulo.*",
+  "Quem se informa *decide melhor.*",
+  "Pequenas atitudes de hoje constroem a *segurança de amanhã.*",
+  "Direito não é privilégio: é *conhecimento* que deve chegar a todos."];
+function apFamiliaPorData(data, seed){ const n = data ? Math.floor(toUTC(data)/86400000) : (seed||0); return AP_ORDEM[((n % AP_ORDEM.length) + AP_ORDEM.length) % AP_ORDEM.length]; }
+function apEscuro(P, seed){ return P.escuro ? P : AT_PALETAS[["cafe","chocolate"][(seed||0) % 2]]; }
+function apClaro(P){ return P.escuro ? AT_PALETAS.areia : P; }
+function apCardCor(P){ return P.escuro ? P.card : (P.bg==="#FFFFFF" ? "#F7F2E9" : "#FFFFFF"); }
+
+/* ---------- elementos gráficos ---------- */
+function apPapel(g, W, H, P, seed, k){
+  g.fillStyle = P.bg; g.fillRect(0, 0, W, H);
+  const gr = g.createRadialGradient(W*.25, H*.18, 0, W*.25, H*.18, W*1.15); gr.addColorStop(0, P.escuro ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.6)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  const gb = g.createLinearGradient(0, H*.55, 0, H); gb.addColorStop(0, "rgba(0,0,0,0)"); gb.addColorStop(1, P.escuro ? "rgba(0,0,0,.20)" : "rgba(90,64,50,.06)"); g.fillStyle = gb; g.fillRect(0, 0, W, H);
+  const r = atRng(seed*13 + 5); g.save(); g.strokeStyle = P.escuro ? "#FFFFFF" : "#8F6E3E"; g.lineWidth = .9*k;
+  for(let n=0;n<80;n++){ g.globalAlpha = .02 + r()*.03; const x = r()*W, y = r()*H, l = (24 + r()*70)*k, a = r()*Math.PI; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a)*l/2 + (r()-.5)*12*k, y + Math.sin(a)*l/2 + (r()-.5)*12*k, x + Math.cos(a)*l, y + Math.sin(a)*l); g.stroke(); }
+  g.restore(); atGrao(g, W, H, seed, P.escuro);
+}
+function apBrilho(g, x, y, s, cor){ g.save(); g.fillStyle = cor; g.beginPath(); g.moveTo(x, y - s); g.quadraticCurveTo(x + s*.14, y - s*.14, x + s, y); g.quadraticCurveTo(x + s*.14, y + s*.14, x, y + s); g.quadraticCurveTo(x - s*.14, y + s*.14, x - s, y); g.quadraticCurveTo(x - s*.14, y - s*.14, x, y - s); g.fill(); g.restore(); }
+function apRamo(g, x, y, len, ang, cor, k, espelho){
+  g.save(); g.translate(x, y); g.rotate(ang); if(espelho) g.scale(1, -1); g.strokeStyle = cor; g.lineWidth = 1.5*k; g.lineCap = "round";
+  const P = t => { const u = 1 - t; return [3*u*u*t*len*.33 + 3*u*t*t*len*.66 + t*t*t*len, 3*u*u*t*(-len*.10) + 3*u*t*t*(-len*.04) + t*t*t*(-len*.2)]; };
+  g.beginPath(); g.moveTo(0, 0); g.bezierCurveTo(len*.33, -len*.10, len*.66, -len*.04, len, -len*.2); g.stroke();
+  for(let n=1;n<=8;n++){ const t = n/9, [px, py] = P(t), lado = n % 2 ? 1 : -1, fl = len*(.15 - t*.06);
+    g.save(); g.translate(px, py); g.rotate(-0.25 + lado*-0.85); g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(fl*.5, -fl*.32, fl, 0); g.quadraticCurveTo(fl*.5, fl*.32, 0, 0); g.stroke(); g.restore(); }
+  const [ex, ey] = P(1); g.beginPath(); g.arc(ex + 6*k, ey - 2*k, 4*k, 0, Math.PI*2); g.fillStyle = cor; g.fill();
+  g.restore();
+}
+function apCanto(g, x, y, s, rot, cor, k){ g.save(); g.translate(x, y); g.rotate(rot); g.strokeStyle = cor; g.fillStyle = cor; g.lineWidth = 1.4*k;
+  g.beginPath(); g.moveTo(0, s); g.lineTo(0, 0); g.lineTo(s, 0); g.stroke();
+  g.beginPath(); g.moveTo(10*k, s*.62); g.lineTo(10*k, 10*k); g.lineTo(s*.62, 10*k); g.stroke();
+  g.beginPath(); g.arc(10*k, 10*k, s*.32, 0, Math.PI/2); g.stroke();
+  g.save(); g.rotate(Math.PI/4); g.fillRect(-4.5*k, -4.5*k, 9*k, 9*k); g.restore(); g.restore(); }
+function apSelo(g, cx, cy, r, P, k, cor){
+  cor = cor || P.ac; g.save(); g.strokeStyle = cor; g.fillStyle = cor; g.lineWidth = 1.3*k;
+  g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.stroke(); g.beginPath(); g.arc(cx, cy, r*.64, 0, Math.PI*2); g.stroke();
+  const txt = `${(ccCfg().assinatura||"JÉSSICA VALIENTE").toUpperCase()} • INFORMAÇÃO JURÍDICA • `; const ch = [...txt];
+  g.font = `600 ${r*.15}px ${AT_SANS}`; g.textAlign = "center"; g.textBaseline = "middle";
+  ch.forEach((c, n) => { const a = -Math.PI/2 + (n/ch.length)*Math.PI*2; g.save(); g.translate(cx + Math.cos(a)*r*.82, cy + Math.sin(a)*r*.82); g.rotate(a + Math.PI/2); g.fillText(c, 0, 0); g.restore(); });
+  g.font = `italic 400 ${r*.48}px ${AT_SERIF}`; g.fillText("JV", cx, cy + r*.04); g.restore(); g.textAlign = "left"; g.textBaseline = "alphabetic";
+}
+function apContorno(g, txt, x, y, tam, cor, k, alinh, alfa){ g.save(); g.globalAlpha = alfa==null ? 1 : alfa; g.font = `400 ${tam}px ${AT_SERIF}`; g.textAlign = alinh||"left"; g.textBaseline = "alphabetic"; g.strokeStyle = cor; g.lineWidth = 2*k; g.strokeText(txt, x, y); g.restore(); }
+function apSeta(g, cx, cy, r, P, k, cheio){ g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); if(cheio){ g.fillStyle = atOuro(g, cx-r, cy-r, cx+r, cy+r, P.escuro); g.fill(); } else { g.strokeStyle = P.ac; g.lineWidth = 1.6*k; g.stroke(); }
+  g.strokeStyle = cheio ? (P.escuro ? P.bg : "#FFFFFF") : P.ac; g.lineWidth = 2.2*k; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(cx - r*.36, cy); g.lineTo(cx + r*.36, cy); g.moveTo(cx + r*.1, cy - r*.26); g.lineTo(cx + r*.36, cy); g.lineTo(cx + r*.1, cy + r*.26); g.stroke(); g.restore(); }
+function apCartao(g, x, y, w, h, r, cor, k, sombra){ g.save(); if(sombra !== false){ g.shadowColor = "rgba(43,30,22,.16)"; g.shadowBlur = 44*k; g.shadowOffsetY = 18*k; } atRR(g, x, y, w, h, r); g.fillStyle = cor; g.fill(); g.restore(); }
+function apRot(g, txt, x, y, cor, k, tam, alinh){ g.save(); tam = (tam||19)*k; g.font = `600 ${tam}px ${AT_SANS}`; g.fillStyle = cor; g.textBaseline = "alphabetic"; const w = atEspacado(g, String(txt).toUpperCase(), x, y, tam*.24, alinh); g.restore(); return w; }
+function apLinha(g, x0, y0, x1, y1, cor, k, lw, alfa){ g.save(); g.globalAlpha = alfa==null ? 1 : alfa; g.strokeStyle = cor; g.lineWidth = (lw||1.2)*k; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.restore(); }
+function apGrade(g, W, H, P, k){ g.save(); g.strokeStyle = P.escuro ? "#FFFFFF" : P.tit; g.globalAlpha = P.escuro ? .05 : .06; g.lineWidth = 1*k; for(let x=90*k;x<W;x+=90*k){ g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); } for(let y=90*k;y<H;y+=90*k){ g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); } g.restore(); }
+function apMoldura(g, W, H, P, k){ g.save(); g.strokeStyle = P.ac; g.globalAlpha = .85; g.lineWidth = 1.3*k; g.strokeRect(44*k, 44*k, W-88*k, H-88*k); g.globalAlpha = .5; g.lineWidth = .9*k; g.strokeRect(58*k, 58*k, W-116*k, H-116*k); g.restore();
+  [[58,58,0],[W/k-58,58,Math.PI/2],[W/k-58,H/k-58,Math.PI],[58,H/k-58,-Math.PI/2]].forEach(([x, y, a]) => apCanto(g, x*k, y*k, 64*k, a, P.ac, k)); }
+function apTit(g, txt, o){ return atAjustarEd(g, txt, Object.assign({peso:400, lh:1.08}, o)); }
+function apTxt(g, txt, o){ return atAjustar(g, txt, Object.assign({fam:AT_SANS, peso:300, pesoD:600, lh:1.5}, o)); }
+function apVertical(g, txt, x, y, cor, k, tam){ g.save(); g.translate(x, y); g.rotate(-Math.PI/2); apRot(g, txt, 0, 0, cor, k, tam||15, "center"); g.restore(); }
+function apNum(i){ return String(i.numeroSerie||1).padStart(2, "0"); }
+
+/* ---------- motor ---------- */
+async function apDesenhar(g, W, H, i, idx){
+  const s = i.slides[idx] || {}, total = i.slides.length, k = W/1080, d = i.design || {}, seed = (d.seed||1)*31 + idx*7;
+  const papel = s.papel || (total===1 ? "unico" : idx===0 ? "capa" : idx===total-1 ? "final" : "meio");
+  const C = {g, W, H, i, s, idx, total, k, d, seed, P:atPaleta(i, s), fam: AT_PREMIUM[d.premium] ? d.premium : "atelier", papel, mx:96*k, rot:(s.rotulo || atAreaRot(i)), ic:(s.icone || d.icone || "balanca")};
+  g.save(); g.textAlign = "left"; g.textBaseline = "alphabetic";
+  if(papel==="capa") await apCapa(C);
+  else if(papel==="final") await apFinal(C);
+  else if(papel==="unico") await apUnico(C);
+  else await apMeio(C);
+  g.restore();
+}
+
+/* ---------- capas (e post único informativo) ---------- */
+async function apCapa(C, unico){
+  const {g, W, H, i, s, k, P, mx, seed} = C; const K = v => v*k; const larg = W - 2*mx;
+  const itens = !unico && Array.isArray(s.itens) ? s.itens.filter(Boolean).slice(0, 3) : [];
+  const corpo = unico ? (s.texto || "") : "";
+  const sub = unico ? "" : (s.sub || "Deslize e descubra");
+  let Pr = P;
+  if(C.fam==="atelier"){
+    apPapel(g, W, H, P, seed, k);
+    const ax = K(560), ay = K(120), aw = K(410), ah = K(600);
+    g.save(); g.shadowColor = "rgba(43,30,22,.18)"; g.shadowBlur = K(40); g.shadowOffsetY = K(16); atArco(g, ax, ay, aw, ah); g.fillStyle = P.soft; g.fill(); g.restore();
+    g.save(); atArco(g, ax, ay, aw, ah); g.clip(); const foto = await atFoto(g, s.imgId || C.d.fotoId, ax, ay, aw, ah);
+    if(!foto){ const gr = g.createLinearGradient(ax, ay, ax + aw, ay + ah); gr.addColorStop(0, P.escuro ? "rgba(255,255,255,.10)" : "rgba(255,255,255,.7)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(ax, ay, aw, ah);
+      atIcone(g, C.ic, ax + aw/2, ay + ah*.58, K(210), P.escuro ? P.ac : P.ac2, 1.3); }
+    g.restore();
+    g.strokeStyle = P.ac; g.lineWidth = K(1.6); atArco(g, ax - K(22), ay - K(22), aw + K(44), ah + K(44)); g.stroke();
+    apBrilho(g, ax - K(22), ay + ah*.42, K(18), P.ac); apBrilho(g, ax + aw + K(2), ay + K(40), K(10), P.ac); apBrilho(g, ax - K(52), ay + ah*.42 + K(40), K(7), P.ac);
+    apRamo(g, ax - K(8), ay + ah + K(30), K(210), -2.75, P.ac, k, true);
+    atRotulo(g, C.rot, mx, K(140), P, k);
+    apVertical(g, `Nº ${apNum(i)}  ·  ${(ccCfg().arroba||"").replace(/^@/,"@")}`, K(52), K(470), P.mut, k, 14);
+    if(itens.length){ let y = K(300); apRot(g, "Neste conteúdo", mx, y, P.ac2, k, 16); y += K(30);
+      itens.forEach((t, n) => { apLinha(g, mx, y, mx + K(380), y, P.linha, k, 1.2); g.font = `italic 400 ${K(34)}px ${AT_SERIF}`; g.fillStyle = P.ac; g.fillText(String(n+1).padStart(2,"0"), mx, y + K(56));
+        const f = apTxt(g, t, {max:K(300), maxAlt:K(70), tam:K(25), min:K(18), lh:1.3, peso:400}); atEscrever(g, f, mx + K(70), y + K(24), {cor:P.txt}); y += K(96); }); }
+    else if(corpo){ const f = apTxt(g, corpo, {max:K(400), maxAlt:K(330), tam:K(31), min:K(21), lh:1.5}); g.fillStyle = P.ac; g.fillRect(mx, K(290), K(54), K(3)); atEscrever(g, f, mx, K(320), {cor:P.txt, corD:P.ac2}); }
+    const f = apTit(g, s.titulo, {max:larg, maxAlt:K(270), tam:K(98), min:K(50)}); const yT = Math.max(K(800), K(1088) - f.alt);
+    atEscrever(g, f, mx, yT, {cor:P.tit, corD:P.ac});
+    if(!unico){ const yS = yT + f.alt + K(40); g.fillStyle = P.ac; g.fillRect(mx, yS - K(8), K(60), K(2.5)); apRot(g, sub, mx + K(78), yS, P.mut, k, 16); apSeta(g, W - mx - K(34), yS - K(12), K(34), P, k, true); }
+  }
+  else if(C.fam==="revista"){
+    apPapel(g, W, H, P, seed, k);
+    apRot(g, "JV · Informação jurídica", mx, K(118), P.tit, k, 17); apRot(g, `Edição Nº ${apNum(i)}`, W - mx, K(118), P.mut, k, 15, "right");
+    apLinha(g, mx, K(142), W - mx, K(142), P.tit, k, 1.6, .8); apLinha(g, mx, K(150), W - mx, K(150), P.tit, k, .7, .6);
+    const tt = (s.titulo||"").replace(/\*/g, ""); const big = s.numero || (/\?\s*$/.test(tt) ? "?" : apNum(i));
+    apContorno(g, big, W - mx + K(30), K(690), K(560), P.ac, k, "right", .45);
+    g.fillStyle = P.ac; g.fillRect(mx, K(232), K(56), K(3)); apRot(g, C.rot, mx + K(74), K(242), P.ac2, k, 17);
+    const f = apTit(g, s.titulo, {max:larg - K(40), maxAlt: corpo ? K(420) : K(520), tam:K(114), min:K(52), lh:1.02}); const yT = K(296); atEscrever(g, f, mx, yT, {cor:P.tit, corD:P.ac});
+    let y = yT + f.alt + K(34);
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg*.86, maxAlt:Math.max(K(120), K(1110) - y), tam:K(32), min:K(22)}); apLinha(g, mx, y, mx + K(120), y, P.ac, k, 2.5); atEscrever(g, fc, mx, y + K(36), {cor:P.txt, corD:P.ac2}); }
+    else { const yB = Math.max(y + K(30), K(940)); apLinha(g, mx, yB, W - mx, yB, P.tit, k, 1.2, .7); apRot(g, itens.length ? "Nesta edição" : sub, mx, yB + K(42), P.ac2, k, 15);
+      if(itens.length){ const cw = (larg - K(40)*(itens.length-1)) / itens.length;
+        itens.forEach((t, n) => { const x = mx + n*(cw + K(40)); if(n) apLinha(g, x - K(20), yB + K(70), x - K(20), yB + K(190), P.linha, k, 1.2);
+          g.font = `italic 400 ${K(44)}px ${AT_SERIF}`; g.fillStyle = P.ac; g.fillText(String(n+1).padStart(2,"0"), x, yB + K(118));
+          const ft = apTxt(g, t, {max:cw - K(10), maxAlt:K(70), tam:K(23), min:K(17), lh:1.3, peso:400}); atEscrever(g, ft, x, yB + K(138), {cor:P.txt}); }); }
+      else apSeta(g, W - mx - K(34), yB + K(36), K(32), P, k, true); }
+  }
+  else if(C.fam==="bloco"){
+    const D = apEscuro(P, seed), L = apClaro(P); Pr = L; const yb = corpo ? K(640) : K(760);
+    apPapel(g, W, H, L, seed, k);
+    g.save(); g.beginPath(); g.rect(0, 0, W, yb); g.clip(); apPapel(g, W, H, D, seed + 1, k);
+    g.strokeStyle = D.ac; g.globalAlpha = .3; g.lineWidth = K(1.4); [170, 240, 310].forEach(rr => { g.beginPath(); g.arc(W - K(40), K(60), K(rr), 0, Math.PI*2); g.stroke(); }); g.restore();
+    apBrilho(g, W - K(210), K(250), K(14), D.ac); apBrilho(g, W - K(180), K(290), K(7), D.ac);
+    atRotulo(g, C.rot, mx, K(128), D, k);
+    const f = apTit(g, s.titulo, {max:larg - K(60), maxAlt:yb - K(300), tam:K(104), min:K(50), lh:1.04}); atEscrever(g, f, mx, Math.max(K(230), yb - K(90) - f.alt), {cor:D.tit, corD:D.ac});
+    const cy = yb - K(56), ch = corpo ? K(420) : (itens.length ? K(300) : K(200)); apCartao(g, mx, cy, larg, ch, K(26), apCardCor(L), k); g.fillStyle = atOuro(g, mx, cy, mx, cy + ch, false); g.fillRect(mx, cy + K(36), K(6), ch - K(72));
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg - K(130), maxAlt:ch - K(110), tam:K(33), min:K(22)}); atEscrever(g, fc, mx + K(64), cy + K(58), {cor:L.txt, corD:L.ac2}); }
+    else if(itens.length){ apRot(g, "Você vai ver", mx + K(64), cy + K(62), L.ac2, k, 15); itens.forEach((t, n) => { const y = cy + K(100) + n*K(62); g.save(); g.beginPath(); g.arc(mx + K(80), y + K(18), K(14), 0, Math.PI*2); g.strokeStyle = L.ac; g.lineWidth = K(1.6); g.stroke(); g.restore(); atIcone(g, "check", mx + K(80), y + K(18), K(16), L.ac2, 2);
+        const ft = apTxt(g, t, {max:larg - K(180), maxAlt:K(46), tam:K(27), min:K(18), lh:1.2, peso:400}); atEscrever(g, ft, mx + K(112), y, {cor:L.txt}); }); }
+    else { const fs = apTit(g, sub, {max:larg - K(130), maxAlt:K(90), tam:K(40), min:K(26)}); atEscrever(g, fs, mx + K(64), cy + K(70), {cor:L.tit, corD:L.ac}); }
+    if(!unico) apSeta(g, W - mx - K(34), cy + ch + K(70), K(34), L, k, true);
+  }
+  else if(C.fam==="classico"){
+    apPapel(g, W, H, P, seed, k); apMoldura(g, W, H, P, k);
+    const ex = W/2, ey = K(222); g.strokeStyle = P.ac; g.lineWidth = K(1.4); g.beginPath(); g.arc(ex, ey, K(66), 0, Math.PI*2); g.stroke(); g.beginPath(); g.arc(ex, ey, K(56), 0, Math.PI*2); g.globalAlpha = .5; g.stroke(); g.globalAlpha = 1;
+    atIcone(g, C.ic, ex, ey, K(70), P.ac, 1.3); apBrilho(g, ex - K(110), ey, K(9), P.ac); apBrilho(g, ex + K(110), ey, K(9), P.ac);
+    apRot(g, C.rot, W/2, K(352), P.ac2, k, 17, "center");
+    const f = apTit(g, s.titulo, {max:larg - K(90), maxAlt: corpo ? K(330) : K(430), tam:K(96), min:K(48), lh:1.06}); const yT = K(400); atEscrever(g, f, W/2, yT, {cor:P.tit, corD:P.ac, alinh:"center"});
+    let y = yT + f.alt + K(52); atDivisor(g, W/2, y, K(150), P.ac, k); apRamo(g, W/2 - K(96), y, K(150), Math.PI + .12, P.ac, k); apRamo(g, W/2 + K(96), y, K(150), -.12, P.ac, k, true);
+    y += K(60);
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg - K(120), maxAlt:K(1140) - y, tam:K(31), min:K(21)}); atEscrever(g, fc, W/2, y, {cor:P.txt, corD:P.ac2, alinh:"center"}); }
+    else if(itens.length){ g.font = `italic 400 ${K(34)}px ${AT_SERIF}`; g.fillStyle = P.txt; g.textAlign = "center"; g.fillText(itens.join("  ·  "), W/2, y + K(20), larg - K(80)); g.textAlign = "left"; apRot(g, sub + "  →", W/2, K(1150), P.mut, k, 15, "center"); }
+    else apRot(g, sub + "  →", W/2, y + K(20), P.mut, k, 16, "center");
+  }
+  else { // moderno
+    apPapel(g, W, H, P, seed, k); apGrade(g, W, H, P, k);
+    const tt = (s.titulo||"").replace(/\*/g, ""); const big = s.numero || (/\?\s*$/.test(tt) ? "?" : "§");
+    apContorno(g, big, W + K(70), K(640), K(720), P.ac, k, "right", .4);
+    g.font = `600 ${K(18)}px ${AT_SANS}`; let lw = 0; [...C.rot.toUpperCase()].forEach(c => lw += g.measureText(c).width + K(4.3)); const bw = lw + K(56);
+    g.strokeStyle = P.ac; g.lineWidth = K(1.5); g.strokeRect(mx + K(12), K(132), bw, K(62)); g.fillStyle = P.tit; g.fillRect(mx, K(120), bw, K(62)); apRot(g, C.rot, mx + K(28), K(160), P.bg, k, 18);
+    const f = apTit(g, s.titulo, {max:larg - K(80), maxAlt: corpo ? K(440) : K(520), tam:K(112), min:K(50), lh:1.03}); const yT = K(290); atEscrever(g, f, mx, yT, {cor:P.tit, corD:P.ac2});
+    let y = yT + f.alt + K(46); g.fillStyle = atOuro(g, mx, y, mx + K(160), y, P.escuro); g.fillRect(mx, y, K(160), K(4));
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg*.85, maxAlt:K(1120) - y - K(40), tam:K(32), min:K(22)}); atEscrever(g, fc, mx, y + K(44), {cor:P.txt, corD:P.ac2}); }
+    else { let x = mx, yy = Math.max(y + K(70), K(980)); (itens.length ? itens : [sub]).forEach(t => { g.font = `500 ${K(22)}px ${AT_SANS}`; const w = g.measureText(t).width + K(48); if(x + w > W - mx - K(100)){ x = mx; yy += K(70); }
+        atRR(g, x, yy, w, K(52), K(26)); g.strokeStyle = P.ac; g.lineWidth = K(1.4); g.stroke(); g.fillStyle = P.tit; g.textBaseline = "middle"; g.fillText(t, x + K(24), yy + K(27)); g.textBaseline = "alphabetic"; x += w + K(14); });
+      if(!unico) apSeta(g, W - mx - K(34), yy + K(26), K(34), P, k, true); }
+  }
+  await atRodape(g, W, H, Pr, k, C.idx, C.total);
+}
+
+/* ---------- páginas internas ---------- */
+async function apFundoMeio(C){
+  const {g, W, H, k, P, seed, mx} = C; const K = v => v*k;
+  apPapel(g, W, H, P, seed, k);
+  if(C.fam==="classico") apMoldura(g, W, H, P, k);
+  if(C.fam==="moderno") apGrade(g, W, H, P, k);
+  if(C.fam==="atelier"){ apRamo(g, W - K(70), K(110), K(170), Math.PI*.82, P.ac, k); apBrilho(g, W - K(250), K(96), K(9), P.ac); }
+  if(C.fam==="bloco"){ const D = apEscuro(P, seed); g.save(); g.beginPath(); g.rect(0, 0, K(26), H); g.clip(); g.fillStyle = D.bg; g.fillRect(0, 0, W, H); g.restore(); }
+  const top = C.fam==="classico" ? K(128) : K(118);
+  apRot(g, C.rot, mx, top, P.ac2, k, 15);
+  g.font = `italic 400 ${K(30)}px ${AT_SERIF}`; g.fillStyle = P.mut; g.textAlign = "right"; g.fillText(C.total > 1 ? `${String(C.idx+1).padStart(2,"0")} / ${String(C.total).padStart(2,"0")}` : `Nº ${apNum(C.i)}`, W - mx, top + K(2)); g.textAlign = "left";
+  apLinha(g, mx, top + K(28), W - mx, top + K(28), P.tit, k, 1, C.fam==="revista" ? .7 : .25);
+  if(C.fam==="revista") apLinha(g, mx, top + K(35), W - mx, top + K(35), P.tit, k, .6, .5);
+}
+async function apMeio(C){
+  const {g, W, H, k, P, s, mx} = C; const K = v => v*k; const larg = W - 2*mx, lay = s.layout || "numero";
+  await apFundoMeio(C);
+  const card = apCardCor(P);
+  if(lay==="numero" || lay==="icone" || !["citacao","mito","alerta","check"].includes(lay)){
+    const semTxt = !String(s.texto||"").trim(); const fPre = semTxt ? apTit(g, s.titulo || "", {max:larg - K(140), maxAlt:K(520), tam:K(64), min:K(38), lh:1.16}) : null;
+    let y = semTxt ? Math.max(K(200), (K(1190) - (K(250) + fPre.alt + K(170)))/2) : K(230);
+    if(lay==="icone"){ g.save(); g.beginPath(); g.arc(mx + K(70), y + K(70), K(70), 0, Math.PI*2); g.fillStyle = P.soft; g.fill(); g.strokeStyle = P.ac; g.lineWidth = K(1.4); g.beginPath(); g.arc(mx + K(70), y + K(70), K(84), 0, Math.PI*2); g.stroke(); g.restore(); atIcone(g, C.ic, mx + K(70), y + K(70), K(78), P.ac2, 1.4); y += K(190); }
+    else { apContorno(g, String(s.num || C.idx).padStart(2, "0"), mx - K(6), y + K(190), K(230), P.ac, k, "left", .9); apBrilho(g, mx + K(290), y + K(40), K(12), P.ac);
+      apLinha(g, mx + K(310), y + K(120), W - mx, y + K(120), P.ac, k, 1.2, .6); apRot(g, `Ponto ${String(s.num || C.idx).padStart(2, "0")}`, W - mx, y + K(100), P.ac2, k, 14, "right"); y += K(230); }
+    const tit = s.titulo || "";
+    if(!String(s.texto||"").trim()){ // frase única: vira um cartão de destaque
+      const f = apTit(g, tit, {max:larg - K(140), maxAlt:K(520), tam:K(64), min:K(38), lh:1.16}); const ch = f.alt + K(170), cy = y + K(10);
+      apCartao(g, mx, cy, larg, ch, K(24), card, k); g.save(); g.strokeStyle = P.ac; g.globalAlpha = .7; g.lineWidth = K(1.2); atRR(g, mx + K(18), cy + K(18), larg - K(36), ch - K(36), K(16)); g.stroke(); g.restore();
+      apCanto(g, mx + K(30), cy + K(30), K(40), 0, P.ac, k); apCanto(g, W - mx - K(30), cy + ch - K(30), K(40), Math.PI, P.ac, k);
+      atEscrever(g, f, mx + K(70), cy + K(85), {cor:P.tit, corD:P.ac});
+      await atRodape(g, W, H, P, k, C.idx, C.total); return; }
+    const f = apTit(g, tit, {max:larg, maxAlt:K(300), tam:K(64), min:K(38), lh:1.12}); atEscrever(g, f, mx, y, {cor:P.tit, corD:P.ac}); y += f.alt + K(44);
+    if(String(s.texto||"").trim()){ const fc = apTxt(g, s.texto, {max:larg - K(120), maxAlt:Math.max(K(110), K(1110) - y - K(100)), tam:K(36), min:K(23)}); const ch = fc.alt + K(100);
+      apCartao(g, mx, y, larg, ch, K(22), card, k); g.fillStyle = atOuro(g, mx, y, mx, y + ch, P.escuro); g.fillRect(mx, y + K(30), K(5), ch - K(60)); atEscrever(g, fc, mx + K(60), y + K(48), {cor:P.txt, corD:P.ac2}); }
+    else { g.fillStyle = P.ac; g.fillRect(mx, y, K(80), K(3)); }
+  }
+  else if(lay==="citacao"){
+    const f = apTit(g, s.titulo, {max:larg - K(150), maxAlt:K(440), tam:K(68), min:K(40), lh:1.14}); const ch = f.alt + K(220), cy = Math.max(K(290), (K(1180) - ch - (s.texto ? K(200) : 0))/2 + K(40));
+    apCartao(g, mx, cy, larg, ch, K(28), card, k); g.fillStyle = atOuro(g, mx, cy + ch - K(6), mx + larg, cy + ch, P.escuro); atRR(g, mx + K(60), cy + ch - K(5), larg - K(120), K(5), K(3)); g.fill();
+    g.beginPath(); g.arc(mx + K(90), cy, K(58), 0, Math.PI*2); g.fillStyle = atOuro(g, mx + K(32), cy - K(58), mx + K(148), cy + K(58), P.escuro); g.fill();
+    g.font = `400 ${K(130)}px ${AT_SERIF}`; g.fillStyle = P.escuro ? P.bg : "#FFFFFF"; g.textAlign = "center"; g.fillText("“", mx + K(90), cy + K(78)); g.textAlign = "left";
+    apRot(g, atAreaRot(C.i), W - mx - K(50), cy + K(70), P.ac2, k, 14, "right");
+    atEscrever(g, f, mx + K(70), cy + K(130), {cor:P.tit, corD:P.ac});
+    const y2 = cy + ch + K(80);
+    if(s.texto){ apSeta(g, mx + K(30), y2 + K(4), K(30), P, k, false); const fc = apTxt(g, s.texto, {max:larg - K(110), maxAlt:K(200), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, mx + K(90), y2 - K(16), {cor:P.txt, corD:P.ac2}); }
+  }
+  else if(lay==="mito"){
+    const h1 = K(300), y1 = K(250); atRR(g, mx, y1, larg, h1, K(22)); g.strokeStyle = P.ac; g.lineWidth = K(1.6); g.setLineDash([K(8), K(8)]); g.stroke(); g.setLineDash([]);
+    atRotulo(g, "Mito", mx + K(44), y1 - K(25), P, k, {cheio:P.escuro ? P.soft : P.bg2, corTxt:P.tit});
+    const f1 = apTit(g, s.titulo, {max:larg - K(130), maxAlt:h1 - K(90), tam:K(52), min:K(32), lh:1.12}); atEscrever(g, f1, mx + K(48), y1 + (h1 - f1.alt)/2, {cor:P.tit, corD:P.ac});
+    const D = apEscuro(P, C.seed), y2 = y1 + h1 + K(70), h2 = K(1120) - y2 - K(40); apCartao(g, mx, y2, larg, h2, K(22), P.escuro ? AT_PALETAS.areia.bg : D.bg, k);
+    const Q = P.escuro ? AT_PALETAS.areia : D; atRotulo(g, "Verdade", mx + K(44), y2 - K(25), P, k, {cheio:atOuro(g, mx, y2, mx + K(200), y2, true), corTxt:"#3B2B21"});
+    const f2 = apTxt(g, s.texto||"", {max:larg - K(110), maxAlt:h2 - K(110), tam:K(36), min:K(22), peso:400}); atEscrever(g, f2, mx + K(48), y2 + (h2 - f2.alt)/2, {cor:Q.tit, corD:Q.ac});
+  }
+  else if(lay==="alerta"){
+    const y = K(260), h = K(760); apCartao(g, mx, y, larg, h, K(26), card, k); g.strokeStyle = P.ac; g.lineWidth = K(1.4); atRR(g, mx + K(18), y + K(18), larg - K(36), h - K(36), K(18)); g.stroke();
+    g.beginPath(); g.arc(W/2, y, K(56), 0, Math.PI*2); g.fillStyle = atOuro(g, W/2 - K(56), y - K(56), W/2 + K(56), y + K(56), P.escuro); g.fill(); atIcone(g, "alerta", W/2, y, K(54), P.escuro ? P.bg : "#FFFFFF", 1.8);
+    apRot(g, s.rotulo || "Atenção", W/2, y + K(120), P.ac2, k, 17, "center");
+    const f = apTit(g, s.titulo, {max:larg - K(140), maxAlt:K(220), tam:K(62), min:K(36)}); atEscrever(g, f, W/2, y + K(160), {cor:P.tit, corD:P.ac, alinh:"center"});
+    const fc = apTxt(g, s.texto||"", {max:larg - K(160), maxAlt:h - K(220) - f.alt - K(40), tam:K(34), min:K(22)}); atEscrever(g, fc, W/2, y + K(200) + f.alt, {cor:P.txt, corD:P.ac2, alinh:"center"});
+  }
+  else if(lay==="check"){
+    const f = apTit(g, s.titulo, {max:larg, maxAlt:K(200), tam:K(78), min:K(44)}); atEscrever(g, f, mx, K(230), {cor:P.tit, corD:P.ac});
+    let y = K(230) + f.alt + K(50); const it = (s.itens||[]).slice(0, 5); const rh = Math.min(K(150), (K(1110) - y) / Math.max(1, it.length));
+    apCartao(g, mx, y, larg, rh*it.length + K(30), K(24), card, k);
+    it.forEach((t, n) => { const yy = y + K(15) + n*rh; if(n) apLinha(g, mx + K(40), yy, W - mx - K(40), yy, P.linha, k, 1.2);
+      g.beginPath(); g.arc(mx + K(76), yy + rh/2, K(24), 0, Math.PI*2); g.fillStyle = atOuro(g, mx + K(52), yy, mx + K(100), yy + rh, P.escuro); g.fill(); atIcone(g, "check", mx + K(76), yy + rh/2, K(24), P.escuro ? P.bg : "#FFFFFF", 2.2);
+      const ft = apTxt(g, t, {max:larg - K(190), maxAlt:rh - K(30), tam:K(31), min:K(20), peso:400, lh:1.3}); atEscrever(g, ft, mx + K(132), yy + (rh - ft.alt)/2, {cor:P.txt, corD:P.ac2}); });
+  }
+  await atRodape(g, W, H, P, k, C.idx, C.total);
+}
+
+/* ---------- página final ---------- */
+async function apFinal(C){
+  const {g, W, H, k, P, s, mx, seed} = C; const K = v => v*k; const larg = W - 2*mx;
+  const Q = C.fam==="bloco" ? apEscuro(P, seed) : P;
+  apPapel(g, W, H, Q, seed, k); if(C.fam==="classico") apMoldura(g, W, H, Q, k); if(C.fam==="moderno") apGrade(g, W, H, Q, k);
+  apSelo(g, W/2, K(270), K(112), Q, k);
+  const f = apTit(g, s.titulo, {max:larg - K(60), maxAlt:K(270), tam:K(86), min:K(46), lh:1.08}); const y = K(450); atEscrever(g, f, W/2, y, {cor:Q.tit, corD:Q.ac, alinh:"center"});
+  let y2 = y + f.alt + K(40); atDivisor(g, W/2, y2, K(160), Q.ac, k); y2 += K(50);
+  if(s.texto){ const fc = apTxt(g, s.texto, {max:larg - K(120), maxAlt:K(150), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, W/2, y2, {cor:Q.txt, corD:Q.ac2, alinh:"center"}); y2 += fc.alt + K(60); }
+  const acoes = [["salvar","Salve"],["enviar","Compartilhe"],["comentar","Comente"]]; const yA = Math.max(y2 + K(40), K(960)), gap = K(250);
+  acoes.forEach(([ic, t], n) => { const cx = W/2 + (n-1)*gap; g.beginPath(); g.arc(cx, yA, K(50), 0, Math.PI*2); g.strokeStyle = Q.ac; g.lineWidth = K(1.5); g.stroke(); atIcone(g, ic, cx, yA, K(44), Q.ac, 1.6); apRot(g, t, cx, yA + K(92), Q.tit, k, 15, "center"); });
+  await atRodape(g, W, H, Q, k, C.idx, C.total);
+}
+
+/* ---------- posts únicos ---------- */
+async function apUnico(C){
+  const {g, W, H, k, P, s, mx, seed} = C; const K = v => v*k; const larg = W - 2*mx; const lay = s.layout || "unico";
+  if(lay==="unico") return apCapa(C, true);
+  if(lay==="frase" || lay==="motivacional"){
+    const mot = lay==="motivacional"; apPapel(g, W, H, P, seed, k);
+    if(C.fam==="classico" || C.fam==="revista" || mot) apMoldura(g, W, H, P, k); else if(C.fam==="moderno") apGrade(g, W, H, P, k);
+    if(mot){ apRot(g, "Para refletir", W/2, K(250), P.ac2, k, 17, "center"); apBrilho(g, W/2, K(190), K(16), P.ac); apBrilho(g, W/2 - K(40), K(205), K(7), P.ac); apBrilho(g, W/2 + K(40), K(205), K(7), P.ac); }
+    else { g.font = `400 ${K(300)}px ${AT_SERIF}`; g.fillStyle = P.ac; g.globalAlpha = .5; g.textAlign = "center"; g.fillText("“", W/2, K(420)); g.globalAlpha = 1; g.textAlign = "left"; }
+    const f = apTit(g, s.titulo, {max:larg - K(80), maxAlt:K(520), tam: mot ? K(90) : K(82), min:K(44), lh:1.12}); const y = Math.max(K(360), (H - f.alt)/2 - K(40));
+    atEscrever(g, f, W/2, y, {cor:P.tit, corD:P.ac, alinh:"center"});
+    const y2 = y + f.alt + K(56); atDivisor(g, W/2, y2, K(140), P.ac, k); apRamo(g, W/2 - K(90), y2, K(140), Math.PI + .12, P.ac, k); apRamo(g, W/2 + K(90), y2, K(140), -.12, P.ac, k, true);
+    apRot(g, mot ? (ccCfg().assinatura || "Jéssica Valiente") : C.rot, W/2, y2 + K(70), P.mut, k, 15, "center");
+    return atRodape(g, W, H, P, k, 0, 1);
+  }
+  if(lay==="dica"){
+    const D = apEscuro(P, seed), L = apClaro(P); apPapel(g, W, H, L, seed, k);
+    g.save(); g.beginPath(); g.rect(0, 0, K(360), H); g.clip(); apPapel(g, W, H, D, seed + 3, k); g.restore();
+    apContorno(g, "!", K(180), K(560), K(380), D.ac, k, "center", .8); apVertical(g, "Dica rápida", K(180), K(860), D.ac, k, 20);
+    apRamo(g, K(90), K(1060), K(170), -.5, D.ac, k); apBrilho(g, K(270), K(240), K(14), D.ac);
+    const x = K(430), lg = W - x - mx; atRotulo(g, s.rotulo || "Dica rápida", x, K(200), L, k);
+    const f = apTit(g, s.titulo, {max:lg, maxAlt:K(560), tam:K(76), min:K(40), lh:1.12}); atEscrever(g, f, x, K(300), {cor:L.tit, corD:L.ac});
+    const y = K(300) + f.alt + K(50); g.fillStyle = L.ac; g.fillRect(x, y, K(70), K(3));
+    if(s.sub){ const fs = apTxt(g, s.sub, {max:lg, maxAlt:K(160), tam:K(30), min:K(20), peso:400}); atEscrever(g, fs, x, y + K(40), {cor:L.txt, corD:L.ac2}); }
+    return atRodape(g, W, H, L, k, 0, 1, {semLogo:false});
+  }
+  if(lay==="mito" || lay==="check"){ await apMeio(Object.assign({}, C, {idx:0, total:1, s:Object.assign({}, s, {rotulo: s.rotulo || (lay==="mito" ? "Mito ou verdade?" : C.rot)})})); return; }
+  return apCapa(C, true);
+}
+
+/* =========================================================
+   CENTRAL DE CONTEÚDO — Comandos da Central
+   (GERAR NOVOS CONTEÚDOS · LIMPAR CONTEÚDOS PENDENTES ·
+    conversa com a IA · referências e instruções)
+   Nada é publicado sem APROVAR. Nada existente é apagado
+   ou alterado sem confirmação.
+   ========================================================= */
+const CCX = {vista:null, resp:null};
+const CCX_EXEMPLOS = ["Crie 5 posts seguindo esta referência.","Aplique a coleção premium nos pendentes.","Não gostei desse modelo, faça outro mais elegante.","Mantenha o mesmo layout, mas altere o conteúdo.","Use minha identidade visual e não invente outras cores.","Crie um carrossel educativo sobre aposentadoria."];
+const CCX_ABAS = ["feed","aguardando","carrosseis","criar"];
+function ccxPendentes(){ return ccFeedItens().filter(i => !["aprovado","agendado","publicado"].includes(i.status) && !i.aprovacao); }
+function ccxUltimos(){ return (ccDB().centralUltimos||[]).map(ccItem).filter(Boolean); }
+function ccxVisto(){ const i = CCX.vista && ccItem(CCX.vista); return i && ["carrossel","post"].includes(i.tipo) ? i : null; }
+
+function ccxPainel(el){
+  const pend = ccxPendentes(), ult = ccxUltimos(), visto = ccxVisto(), lix = ccDB().lixeiraCentral;
+  const r = CCX.resp || ccDB().centralResp || null; const rItens = r ? (r.ids||[]).map(ccItem).filter(Boolean) : [];
+  el.innerHTML = `<div class="cartao ccx">
+    <div class="ccx-topo"><div><h3 style="margin:0">Comandos da Central</h3><p class="sub" style="margin:4px 0 0">Tudo o que for criado ou alterado aqui vai para <b>Aguardando aprovação</b>. Nada é publicado sem o seu APROVAR.</p></div>
+      <div class="ccx-botoes"><button class="btn btn-pri" id="ccx-gerar">GERAR NOVOS CONTEÚDOS</button>
+        <button class="btn btn-perigo" id="ccx-limpar" ${pend.length ? "" : "disabled"}>LIMPAR CONTEÚDOS PENDENTES${pend.length ? ` (${pend.length})` : ""}</button>
+        <button class="btn" id="ccx-refs">Referências e instruções</button>
+        ${lix && lix.itens && lix.itens.length ? `<button class="btn btn-sm" id="ccx-desfazer" title="Apagados em ${new Date(lix.em).toLocaleString("pt-BR")}">Desfazer última limpeza (${lix.itens.length})</button>` : ""}</div></div>
+    <form id="ccx-f" class="ccx-cmd"><textarea name="t" rows="2" placeholder="Converse com a IA da Central. Ex.: Crie 5 posts seguindo esta referência." required></textarea>
+      <div class="ccx-cmd-lado"><label class="sub">Aplicar alterações em<select name="alvo">
+        <option value="auto">Escolher automaticamente</option>
+        ${visto ? `<option value="visto">Post aberto por último: ${esc(visto.titulo.slice(0, 40))}</option>` : ""}
+        ${ult.length ? `<option value="ultimos">Últimos criados ou alterados aqui (${ult.length})</option>` : ""}
+        ${pend.length ? `<option value="pendentes">Todos os pendentes (${pend.length})</option>` : ""}</select></label>
+      <button class="btn btn-pri">Enviar comando</button></div></form>
+    <div class="cc-chips" style="margin:10px 0 0">${CCX_EXEMPLOS.map(x => `<button type="button" class="cc-chip" data-ccx-ex="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+    ${r ? `<div class="ccx-resp"><div class="sub">${new Date(r.ts).toLocaleString("pt-BR")} · você pediu: <b>${esc(r.texto)}</b></div><p style="margin:6px 0 0">${esc(r.msg)}</p>
+      ${rItens.length ? `<div class="at-grade">${rItens.slice(0, 12).map(i => atCard(i)).join("")}</div>` : ""}</div>` : ""}
+  </div>`;
+  $("#ccx-gerar").onclick = () => ccxAbrirGerar();
+  $("#ccx-limpar").onclick = () => ccxLimpar();
+  $("#ccx-refs").onclick = () => ccxAbrirRefs();
+  const bd = $("#ccx-desfazer"); if(bd) bd.onclick = () => ccxDesfazerLimpeza();
+  el.querySelectorAll("[data-ccx-ex]").forEach(b => b.onclick = () => { const t = $("#ccx-f").t; t.value = b.dataset.ccxEx; t.focus(); });
+  $("#ccx-f").t.onkeydown = e => { if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); $("#ccx-f").requestSubmit(); } };
+  $("#ccx-f").onsubmit = async e => { e.preventDefault(); const f = e.target, t = f.t.value.trim(); if(!t) return;
+    const bt = f.querySelector("button"); bt.disabled = true; bt.textContent = "Trabalhando…";
+    try{ await ccxExecutar(t, f.alvo.value); } catch(err){ console.error(err); toast("Não consegui executar o comando: " + (err.message||err), true); }
+    bt.disabled = false; bt.textContent = "Enviar comando"; };
+  const resp = el.querySelector(".ccx-resp"); if(resp) atLigarCards(resp);
+}
+
+/* ---------- Resposta e registro ---------- */
+function ccxResponder(texto, msg, itens){
+  const ids = (itens||[]).map(i => i.id||i);
+  CCX.resp = {ts:new Date().toISOString(), texto, msg, ids}; ccDB().centralResp = CCX.resp;
+  if(ids.length) ccDB().centralUltimos = ids;
+  ccDB().comandos.push({ts:CCX.resp.ts, texto, resposta:msg, itens:ids, ir:null}); if(ccDB().comandos.length > 100) ccDB().comandos.splice(0, ccDB().comandos.length-100);
+  salvar(); ccRerender();
+}
+
+/* ---------- GERAR NOVOS CONTEÚDOS ---------- */
+function ccxProximoDiaLivre(d){ let x = d || addDias(hojeStr(), 1); for(let n=0;n<400;n++){ if(!ccFeedDoDia(x).length) return x; x = addDias(x, 1); } return x; }
+function ccxGerar(o){
+  const fc = ccCfg().feed; const criados = []; let aviso = "";
+  const usados = new Set(ccFeedItens().filter(i => (i.dataPrevista||"") >= addDias(hojeStr(), -20)).map(i => i.temaId).filter(Boolean));
+  let temas = o.assunto ? ccBuscarTemas(o.assunto, o.area || undefined) : [];
+  if(o.assunto && !temas.length){ const ar = o.area || ccAdivinharArea(o.assunto); aviso = ` Não encontrei “${o.assunto}” na biblioteca de temas conferidos, então usei temas de ${ar==="fam" ? "Direito de Família" : "Direito Previdenciário"}.`; if(!o.area && (ar==="prev" || ar==="fam")) o.area = ar; }
+  const formatos = (o.formatos && o.formatos.length ? o.formatos : (fc.formatosPref && fc.formatosPref.length ? fc.formatosPref : Object.keys(AT_ESTILOS))).filter(k => AT_ESTILOS[k]);
+  const capas = (o.capas || fc.capasPref || []).filter(k => AT_CAPAS_V3[k] || AT_PREMIUM[k]);
+  const ordem = AT_RITMO.filter(x => formatos.includes(x)); const seqF = ordem.length ? ordem : formatos;
+  const instr = [fc.instrucoes, o.instr].filter(Boolean).join(" ");
+  let d = o.inicio && o.inicio > hojeStr() ? o.inicio : addDias(hojeStr(), 1);
+  for(let k=0;k<o.qtd;k++){
+    d = ccxProximoDiaLivre(d);
+    const area = o.area || (Math.floor(toUTC(d)/86400000) % 2 ? "fam" : "prev");
+    const t = temas.length ? temas[k % temas.length] : ccProximoTema(area, usados); if(!t) continue; usados.add(t.id);
+    const estilo = seqF[k % seqF.length] || "info", tipo = estilo==="carrossel" ? "carrossel" : "post";
+    const base = ccDB().itens.filter(i => i.temaId===t.id).length;
+    const it = ccFeedGerar(t.id, tipo, {variacao:base, data:d, estilo, capa: capas.length ? capas[k % capas.length] : null}); if(!it) continue;
+    if(it.slides[0]?.papel==="capa" && AT_CAPAS_ED[it.design.capa]) delete it.slides[0].layout;
+    it.planoFeed = d; it.origem = "central"; if(o.instr) it.instrucoes = o.instr;
+    const ap = ccxAplicarInstr(it, instr);
+    it.historico.push({ts:new Date().toISOString(), de:it.status, para:it.status, obs:`Criado em GERAR NOVOS CONTEÚDOS${ap.length ? " · " + ap.join(", ") : ""}`, usuario:USU?.nome||""});
+    ccDB().itens.push(it); criados.push(it); d = addDias(d, 1);
+  }
+  if(criados.length) registrar("conteúdo", `Central: ${criados.length} conteúdo(s) gerado(s) para aprovação`);
+  salvar(); return {criados, aviso, semRef: !capas.length};
+}
+function ccxAplicarInstr(i, txt){ // só aplica o que for pedido de forma clara; cores sempre dentro da paleta da marca
+  const n = ccNormal(txt||""), d = i.design, feito = []; if(!n.trim() || !d) return feito;
+  if(/(mais escur|fundo escuro|tons? escuros?|cores escuras)/.test(n)){ d.paleta = AT_ESCUROS[(d.seed||0) % AT_ESCUROS.length]; feito.push(`cores: ${AT_PALETAS[d.paleta].nome}`); }
+  else if(/(mais clar|fundo claro|tons? claros?|cores claras|mais leve)/.test(n)){ d.paleta = AT_CLAROS[(d.seed||0) % AT_CLAROS.length]; feito.push(`cores: ${AT_PALETAS[d.paleta].nome}`); }
+  if(/(menos texto|textos? (mais )?curtos?|mais diret|enxut|resumid)/.test(n)){ i.slides.forEach(s => { if(s.texto && s.papel!=="final"){ s.texto = atFrases(s.texto)[0] || ""; } if(s.itens) s.itens = s.itens.slice(0, 3); }); feito.push("textos mais curtos"); }
+  if(/(elegan|sofistic|refinad|chique|luxo)/.test(n) && !(ccCfg().feed.capasPref||[]).length && AT_PREMIUM[d.premium]){ d.premium = ["classico","atelier","revista"][(d.seed||0) % 3]; feito.push(`modelo: ${AT_PREMIUM[d.premium]}`); }
+  else if(/(elegan|sofistic|refinad|chique|luxo)/.test(n) && !(ccCfg().feed.capasPref||[]).length && i.tipo==="carrossel"){ const op = Object.keys(AT_CAPAS_ED); d.capa = op[(d.seed||0) % op.length]; if(i.slides[0]?.papel==="capa") delete i.slides[0].layout; feito.push(`capa: ${AT_CAPAS_V3[d.capa]}`); }
+  return feito;
+}
+function ccxAbrirGerar(pre){
+  pre = pre || {}; const fc = ccCfg().feed; const fp = pre.formatos || fc.formatosPref || Object.keys(AT_ESTILOS); const cp = fc.capasPref || [];
+  const pend = ccxPendentes().length;
+  const corpo = `<form class="campos" id="ccx-fg">
+    <label>Quantidade de conteúdos<input type="number" name="qtd" min="1" max="60" value="${pre.qtd||6}"></label>
+    <label>Começar em<input type="date" name="ini" value="${ccxProximoDiaLivre()}"></label>
+    <label>Área<select name="area"><option value="">Alternar Previdenciário e Família</option><option value="prev">Só Previdenciário</option><option value="fam">Só Família</option></select></label>
+    <label>Assunto (opcional)<input name="assunto" value="${esc(pre.assunto||"")}" placeholder="Ex.: aposentadoria, pensão alimentícia"></label>
+    <div class="largo"><div class="sub" style="margin-bottom:4px">Formatos</div>${Object.entries(AT_ESTILOS).map(([k, v]) => `<label class="chk" style="display:inline-flex;margin-right:14px"><input type="checkbox" name="f_${k}" ${fp.includes(k)?"checked":""}> ${v}</label>`).join("")}</div>
+    <label class="largo">Instruções para esta geração (opcional)<textarea name="instr" rows="2" placeholder="Ex.: textos mais curtos, tons claros, visual mais elegante">${esc(pre.instr||"")}</textarea></label>
+    <div class="largo sub">Modelos de referência: <b>${cp.length ? cp.map(k => esc(AT_PREMIUM[k]||AT_CAPAS_V3[k]||k)).join(", ") : "coleção premium (5 famílias, alternadas)"}</b> · Cores: somente as paletas da sua marca. ${fc.instrucoes ? `Suas instruções fixas também serão seguidas.` : ""} Ajuste em “Referências e instruções”.</div>
+    <div class="largo sub">Os conteúdos entram nos próximos dias livres (dias que já têm publicação não são duplicados)${pend ? `. Você tem ${pend} pendente(s); para recomeçar do zero, use antes “LIMPAR CONTEÚDOS PENDENTES”` : ""}. Tudo fica aguardando a sua aprovação.</div></form>`;
+  modal("Gerar novos conteúdos", corpo, [{t:"Cancelar", v:null}, {t:"Gerar conteúdos", cls:"btn-pri", acao: f => {
+    const v = lerForm(f.querySelector("#ccx-fg")); const formatos = Object.keys(AT_ESTILOS).filter(k => v["f_"+k]);
+    if(!formatos.length){ toast("Marque pelo menos um formato.", true); return false; }
+    const r = ccxGerar({qtd:Math.max(1, Math.min(60, +v.qtd||6)), inicio:v.ini, area:v.area, assunto:v.assunto, instr:v.instr, formatos});
+    ccxResponder(`GERAR NOVOS CONTEÚDOS (${r.criados.length})`, r.criados.length ? `Criei ${r.criados.length} conteúdo(s), de ${fmtData(r.criados[0].dataPrevista)} a ${fmtData(r.criados[r.criados.length-1].dataPrevista)}. Estão aguardando a sua aprovação.${r.aviso}` : "Nada foi criado.", r.criados);
+    toast(r.criados.length ? `${r.criados.length} conteúdo(s) criado(s) para a sua aprovação.` : "Nada foi criado.", !r.criados.length); return true; }}]);
+}
+
+/* ---------- LIMPAR CONTEÚDOS PENDENTES ---------- */
+async function ccxLimpar(){
+  const l = ccxPendentes(); if(!l.length){ toast("Não há conteúdos pendentes."); return false; }
+  const ag = l.filter(i => i.status==="aprovacao").length, aj = l.length - ag;
+  const manter = ccFeedItens().filter(i => ["aprovado","agendado","publicado"].includes(i.status)).length;
+  const ok = await confirmar("Apagar todos os conteúdos pendentes?", `Você realmente deseja apagar <b>todos os ${l.length} conteúdos pendentes</b>? (${ag} aguardando aprovação${aj ? `, ${aj} reprovado(s) ou com alteração pedida` : ""})<br><br>Os ${manter} conteúdo(s) aprovados, agendados ou publicados <b>não serão apagados</b>. Se mudar de ideia, use o botão “Desfazer última limpeza”.`, "Sim, apagar todos os pendentes", true);
+  if(!ok) return false;
+  const ids = new Set(l.map(i => i.id));
+  ccDB().lixeiraCentral = {em:new Date().toISOString(), itens:JSON.parse(JSON.stringify(l)), tarefas:JSON.parse(JSON.stringify(ccDB().tarefas.filter(t => ids.has(t.itemId))))};
+  ccDB().itens = ccDB().itens.filter(i => !ids.has(i.id)); ccDB().tarefas = ccDB().tarefas.filter(t => !ids.has(t.itemId));
+  ccDB().centralUltimos = (ccDB().centralUltimos||[]).filter(id => !ids.has(id)); if(CCX.vista && ids.has(CCX.vista)) CCX.vista = null;
+  registrar("conteúdo", `Central: ${l.length} conteúdo(s) pendente(s) apagado(s) de uma vez`);
+  ccxResponder("LIMPAR CONTEÚDOS PENDENTES", `Apaguei ${l.length} conteúdo(s) pendente(s). Os aprovados, agendados e publicados continuam. Agora você pode usar “GERAR NOVOS CONTEÚDOS” para começar uma nova sequência do zero.`, []);
+  toast(`${l.length} conteúdo(s) pendente(s) apagado(s).`); return true;
+}
+async function ccxDesfazerLimpeza(){
+  const lx = ccDB().lixeiraCentral; if(!lx || !lx.itens?.length) return;
+  if(!(await confirmar("Desfazer a última limpeza", `Trazer de volta os ${lx.itens.length} conteúdo(s) apagados em ${new Date(lx.em).toLocaleString("pt-BR")}? Eles voltam para aguardando aprovação, nas mesmas datas (podem ficar dois no mesmo dia, se você já gerou conteúdos novos).`, "Trazer de volta"))) return;
+  const tem = new Set(ccDB().itens.map(i => i.id)); const volta = lx.itens.filter(i => !tem.has(i.id));
+  ccDB().itens.push(...volta); ccDB().tarefas.push(...(lx.tarefas||[]).filter(t => volta.some(i => i.id===t.itemId)));
+  ccDB().lixeiraCentral = null; registrar("conteúdo", `Central: limpeza desfeita (${volta.length} conteúdo(s) restaurado(s))`);
+  ccxResponder("Desfazer última limpeza", `Trouxe de volta ${volta.length} conteúdo(s).`, volta);
+}
+
+/* ---------- Referências e instruções ---------- */
+function ccxAbrirRefs(rasc){
+  const fc = ccCfg().feed; const refs = (ccDB().imagens||[]).filter(x => x.ref);
+  const fp = fc.formatosPref || Object.keys(AT_ESTILOS), cp = fc.capasPref || [];
+  const corpo = `<form class="campos" id="ccx-fr">
+    <label class="largo">Suas instruções fixas (a Central segue em toda geração)<textarea name="instr" rows="3" placeholder="Ex.: textos mais curtos; visual elegante; tons claros">${esc(rasc!=null ? rasc : (fc.instrucoes||""))}</textarea></label>
+    <div class="largo"><div class="sub" style="margin-bottom:4px"><b>Modelos que seguem as suas referências</b> — marque os modelos de capa mais parecidos com as referências que você enviou. A Central passa a usar só esses. Sem nenhum marcado, usa todos.</div>
+      ${Object.entries(Object.assign({}, AT_PREMIUM, AT_CAPAS_V3)).map(([k, v]) => `<label class="chk" style="display:inline-flex;margin-right:14px"><input type="checkbox" name="c_${k}" ${cp.includes(k)?"checked":""}> ${esc(v)}</label>`).join("")}</div>
+    <div class="largo"><div class="sub" style="margin-bottom:4px">Formatos preferidos</div>${Object.entries(AT_ESTILOS).map(([k, v]) => `<label class="chk" style="display:inline-flex;margin-right:14px"><input type="checkbox" name="f_${k}" ${fp.includes(k)?"checked":""}> ${v}</label>`).join("")}</div>
+    <div class="largo"><div class="sub" style="margin-bottom:4px"><b>Cores da sua identidade visual</b> (a Central nunca usa outras cores)</div><div class="ccx-paletas">${Object.values(AT_PALETAS).map(p => `<span title="${esc(p.nome)}"><i style="background:${p.bg}"></i><i style="background:${p.ac}"></i>${esc(p.nome)}</span>`).join("")}</div></div>
+    <div class="largo"><div class="sub" style="margin-bottom:4px"><b>Imagens de referência</b> (ficam guardadas aqui para você comparar; não aparecem nas artes)</div>
+      <div class="at-fotos">${refs.map(x => `<div class="at-foto"><img data-ref-img="${x.id}" alt=""><button type="button" class="btn-link" data-ref-rm="${x.id}">remover</button></div>`).join("") || `<span class="sub">Nenhuma referência enviada.</span>`}</div>
+      <label class="btn btn-sm" style="margin-top:8px">Enviar imagens de referência<input type="file" id="ccx-up-ref" accept="image/*" multiple hidden></label></div></form>`;
+  const salvarRefs = f => { const v = lerForm(f.querySelector("#ccx-fr")); const formatos = Object.keys(AT_ESTILOS).filter(k => v["f_"+k]);
+    if(!formatos.length){ toast("Marque pelo menos um formato.", true); return false; }
+    fc.instrucoes = v.instr; fc.formatosPref = formatos; fc.capasPref = Object.keys(Object.assign({}, AT_PREMIUM, AT_CAPAS_V3)).filter(k => v["c_"+k]); salvar(); toast("Referências e instruções salvas."); ccRerender(); return true; };
+  modal("Referências e instruções", corpo, [{t:"Cancelar", v:null}, {t:"Salvar", cls:"btn-pri", acao: salvarRefs}]);
+  const m = [...document.querySelectorAll(".fundo-modal")].pop(); if(!m) return;
+  m.querySelectorAll("img[data-ref-img]").forEach(async im => { const x = ccDB().imagens.find(y => y.id===im.dataset.refImg); im.src = await ccUrl(im.dataset.refImg, x?.mime || "image/jpeg") || ""; });
+  m.querySelector("#ccx-up-ref").onchange = async e => { for(const fl of e.target.files){ const id = uid(); await ccGuardarArquivo(id, await fl.arrayBuffer()); ccDB().imagens.push({id, nome:fl.name, mime:fl.type, ref:true, marca:false, criado:new Date().toISOString()}); }
+    salvar(); toast("Referências guardadas. Agora marque os modelos parecidos com elas."); const rs = lerForm(m.querySelector("#ccx-fr")).instr; m.remove(); ccxAbrirRefs(rs); };
+  m.querySelectorAll("[data-ref-rm]").forEach(b => b.onclick = async () => { m.style.display = "none"; const rs = lerForm(m.querySelector("#ccx-fr")).instr; const ok = await confirmar("Remover referência", "Remover esta imagem de referência?", "Remover", true); m.remove();
+    if(ok){ await ccApagarArquivo(b.dataset.refRm); ccDB().imagens = ccDB().imagens.filter(x => x.id!==b.dataset.refRm); salvar(); } ccxAbrirRefs(rs); });
+}
+
+/* ---------- Conversa com a IA da Central ---------- */
+function ccxQtd(n){ const m = n.match(/\b(\d{1,2}|um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez)\b\s+(?:novos?\s+|novas?\s+)?(posts?|carrosse(?:is|l)|conteudos?|publicac(?:oes|ao)|artes?|frases?|dicas?)/); return m ? Math.min(60, +m[1] || CC_NUM[m[1]] || 1) : 0; }
+function ccxEhEdicao(n){ return /(nao gostei|outro modelo|outra versao|refaz|refaca|mesmo layout|mantenh|troque|troca|mude|muda|altere|altera|ajuste|ajusta|deixe|deixa|melhore|modifique|(desse|dessa|deste|desta|esse|essa|este|esta|nesse|nessa|neste|nesta)\s+(post|modelo|arte|carrossel|layout|conteudo|publicacao|capa))/.test(n); }
+function ccxEhGeracao(n){ return /(cri[ea]r?|ger[ea]r?|produz|mont[ea]|fa[cz]a|faz|prepar[ea]|quero|elabor)/.test(n) && /(posts?|carrosse|conteudos?|publicac|artes?|sequencia|frases?|dicas?)/.test(n) && !/(nao gostei|outro modelo|outra versao|mesmo layout|mantenh)/.test(n); }
+async function ccxExecutar(texto, alvoSel){
+  const n = ccNormal(texto);
+  // 1) limpar pendentes
+  if(/(limp|apag|exclu|remov|delet)/.test(n) && /(pendent|nao aprovad|aguardando|todos os (posts|conteudos))/.test(n)){ await ccxLimpar(); return; }
+  // pedidos de vídeo, stories e planejamento continuam com a assistente já existente
+  if(/(video|reels|tiktok|stories|roteiro|gravar|semana|janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|analis|desempenho)/.test(n) && !/(posts?|carrosse|artes?)\b/.test(n)){ const r = await ccExecutarComando(texto); ccxResponder(texto, r.msg, r.itens||[]); if(r.acao) r.acao(); return; }
+  // 2) regra de identidade visual
+  const pedeMarca = /(identidade visual|cores da (minha )?marca|minhas cores|nao invente|nao use outras cores|outras cores)/.test(n);
+  if(pedeMarca){ const fc = ccCfg().feed; fc.somenteMarca = true; if(!/cores da marca/.test(ccNormal(fc.instrucoes||""))) fc.instrucoes = [fc.instrucoes, "Usar somente as cores da marca."].filter(Boolean).join(" "); }
+  // 3) gerar novos
+  if(ccxEhGeracao(n) && !(ccxEhEdicao(n) && !ccxQtd(n))){
+    const qtd = ccxQtd(n) || (/\b(um|uma)\b/.test(n) ? 1 : /posts|conteudos|carrosseis|artes/.test(n) ? 5 : 1);
+    const formatos = /carrosse/.test(n) && !/\bposts?\b/.test(n) ? ["carrossel"] : /(frase|motivac)/.test(n) ? ["frase"] : /\bdicas?\b/.test(n) ? ["dica"] : /informativ/.test(n) ? ["info"] : /carrosse/.test(n) ? ["carrossel", "info"] : null;
+    const assunto = ((texto.match(/sobre\s+(.+?)\s*(?:[.!?;]|,\s*(?:com|use|usando|seguindo|mantendo)|\s+(?:com|seguindo|usando|no estilo|nas cores|para o)\s|$)/i)||[])[1]||"").trim();
+    const area = /(famil|pensao|guarda|divorc|alimentos|uniao estavel|heranc|inventar)/.test(ccNormal(assunto)) ? "fam" : /(inss|aposent|previd|bpc|loas|auxilio|pensao por morte|beneficio)/.test(ccNormal(assunto)) ? "prev" : "";
+    const r = ccxGerar({qtd, formatos, assunto, area, instr:texto, capas: /referenc/.test(n) ? null : undefined});
+    const semRef = /referenc/.test(n) && r.semRef ? " Você ainda não marcou os modelos que seguem as suas referências; usei a coleção premium. Abra “Referências e instruções” para escolher." : "";
+    ccxResponder(texto, r.criados.length ? `Criei ${r.criados.length} conteúdo(s) com a sua identidade visual (${[...new Set(r.criados.map(i => AT_ESTILOS[i.estilo]||i.tipo))].join(", ")}), de ${fmtData(r.criados[0].dataPrevista)} a ${fmtData(r.criados[r.criados.length-1].dataPrevista)}. Estão aguardando a sua aprovação.${r.aviso}${semRef}` : "Nada foi criado.", r.criados);
+    return;
+  }
+  // 4) alterar conteúdos existentes
+  const ehEdicao = ccxEhEdicao(n) || pedeMarca || /(elegan|sofistic|escur|clar|menos texto|legenda|hashtag|titulo|capa|cor|icone|curt|premium|pack|canva)/.test(n);
+  if(ehEdicao){
+    let alvo = [];
+    if(alvoSel==="visto") alvo = [ccxVisto()].filter(Boolean);
+    else if(alvoSel==="ultimos") alvo = ccxUltimos();
+    else if(alvoSel==="pendentes") alvo = ccxPendentes();
+    else { const v = ccxVisto(), u = ccxUltimos().filter(i => i.status!=="publicado"); alvo = /pendentes/.test(n) ? ccxPendentes() : (/(todos|todas)/.test(n) ? (u.length ? u : ccxPendentes()) : v ? [v] : u.length===1 ? u : []);
+      if(!alvo.length && u.length > 1) alvo = u; }
+    alvo = alvo.filter(i => i && ["carrossel","post"].includes(i.tipo) && i.status!=="publicado" && i.slides && i.design);
+    if(!alvo.length){ ccxResponder(texto, pedeMarca ? `Combinado: a Central usa somente as cores da sua marca (${Object.values(AT_PALETAS).map(p => p.nome).join(", ")}). Essa regra ficou salva nas suas instruções.` : "Não sei em qual post aplicar. Clique no post para abri-lo (depois feche) e envie o comando de novo, ou escolha “Todos os pendentes” no campo “Aplicar alterações em”.", []); return; }
+    const aprov = alvo.filter(i => ["aprovado","agendado"].includes(i.status)).length;
+    if(alvo.length > 1 || aprov){ const ok = await confirmar("Confirmar alteração", `Vou alterar <b>${alvo.length} conteúdo(s)</b>${aprov ? `, sendo ${aprov} já aprovado(s) ou agendado(s): eles perdem a aprovação e voltam para aguardando aprovação` : ""}. A versão anterior de cada um fica guardada no histórico de versões. Continuar?`, "Sim, alterar"); if(!ok) return; }
+    const resumo = []; let iguais = 0;
+    alvo = alvo.filter(i => { const feito = ccxAlterar(i, texto, n, pedeMarca); if(!feito){ iguais++; return false; } ccAlterouAposAprovar(i); if(i.status==="ajustes"){ ccMudarStatus(i, "aprovacao", "Ajustes feitos pela Central"); i.ajuste = null; }
+      i.atualizado = new Date().toISOString(); i.historico.push({ts:i.atualizado, de:i.status, para:i.status, obs:`Alterado pela Central: ${texto} → ${feito.join(", ")}`, usuario:USU?.nome||""}); resumo.push(feito.join(", ")); return true; });
+    const uniq = [...new Set(resumo)];
+    if(!alvo.length){ ccxResponder(texto, `Nada precisou mudar: ${iguais} conteúdo(s) já estavam na coleção premium.`, []); return; }
+    ccxResponder(texto, `${iguais ? `${iguais} conteúdo(s) já estavam na coleção premium e ficaram como estavam. ` : ""}Alterei ${alvo.length} conteúdo(s): ${uniq.slice(0, 3).join(" · ")}${uniq.length > 3 ? " · …" : ""}. A versão anterior ficou guardada (abra o post para restaurar). Confira a prévia abaixo e aprove quando gostar.`, alvo);
+    return;
+  }
+  // 5) demais pedidos (vídeos, stories, planejamento): assistente já existente
+  const r = await ccExecutarComando(texto);
+  if(r.acao){ ccxResponder(texto, r.msg, r.itens||[]); r.acao(); } else ccxResponder(texto, r.msg, r.itens||[]);
+}
+function ccxAlterar(i, texto, n, pedeMarca){
+  const d = i.design; let feito = [];
+  if(/(mesmo layout|mesmo modelo|mesmo visual|mesma arte|mantenh)/.test(n) && /(conteudo|texto|tema|assunto)/.test(n)) return ccxTrocarConteudo(i, /(tema|assunto)/.test(n));
+  if(/(premium|pack|canva|profissional|designer)/.test(n) && AT_PREMIUM[d.premium] && !/(elegan|outro|troque|mude|nao gostei|escur|clar|texto|conteudo)/.test(n)) return null;
+  if(/(premium|pack|canva|profissional|designer)/.test(n) && !AT_PREMIUM[d.premium]){
+    atGuardarVersao(i, texto); d.premium = apFamiliaPorData(i.dataPrevista, d.seed); d.v = 4; i.ultimoPedido = {pedido:texto, feito:["coleção premium"], ts:new Date().toISOString(), versao:i.versao};
+    return [`coleção premium: ${AT_PREMIUM[d.premium]}`]; }
+  if(/(elegan|sofistic|refinad|chique|luxo)/.test(n) && AT_PREMIUM[d.premium]){
+    atGuardarVersao(i, texto); const op = ["classico","atelier","revista","bloco"].filter(x => x!==d.premium); d.premium = op[Math.floor(Math.random()*op.length)]; d.seed = 1 + Math.floor(Math.random()*999999);
+    const pal = ["champanhe","branco","chocolate","areia"].filter(p => p!==d.paleta); if(!/(escur|clar|cor)/.test(n)) d.paleta = pal[d.seed % pal.length];
+    feito.push(`modelo mais elegante: ${AT_PREMIUM[d.premium]}`, `cores: ${AT_PALETAS[d.paleta].nome}`); i.ultimoPedido = {pedido:texto, feito, ts:new Date().toISOString(), versao:i.versao};
+    return feito.concat(/(menos texto|curt)/.test(n) ? ccxAplicarInstr(i, texto) : []); }
+  if(/(elegan|sofistic|refinad|chique|luxo)/.test(n)){
+    atGuardarVersao(i, texto); const op = Object.keys(AT_CAPAS_ED).filter(k => k!==d.capa); d.capa = op[Math.floor(Math.random()*op.length)]; d.seed = 1 + Math.floor(Math.random()*999999); d.v = 3;
+    if(i.slides[0]?.papel==="capa") delete i.slides[0].layout;
+    const pal = ["champanhe","branco","chocolate","areia"].filter(p => p!==d.paleta); if(!/(escur|clar|cor)/.test(n)) d.paleta = pal[d.seed % pal.length];
+    feito.push(`modelo mais elegante: ${AT_CAPAS_V3[d.capa]}`, `cores: ${AT_PALETAS[d.paleta].nome}`);
+    i.ultimoPedido = {pedido:texto, feito, ts:new Date().toISOString(), versao:i.versao};
+    const extra = /(escur|clar|menos texto|curt)/.test(n) ? ccxAplicarInstr(i, texto) : []; return feito.concat(extra);
+  }
+  if(pedeMarca && !/(modelo|layout|nao gostei|outro|escur|clar|texto|legenda)/.test(n)){
+    atGuardarVersao(i, texto); if(!AT_PALETAS[d.paleta]) d.paleta = i.dataPrevista ? atPaletaPorData(i.dataPrevista) : "areia";
+    return [`somente cores da marca (${AT_PALETAS[d.paleta].nome})`];
+  }
+  feito = ccFeedAplicarPedido(i, texto);
+  if(!AT_PALETAS[d.paleta]) d.paleta = "areia";
+  return feito;
+}
+function ccxTrocarConteudo(i, outroTema){
+  const t0 = ccFeedTemaDe(i); const d = i.design; atGuardarVersao(i, "Mesmo layout, novo conteúdo");
+  const antes = JSON.stringify(i.slides.map(s => [s.titulo, s.texto]));
+  let t = t0, v = (i.variacao||0) + 1, slides = t0 ? atMontarSlides(t0, i.tipo, v, d.seed, i.estilo) : null;
+  if(outroTema || !slides || JSON.stringify(slides.map(s => [s.titulo, s.texto]))===antes){
+    t = ccProximoTema(i.area==="fam" ? "fam" : "prev", new Set([i.temaId])); v = ccDB().itens.filter(x => x.temaId===t.id).length; slides = atMontarSlides(t, i.tipo, v, d.seed, i.estilo);
+    i.temaId = t.id; delete i.temaLivre; i.titulo = t.titulo.replace(/\*/g,""); i.area = t.area; i.verificacao = ccVerificacao(t); d.icone = atIconeDoTema(t);
+  }
+  i.slides = slides; i.variacao = v; i.legenda = atLegenda(t, i.tipo, v); i.hashtags = atHashtags(t);
+  if(i.slides[0]?.papel==="capa" && AT_CAPAS_ED[d.capa]) delete i.slides[0].layout;
+  i.gancho = (i.slides[0]?.titulo||"").replace(/\*/g,""); i.ultimoPedido = {pedido:"Mesmo layout, novo conteúdo", feito:["novo conteúdo"], ts:new Date().toISOString(), versao:i.versao};
+  return [t===t0 ? "mesmo layout e cores, textos e legenda novos" : `mesmo layout e cores, novo tema: ${i.titulo}`];
 }
 
 /* ---------------- MEU FEED PREVIEW ---------------- */
