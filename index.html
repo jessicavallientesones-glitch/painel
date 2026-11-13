@@ -5297,7 +5297,7 @@ function atPaleta(i, s){ const d = i.design || {}; let p = (s && s.paleta) || d.
 function atInversa(P){ return P.escuro ? AT_PALETAS.areia : AT_PALETAS.cafe; }
 async function ccAtDesenhar(g, W, H, i, idx){
   if(i.design && ["reels","story"].includes(i.design.formato)) return fpDesenharVert(g, W, H, i);
-  if(i.design && i.design.fotoId && FP_FEED[i.design.fotoLayout]){ const s_ = i.slides[idx] || {}, tot_ = i.slides.length, pap_ = s_.papel || (tot_===1 ? "unico" : idx===0 ? "capa" : idx===tot_-1 ? "final" : "meio");
+  if(i.design && i.design.fotoId && (FP_FEED[i.design.fotoLayout] || FP_LEGADO[i.design.fotoLayout])){ const s_ = i.slides[idx] || {}, tot_ = i.slides.length, pap_ = s_.papel || (tot_===1 ? "unico" : idx===0 ? "capa" : idx===tot_-1 ? "final" : "meio");
     if(pap_==="capa" || (pap_==="unico" && !["mito","check","dica"].includes(s_.layout))) return fpDesenhar(g, W, H, i, idx); }
   if(i.design && AT_PREMIUM[i.design.premium]) return apDesenhar(g, W, H, i, idx);
   if(i.design && AT_CAPAS_ED[i.design.capa]){ const s_ = i.slides[idx] || {}, tot_ = i.slides.length, pap_ = s_.papel || (tot_===1 ? "unico" : idx===0 ? "capa" : idx===tot_-1 ? "final" : "meio");
@@ -5664,7 +5664,7 @@ function ccFeedRestaurarVersao(i, n){
 }
 
 /* ---------- Planejamento de 30 dias ---------- */
-const AT_RITMO = ["carrossel","info","dica","carrossel","info","frase","carrossel","info","dica","carrossel","info","motivacional"]; // carrossel educativo · post informativo · frase · dica rápida
+const AT_RITMO = ["info","carrossel","dica","info","frase","info","motivacional","info","carrossel","dica","info","frase"]; // a cada 12: 2 carrosséis, 1 motivacional // carrossel educativo · post informativo · frase · dica rápida
 const AT_ESTILOS = {carrossel:"Carrossel educativo", info:"Post informativo", frase:"Arte com frase", dica:"Dica rápida", motivacional:"Frase motivacional (poucas)"};
 function ccFeedMigrarV3(){ // refaz capas e ritmo das publicações ainda não aprovadas
   let n = 0;
@@ -6078,8 +6078,9 @@ function atAjustarEd(g, txt, o){ // títulos com *destaque* em letra manuscrita
    rosto (ponto escolhido por você), ajustes leves de luz e tom.
    O rosto nunca é alterado: só recorte, moldura e composição.
    ========================================================= */
-const FP_FEED = {lateral:"Foto · editorial lateral", moldura:"Foto · retrato emoldurado", revista:"Foto · capa de revista", arcofoto:"Foto · arco", dividido:"Foto · foto em cima, texto embaixo", circulo:"Foto · retrato redondo e frase"};
-const FP_VERT = {rv_inteira:"Vertical · foto inteira", rv_moldura:"Vertical · retrato emoldurado", rv_dividida:"Vertical · foto e faixa de texto"};
+const FP_FEED = {lateral:"Foto · editorial lateral", bloco:"Foto · foto inteira com bloco de texto", topo:"Foto · título no alto, foto embaixo", revista:"Foto · capa de revista", dividido:"Foto · foto em cima, texto embaixo"};
+const FP_LEGADO = {moldura:"bloco", arcofoto:"topo", circulo:"revista", rv_moldura:"rv_bloco"};
+const FP_VERT = {rv_inteira:"Vertical · foto inteira", rv_bloco:"Vertical · foto inteira com bloco de texto", rv_dividida:"Vertical · foto e faixa de texto"};
 const FP_FORMATOS = {feed:"Post ou carrossel do feed (1080×1350)", reels:"Capa de Reels (1080×1920)", story:"Story (1080×1920)"};
 const FP_ENQ = {rosto:"Rosto / busto", meio:"Meio corpo", inteiro:"Corpo inteiro"};
 const FP_ROUPA = {clara:"Clara (branco, off-white)", bege:"Bege / caramelo", marrom:"Marrom", escura:"Preta / escura", cinza:"Cinza", outra:"Outra"};
@@ -6107,18 +6108,29 @@ function atRgba(hex, a){ const h = String(hex).replace("#",""); const n = parseI
 /* ---------- sugestão da melhor foto ---------- */
 function fpSugerir(i, lay, evitar){
   const fs = fpFotos().filter(x => !x.editada && !(evitar||[]).includes(x.id)); if(!fs.length) return null;
-  const vert = /^rv_/.test(lay), usadas = {}; ccFeedItens().filter(x => x.design?.fotoId).slice(-12).forEach(x => usadas[x.design.fotoId] = (usadas[x.design.fotoId]||0) + 1);
+  const vert = /^rv_/.test(lay), usadas = {}; ccDB().itens.filter(x => x.design?.fotoId && x.id!==i.id).slice(-30).forEach(x => usadas[x.design.fotoId] = (usadas[x.design.fotoId]||0) + 1);
   const quer = i.estilo==="frase" || i.estilo==="motivacional" ? "frase" : i.area==="bast" ? "bastidores" : vert ? (i.design?.formato==="story" ? "stories" : "reels") : "capa";
   const P = AT_PALETAS[i.design?.paleta] || AT_PALETAS.areia;
-  const nota = x => { let s = 0; if((x.usos||[]).includes(quer)) s += 4; if(x.fav) s += 2;
-    if(lay==="revista" || lay==="rv_inteira") s += x.fundo==="claro" ? 2 : 0;
-    if(["circulo","moldura","rv_moldura","arcofoto"].includes(lay)) s += x.enq==="rosto" ? 3 : x.enq==="meio" ? 1 : -2;
-    if(["lateral","dividido","rv_dividida"].includes(lay)) s += x.enq==="inteiro" ? -1 : 1;
+  const nota = x => { let s = 0; if((x.usos||[]).includes(quer)) s += 3; if(x.fav) s += 2;
+    if(["revista","bloco","rv_inteira","rv_bloco"].includes(lay)) s += (x.enq==="meio" ? 2 : x.enq==="rosto" ? 1 : 0) + (x.fundo==="claro" ? 1 : 0);
+    if(["lateral","dividido","topo","rv_dividida"].includes(lay)) s += x.enq==="inteiro" ? 0 : 1;
     if(P.escuro && ["clara","bege"].includes(x.roupa)) s += 1; if(!P.escuro && ["marrom","escura"].includes(x.roupa)) s += 1;
-    s -= (usadas[x.id]||0) * 2.5; if(!x.foco) s -= 1; return s; };
-  return fs.map(x => [x, nota(x) + ((parseInt(String(x.id).slice(-3), 36) || 0) % 7)/100]).sort((a, b) => b[1] - a[1])[0][0].id;
+    s -= (usadas[x.id]||0) * 6; if(!x.foco) s -= 1; return s; };
+  const nomeBase = x => String(x.nome||x.id).replace(/\.[a-z]+$/i,"");
+  const vistos = new Set(); return fs.filter(x => { const n = nomeBase(x); if(vistos.has(n)) return false; vistos.add(n); return true; })
+    .map(x => [x, nota(x) + ((parseInt(String(x.id).slice(-3), 36) || 0) % 7)/100]).sort((a, b) => b[1] - a[1])[0][0].id;
 }
-
+// uso estratégico: só algumas publicações do feed recebem foto (cerca de 1 a cada 6)
+function fpTalvezFoto(it, k){
+  if(!fpFotos().filter(x => !x.editada).length || !it || !it.design) return false;
+  const recentes = ccFeedItens().filter(x => x.id!==it.id).sort((a, b) => (a.dataPrevista||"") < (b.dataPrevista||"") ? -1 : 1).slice(-5);
+  if(recentes.some(x => x.design?.fotoId && x.design?.fotoLayout)) return false;
+  if(!["info","frase","carrossel"].includes(it.estilo)) return false;
+  const lays = ["revista","bloco","lateral","topo","dividido"]; const lay = lays[(k + (it.design.seed||0)) % lays.length];
+  const fid = fpSugerir(it, lay); if(!fid) return false;
+  const s0 = it.slides[0]; if(it.slides.length===1 && ["mito","check","dica"].includes(s0.layout)){ s0.texto = s0.texto || s0.sub || (s0.itens||[]).join(" · "); s0.layout = "unico"; delete s0.itens; }
+  it.design.fotoLayout = lay; it.design.fotoId = fid; return true;
+}
 /* ---------- capas e posts com foto ---------- */
 async function fpDesenhar(g, W, H, i, idx){
   const s = i.slides[idx] || {}, total = i.slides.length, k = W/1080, d = i.design, seed = (d.seed||1)*31 + idx*7, P = atPaleta(i, s);
@@ -6126,63 +6138,56 @@ async function fpDesenhar(g, W, H, i, idx){
   const tit = s.titulo || "", corpo = unico ? (s.texto || s.sub || "") : "", sub = unico ? "" : (s.sub || "Deslize e descubra");
   g.save(); g.textAlign = "left"; g.textBaseline = "alphabetic";
   const D = apEscuro(P, seed), L = apClaro(P);
-  if(lay==="lateral"){
-    const xf = Math.round(W*.46); apPapel(g, W, H, L, seed, k);
-    await fpFoto(g, fid, xf, 0, W - xf, H, {alvo:[.5,.28]}); g.fillStyle = atOuro(g, xf, 0, xf, H, false); g.fillRect(xf - K(3), 0, K(3), H);
-    const lx = K(70), lw = xf - K(120); atRotulo(g, rot, lx, K(120), L, k);
-    const f = apTit(g, tit, {max:lw, maxAlt:K(560), tam:K(80), min:K(42), lh:1.08}); const yT = Math.max(K(230), (H - f.alt)/2 - K(60)); atEscrever(g, f, lx, yT, {cor:L.tit, corD:L.ac});
-    let y = yT + f.alt + K(40); g.fillStyle = L.ac; g.fillRect(lx, y, K(70), K(3)); y += K(40);
-    if(corpo){ const fc = apTxt(g, corpo, {max:lw, maxAlt:H - y - K(200), tam:K(28), min:K(19)}); atEscrever(g, fc, lx, y, {cor:L.txt, corD:L.ac2}); }
-    else apRot(g, sub, lx, y + K(10), L.mut, k, 15);
+  const LEG = {moldura:"bloco", arcofoto:"topo", circulo:"revista"}; const L2 = LEG[lay] || lay;
+  if(L2==="lateral"){ // texto à esquerda, foto grande à direita, sem moldura
+    const xf = Math.round(W*.40); apPapel(g, W, H, L, seed, k);
+    await fpFoto(g, fid, xf, 0, W - xf, H, {alvo:[.5,.3]});
+    const lx = K(64), lw = xf - K(104); apRot(g, rot, lx, K(150), L.ac2, k, 14);
+    const f = apTit(g, tit, {max:lw, maxAlt:K(600), tam:K(78), min:K(40), lh:1.06}); const yT = Math.max(K(230), (H - f.alt)/2 - K(70)); atEscrever(g, f, lx, yT, {cor:L.tit, corD:L.ac});
+    let y = yT + f.alt + K(36); g.fillStyle = L.ac; g.fillRect(lx, y, K(56), K(2.5)); y += K(40);
+    if(corpo){ const fc = apTxt(g, corpo, {max:lw, maxAlt:H - y - K(200), tam:K(27), min:K(19)}); atEscrever(g, fc, lx, y, {cor:L.txt, corD:L.ac2}); }
+    else apRot(g, sub, lx, y + K(8), L.mut, k, 14);
     g.save(); g.beginPath(); g.rect(0, 0, xf, H); g.clip(); await atRodape(g, W, H, L, k, idx, total, {}); g.restore();
   }
-  else if(lay==="moldura"){
-    apPapel(g, W, H, L, seed, k); const fx = K(300), fy = K(110), fw = K(520), fh = K(700);
-    g.strokeStyle = L.ac; g.lineWidth = K(1.6); g.strokeRect(fx + K(26), fy + K(26), fw, fh);
-    g.save(); g.shadowColor = "rgba(43,30,22,.22)"; g.shadowBlur = K(40); g.shadowOffsetY = K(18); g.fillStyle = L.soft; g.fillRect(fx, fy, fw, fh); g.restore();
-    await fpFoto(g, fid, fx, fy, fw, fh, {alvo:[.5,.32]});
-    apVertical(g, rot, K(150), fy + fh/2, L.ac2, k, 16); apBrilho(g, fx + fw + K(70), fy + K(40), K(14), L.ac); apBrilho(g, fx + fw + K(48), fy + K(80), K(7), L.ac);
-    const f = apTit(g, tit, {max:larg, maxAlt:K(260), tam:K(78), min:K(40), lh:1.06}); const yT = fy + fh + K(70); atEscrever(g, f, W/2, yT, {cor:L.tit, corD:L.ac, alinh:"center"});
-    if(corpo){ const fc = apTxt(g, corpo, {max:larg - K(60), maxAlt:H - yT - f.alt - K(170), tam:K(26), min:K(18)}); atEscrever(g, fc, W/2, yT + f.alt + K(24), {cor:L.txt, corD:L.ac2, alinh:"center"}); }
-    await atRodape(g, W, H, L, k, idx, total);
+  else if(L2==="bloco"){ // foto ocupando toda a arte + bloco de texto sólido sobreposto
+    g.fillStyle = L.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, H, {alvo:[.62,.3]});
+    const bw = K(640), bx = 0, f = apTit(g, tit, {max:bw - K(150), maxAlt:K(380), tam:K(70), min:K(38), lh:1.08});
+    const fc = corpo ? apTxt(g, corpo, {max:bw - K(150), maxAlt:K(130), tam:K(25), min:K(18), peso:400}) : null;
+    const bh = K(130) + f.alt + (fc ? fc.alt + K(36) : K(40)) + K(150), by = H - bh;
+    g.save(); g.beginPath(); g.rect(bx, by, bw, bh); g.clip(); apPapel(g, W, H, L, seed, k); g.restore();
+    g.fillStyle = atOuro(g, bx, by, bx + bw, by, false); g.fillRect(bx, by, bw, K(4));
+    apRot(g, rot, K(72), by + K(78), L.ac2, k, 14); atEscrever(g, f, K(72), by + K(112), {cor:L.tit, corD:L.ac});
+    if(fc) atEscrever(g, fc, K(72), by + K(140) + f.alt, {cor:L.txt, corD:L.ac2});
+    g.save(); g.beginPath(); g.rect(bx, by, bw, bh); g.clip(); await atRodape(g, W, H, L, k, idx, total, {}); g.restore();
   }
-  else if(lay==="revista"){
-    g.fillStyle = L.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, H, {alvo:[.5,.3]});
-    fpDegrade(g, 0, 0, W, K(260), "#2B1E16", .55, 0); fpDegrade(g, 0, H*.48, W, H*.52, "#2B1E16", 0, .82);
-    g.font = `400 ${K(64)}px ${AT_SERIF}`; g.fillStyle = "#F7F2E9"; g.textAlign = "center"; atEspacado(g, (ccCfg().assinatura || "JÉSSICA VALIENTE").toUpperCase(), W/2, K(130), K(14), "center"); g.textAlign = "left";
-    apLinha(g, mx, K(160), W - mx, K(160), "#D9C092", k, 1, .8); apRot(g, rot, W/2, K(196), "#D9C092", k, 14, "center");
-    const f = apTit(g, tit, {max:larg, maxAlt:K(330), tam:K(92), min:K(46), lh:1.04}); const yT = H - K(200) - f.alt - (corpo ? K(110) : 0);
-    atEscrever(g, f, mx, yT, {cor:"#FFFFFF", corD:"#D9C092"});
-    if(corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(100), tam:K(26), min:K(18), peso:400}); atEscrever(g, fc, mx, yT + f.alt + K(26), {cor:"#F3EADD"}); }
+  else if(L2==="topo"){ // título em faixa limpa no alto, foto grande ocupando a parte de baixo
+    const ht = Math.round(H*.36); g.fillStyle = L.bg; g.fillRect(0, 0, W, H);
+    await fpFoto(g, fid, 0, ht, W, H - ht, {alvo:[.5,.26]});
+    g.save(); g.beginPath(); g.rect(0, 0, W, ht); g.clip(); apPapel(g, W, H, L, seed, k); g.restore();
+    apRot(g, rot, mx, K(110), L.ac2, k, 14);
+    const f = apTit(g, tit, {max:larg, maxAlt:ht - K(190), tam:K(76), min:K(38), lh:1.04}); atEscrever(g, f, mx, K(150), {cor:L.tit, corD:L.ac});
+    g.fillStyle = atOuro(g, 0, ht, W, ht, false); g.fillRect(0, ht - K(2), W, K(3));
+    fpDegrade(g, 0, H - K(200), W, K(200), "#2B1E16", 0, .55);
     await atRodape(g, W, H, Object.assign({}, D, {tit:"#F7F2E9", mut:"#EBDDCB", linha:"rgba(255,255,255,.4)"}), k, idx, total);
   }
-  else if(lay==="arcofoto"){
-    apPapel(g, W, H, L, seed, k); const ax = K(250), ay = K(100), aw = K(580), ah = K(720);
-    g.strokeStyle = L.ac; g.lineWidth = K(1.6); atArco(g, ax - K(22), ay - K(22), aw + K(44), ah + K(44)); g.stroke();
-    g.save(); atArco(g, ax, ay, aw, ah); g.clip(); g.fillStyle = L.soft; g.fillRect(ax, ay, aw, ah); await fpFoto(g, fid, ax, ay, aw, ah, {alvo:[.5,.36]}); g.restore();
-    apRamo(g, ax - K(20), ay + ah - K(40), K(180), -2.6, L.ac, k, true); apBrilho(g, ax + aw + K(30), ay + K(120), K(14), L.ac);
-    atRotulo(g, rot, W/2, ay + ah + K(52), L, k, {alinh:"center", cheio:L.bg, corTxt:L.ac2});
-    const f = apTit(g, tit, {max:larg, maxAlt:K(250), tam:K(74), min:K(40), lh:1.06}); atEscrever(g, f, W/2, ay + ah + K(130), {cor:L.tit, corD:L.ac, alinh:"center"});
-    await atRodape(g, W, H, L, k, idx, total);
+  else if(L2==="revista"){ // foto inteira, título grande sobre degradê suave
+    g.fillStyle = L.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, H, {alvo:[.5,.3]});
+    fpDegrade(g, 0, 0, W, K(260), "#2B1E16", .5, 0); fpDegrade(g, 0, H*.5, W, H*.5, "#2B1E16", 0, .82);
+    g.font = `400 ${K(58)}px ${AT_SERIF}`; g.fillStyle = "#F7F2E9"; atEspacado(g, (ccCfg().assinatura || "JÉSSICA VALIENTE").toUpperCase(), W/2, K(126), K(13), "center");
+    apRot(g, rot, W/2, K(176), "#D9C092", k, 13, "center");
+    const f = apTit(g, tit, {max:larg, maxAlt:K(330), tam:K(90), min:K(46), lh:1.04}); const yT = H - K(200) - f.alt - (corpo ? K(100) : 0);
+    atEscrever(g, f, mx, yT, {cor:"#FFFFFF", corD:"#D9C092"});
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(90), tam:K(25), min:K(18), peso:400}); atEscrever(g, fc, mx, yT + f.alt + K(26), {cor:"#F3EADD"}); }
+    await atRodape(g, W, H, Object.assign({}, D, {tit:"#F7F2E9", mut:"#EBDDCB", linha:"rgba(255,255,255,.4)"}), k, idx, total);
   }
-  else if(lay==="dividido"){
-    const hf = Math.round(H*.56); g.fillStyle = D.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, hf, {alvo:[.5,.38]});
-    g.save(); g.beginPath(); g.rect(0, hf, W, H - hf); g.clip(); apPapel(g, W, H, D, seed, k); g.restore();
-    g.fillStyle = atOuro(g, 0, hf, W, hf, true); g.fillRect(0, hf, W, K(4));
-    atRotulo(g, rot, mx, hf - K(25), D, k, {cheio:D.bg, corTxt:D.ac});
-    const f = apTit(g, tit, {max:larg, maxAlt:H - hf - K(250) - (corpo ? K(90) : 0), tam:K(76), min:K(38), lh:1.06}); atEscrever(g, f, mx, hf + K(70), {cor:D.tit, corD:D.ac});
-    if(corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(90), tam:K(25), min:K(18), peso:400}); atEscrever(g, fc, mx, hf + K(90) + f.alt, {cor:D.txt, corD:D.ac}); }
-    else if(!unico) apSeta(g, W - mx - K(34), hf + K(110), K(32), D, k, true);
-    await atRodape(g, W, H, D, k, idx, total);
-  }
-  else { // circulo — retrato redondo e frase
-    apPapel(g, W, H, P, seed, k); apMoldura(g, W, H, P, k); const r = K(170), cx = W/2, cy = K(330);
-    g.strokeStyle = P.ac; g.lineWidth = K(1.4); g.beginPath(); g.arc(cx, cy, r + K(18), 0, Math.PI*2); g.stroke();
-    g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.clip(); g.fillStyle = P.soft; g.fill(); await fpFoto(g, fid, cx - r, cy - r, 2*r, 2*r, {alvo:[.5,.42]}); g.restore();
-    apBrilho(g, cx + r + K(40), cy - r + K(20), K(14), P.ac);
-    const f = apTit(g, tit, {max:larg - K(80), maxAlt:K(420), tam:K(70), min:K(38), lh:1.12}); const yT = cy + r + K(90); atEscrever(g, f, W/2, yT, {cor:P.tit, corD:P.ac, alinh:"center"});
-    const y2 = yT + f.alt + K(46); atDivisor(g, W/2, y2, K(130), P.ac, k); apRot(g, ccCfg().assinatura || "Jéssica Valiente", W/2, y2 + K(56), P.mut, k, 15, "center");
-    await atRodape(g, W, H, P, k, idx, total);
+  else { // dividido: foto grande em cima, faixa de texto embaixo
+    const Q = P; const hf = Math.round(H*.6); g.fillStyle = Q.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, hf, {alvo:[.5,.36]});
+    g.save(); g.beginPath(); g.rect(0, hf, W, H - hf); g.clip(); apPapel(g, W, H, Q, seed, k); g.restore();
+    g.fillStyle = atOuro(g, 0, hf, W, hf, Q.escuro); g.fillRect(0, hf, W, K(3));
+    apRot(g, rot, mx, hf + K(66), Q.ac, k, 14);
+    const f = apTit(g, tit, {max:larg, maxAlt:H - hf - K(260) - (corpo ? K(80) : 0), tam:K(72), min:K(36), lh:1.06}); atEscrever(g, f, mx, hf + K(98), {cor:Q.tit, corD:Q.ac});
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(80), tam:K(24), min:K(18), peso:400}); atEscrever(g, fc, mx, hf + K(118) + f.alt, {cor:Q.txt, corD:Q.ac}); }
+    await atRodape(g, W, H, Q, k, idx, total);
   }
   g.restore();
 }
@@ -6194,13 +6199,12 @@ async function fpDesenharVert(g, W, H, i){
   g.save(); g.textAlign = "left"; g.textBaseline = "alphabetic";
   // área central segura: o Instagram mostra a capa de Reels cortada em 1080×1350 no perfil
   const yS0 = (H - W*1350/1080)/2, yS1 = yS0 + W*1350/1080;
-  if(lay==="rv_moldura"){
-    apPapel(g, W, H, L, seed, k); const fw = K(640), fh = K(820), fx = (W - fw)/2, fy = yS0 + K(60);
-    g.strokeStyle = L.ac; g.lineWidth = K(1.6); g.strokeRect(fx - K(24), fy - K(24), fw + K(48), fh + K(48));
-    g.save(); g.shadowColor = "rgba(43,30,22,.22)"; g.shadowBlur = K(40); g.shadowOffsetY = K(18); g.fillStyle = L.soft; g.fillRect(fx, fy, fw, fh); g.restore(); await fpFoto(g, fid, fx, fy, fw, fh, {alvo:[.5,.32]});
-    apRot(g, rot, W/2, yS0 - K(40), L.ac2, k, 18, "center");
-    const f = apTit(g, tit, {max:larg, maxAlt:K(300), tam:K(84), min:K(44)}); atEscrever(g, f, W/2, fy + fh + K(80), {cor:L.tit, corD:L.ac, alinh:"center"});
-    if(!reels && corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(200), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, W/2, fy + fh + K(110) + f.alt, {cor:L.txt, alinh:"center"}); }
+  if(lay==="rv_moldura" || lay==="rv_bloco"){ // foto inteira + bloco de texto sólido
+    g.fillStyle = L.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, H, {alvo:[.55,.28]});
+    const f = apTit(g, tit, {max:larg - K(60), maxAlt:K(360), tam:K(84), min:K(44)}); const fc = !reels && corpo ? apTxt(g, corpo, {max:larg - K(60), maxAlt:K(200), tam:K(31), min:K(22), peso:400}) : null;
+    const bh = K(150) + f.alt + (fc ? fc.alt + K(30) : 0), by = yS1 - bh - K(20);
+    g.save(); g.beginPath(); g.rect(0, by, W - K(90), bh); g.clip(); apPapel(g, W, H, L, seed, k); g.restore(); g.fillStyle = atOuro(g, 0, by, W, by, false); g.fillRect(0, by, W - K(90), K(4));
+    apRot(g, rot, mx, by + K(70), L.ac2, k, 16); atEscrever(g, f, mx, by + K(100), {cor:L.tit, corD:L.ac}); if(fc) atEscrever(g, fc, mx, by + K(126) + f.alt, {cor:L.txt});
   }
   else if(lay==="rv_dividida"){
     const hf = Math.round(H*.6); g.fillStyle = D.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, hf, {alvo:[.5,.42]});
@@ -6217,7 +6221,7 @@ async function fpDesenharVert(g, W, H, i){
     if(!reels && corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(260), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, mx, yS1 - K(70), {cor:"#F3EADD"}); }
   }
   // marca discreta e chamada
-  const escuro = lay!=="rv_moldura"; g.font = `600 ${K(20)}px ${AT_SANS}`; g.fillStyle = escuro ? "#EBDDCB" : L.mut; g.textAlign = "center";
+  const escuro = true; g.font = `600 ${K(20)}px ${AT_SANS}`; g.fillStyle = escuro ? "#EBDDCB" : L.mut; g.textAlign = "center";
   atEspacado(g, (ccCfg().assinatura || "JÉSSICA VALIENTE").toUpperCase() + (ccCfg().arroba ? "  ·  " + ccCfg().arroba : ""), W/2, H - K(150), K(4), "center");
   if(reels){ g.beginPath(); g.arc(W/2, yS1 + K(40), K(34), 0, Math.PI*2); g.strokeStyle = escuro ? "#D9C092" : L.ac; g.lineWidth = K(2); g.stroke(); g.fillStyle = escuro ? "#D9C092" : L.ac; g.beginPath(); g.moveTo(W/2 - K(9), yS1 + K(26)); g.lineTo(W/2 + K(14), yS1 + K(40)); g.lineTo(W/2 - K(9), yS1 + K(54)); g.closePath(); g.fill(); }
   g.textAlign = "left"; g.restore();
@@ -6308,9 +6312,9 @@ function fpCriar(v){
   const s0 = it.slides[0]; if(it.slides.length===1 && ["mito","check","dica"].includes(s0.layout)){ s0.texto = s0.texto || s0.sub || (s0.itens||[]).join(" · "); s0.layout = "unico"; delete s0.itens; }
   if(v.titulo) it.slides[0].titulo = v.titulo; if(v.texto){ it.slides[0].texto = v.texto; it.slides[0].sub = v.texto; }
   it.design.formato = vert ? v.formato : null; it.origem = "foto";
-  const lays = vert ? Object.keys(FP_VERT) : ["lateral","arcofoto","dividido","moldura","revista","circulo"];
+  const lays = vert ? Object.keys(FP_VERT) : ["bloco","lateral","revista","topo","dividido"];
   const props = []; const usadas = [];
-  for(const lay of (vert ? lays : (estilo==="frase"||estilo==="motivacional" ? ["circulo","moldura","lateral"] : lays.slice(0, 5)))){
+  for(const lay of (vert ? lays : (estilo==="frase"||estilo==="motivacional" ? ["revista","bloco","lateral"] : lays.slice(0, 5)))){
     if(props.length===3) break; const fid = v.foto || fpSugerir(it, lay, usadas) || fpSugerir(it, lay) ; if(fid && !v.foto) usadas.push(fid);
     props.push({fotoLayout:lay, fotoId:fid}); }
   ccDB().itens.push(it); salvar();
@@ -6321,10 +6325,10 @@ function fpCriar(v){
 function fpPropostasPara(i){
   const fs = fpFotos().filter(x => !x.editada), d = i.design || {}, vert = !!d.formato, props = [], usadas = d.fotoId ? [d.fotoId] : [];
   if(vert){ Object.keys(FP_VERT).filter(l => l!==d.fotoLayout).concat(d.fotoLayout ? [] : []).slice(0, 3).forEach(l => { const f = fpSugerir(i, l, usadas) || d.fotoId; usadas.push(f); props.push({fotoLayout:l, fotoId:f}); }); return props.slice(0, 3); }
-  const fams = AP_ORDEM.filter(f => f!==d.premium); const lays = ["lateral","arcofoto","dividido","moldura","revista","circulo"].filter(l => l!==d.fotoLayout);
+  const fams = AP_ORDEM.filter(f => f!==d.premium); const lays = ["revista","bloco","lateral","topo","dividido"].filter(l => l!==d.fotoLayout);
   const podeFoto = i.slides.length > 1 || !["mito","check","dica"].includes(i.slides[0]?.layout);
   if(fs.length && podeFoto){ // duas com foto, uma só gráfica
-    for(const l of lays){ if(props.length===2) break; const f = fpSugerir(i, l, usadas); if(f){ usadas.push(f); props.push({fotoLayout:l, fotoId:f, premium:d.premium || fams[0]}); } }
+    for(const l of lays){ if(props.length===1) break; const f = fpSugerir(i, l, usadas); if(f){ usadas.push(f); props.push({fotoLayout:l, fotoId:f, premium:d.premium || fams[0]}); } }
   }
   fams.forEach(f => { if(props.length < 3) props.push({fotoLayout:null, premium:f}); });
   return props.slice(0, 3);
@@ -6629,8 +6633,7 @@ async function apFinal(C){
   const {g, W, H, k, P, s, mx, seed} = C; const K = v => v*k; const larg = W - 2*mx;
   const Q = C.fam==="bloco" ? apEscuro(P, seed) : P;
   apPapel(g, W, H, Q, seed, k); if(C.fam==="classico") apMoldura(g, W, H, Q, k); if(C.fam==="moderno") apGrade(g, W, H, Q, k);
-  if(C.d.fotoId && (await ccImagem(C.d.fotoId))){ const r = K(112); g.strokeStyle = Q.ac; g.lineWidth = K(1.4); g.beginPath(); g.arc(W/2, K(270), r + K(14), 0, Math.PI*2); g.stroke(); g.save(); g.beginPath(); g.arc(W/2, K(270), r, 0, Math.PI*2); g.clip(); await fpFoto(g, C.d.fotoId, W/2 - r, K(270) - r, 2*r, 2*r, {alvo:[.5,.45]}); g.restore(); }
-  else apSelo(g, W/2, K(270), K(112), Q, k);
+  apSelo(g, W/2, K(270), K(112), Q, k);
   const f = apTit(g, s.titulo, {max:larg - K(60), maxAlt:K(270), tam:K(86), min:K(46), lh:1.08}); const y = K(450); atEscrever(g, f, W/2, y, {cor:Q.tit, corD:Q.ac, alinh:"center"});
   let y2 = y + f.alt + K(40); atDivisor(g, W/2, y2, K(160), Q.ac, k); y2 += K(50);
   if(s.texto){ const fc = apTxt(g, s.texto, {max:larg - K(120), maxAlt:K(150), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, W/2, y2, {cor:Q.txt, corD:Q.ac2, alinh:"center"}); y2 += fc.alt + K(60); }
@@ -6743,9 +6746,10 @@ function ccxGerar(o){
     const t = temas.length ? temas[k % temas.length] : ccProximoTema(area, usados); if(!t) continue; usados.add(t.id);
     const estilo = seqF[k % seqF.length] || "info", tipo = estilo==="carrossel" ? "carrossel" : "post";
     const base = ccDB().itens.filter(i => i.temaId===t.id).length;
-    const it = ccFeedGerar(t.id, tipo, {variacao:base, data:d, estilo, capa: capas.length ? capas[k % capas.length] : null}); if(!it) continue;
+    const pal = (k % 3 === 2) ? AT_ESCUROS[Math.floor(k/3) % AT_ESCUROS.length] : AT_CLAROS[(k - Math.floor(k/3)) % AT_CLAROS.length]; // 2 claras : 1 escura
+    const it = ccFeedGerar(t.id, tipo, {variacao:base, data:d, estilo, paleta:pal, capa: capas.length ? capas[k % capas.length] : null}); if(!it) continue;
     if(it.slides[0]?.papel==="capa" && AT_CAPAS_ED[it.design.capa]) delete it.slides[0].layout;
-    it.planoFeed = d; it.origem = "central"; if(o.instr) it.instrucoes = o.instr;
+    it.planoFeed = d; it.origem = "central"; if(o.instr) it.instrucoes = o.instr; fpTalvezFoto(it, k);
     const ap = ccxAplicarInstr(it, instr);
     it.historico.push({ts:new Date().toISOString(), de:it.status, para:it.status, obs:`Criado em GERAR NOVOS CONTEÚDOS${ap.length ? " · " + ap.join(", ") : ""}`, usuario:USU?.nome||""});
     ccDB().itens.push(it); criados.push(it); d = addDias(d, 1);
