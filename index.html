@@ -78,6 +78,27 @@ h1.tit{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0;colo
 .sub{color:var(--suave);font-size:13px}
 .cab{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:20px}
 .cab .acoes{display:flex;gap:8px;flex-wrap:wrap}
+.oab{position:relative;background:linear-gradient(135deg,#FFFFFF 0%,var(--nude-claro) 55%,var(--nude) 100%);border:1px solid var(--ouro);border-radius:14px;padding:22px 26px;margin:-6px 0 22px;box-shadow:0 10px 30px rgba(90,64,50,.10);overflow:hidden}
+.oab:before{content:"";position:absolute;inset:7px;border:1px solid rgba(184,149,95,.45);border-radius:10px;pointer-events:none}
+.oab .oab-obj{font-size:11px;letter-spacing:3.5px;color:var(--ouro-esc);font-weight:600;text-transform:uppercase}
+.oab .oab-tit{font-family:var(--f-display);font-size:22px;color:var(--marrom);margin:4px 0 0;line-height:1.2}
+.oab .oab-corpo{display:flex;align-items:center;gap:26px;margin-top:14px;flex-wrap:wrap}
+.oab .oab-num{font-family:var(--f-display);font-size:104px;line-height:.9;font-weight:500;background:linear-gradient(100deg,#8F6E3E 0%,#C9A86F 40%,#B8955F 70%,#8F6E3E 100%);-webkit-background-clip:text;background-clip:text;color:transparent;min-width:120px;text-align:center}
+.oab .oab-num.txt{font-size:56px}
+.oab .oab-dias{font-size:12px;letter-spacing:3px;color:var(--marrom);font-weight:600;text-transform:uppercase;text-align:center;margin-top:6px}
+.oab .oab-info{flex:1;min-width:220px}
+.oab .oab-data{font-size:14px;color:var(--texto)}
+.oab .oab-data b{color:var(--marrom)}
+.oab .oab-barra{height:6px;background:rgba(184,149,95,.2);border-radius:6px;margin:12px 0 6px;overflow:hidden}
+.oab .oab-barra i{display:block;height:100%;background:linear-gradient(90deg,#B8955F,#D9C092);border-radius:6px}
+.oab .oab-mini{font-size:12px;color:var(--suave)}
+.oab .oab-frase{position:relative;margin-top:18px;padding-top:14px;border-top:1px solid rgba(184,149,95,.45);font-family:var(--f-display);font-style:italic;font-size:19px;color:var(--marrom);text-align:center}
+.oab .oab-frase:before{content:"✦";display:block;font-style:normal;font-size:12px;color:var(--ouro);margin-bottom:4px}
+.oab .oab-ajustar{position:absolute;top:14px;right:16px;background:none;border:0;color:var(--suave);font-size:11px;cursor:pointer;text-decoration:underline;z-index:1}
+.oab.final{background:linear-gradient(135deg,var(--marrom) 0%,var(--marrom-esc) 100%)}
+.oab.final .oab-tit,.oab.final .oab-frase,.oab.final .oab-dias{color:var(--creme)}
+.oab.final .oab-data,.oab.final .oab-data b,.oab.final .oab-mini,.oab.final .oab-ajustar{color:var(--nude)}
+@media(max-width:640px){.oab{padding:18px}.oab .oab-num{font-size:84px}.oab .oab-corpo{gap:14px;justify-content:center;text-align:center}.oab .oab-tit{font-size:19px;padding-right:56px}.oab .oab-frase{font-size:17px}}
 .msg-dia{background:var(--marrom);border-radius:10px;padding:16px 22px;margin:18px 0 22px}
 .msg-dia .rot{font-size:10px;letter-spacing:3px;color:var(--nude)}
 .msg-dia .txt{font-family:var(--f-display);font-size:20px;font-weight:500;margin-top:6px}
@@ -924,6 +945,47 @@ function gerarICS(itens){
 /* =========================================================
    PAINEL — números e avisos calculados dos dados
    ========================================================= */
+
+/* =========================================================
+   CONTADOR OAB 48 — data conferida no edital de abertura do
+   48º Exame de Ordem Unificado (FGV/CFOAB, publicado em 21/09/2026):
+   1ª fase em 10/01/2027, das 13h às 18h (Brasília). Atualiza sozinho.
+   ========================================================= */
+const OAB_PADRAO = {nome:"OAB 48", data:"2027-01-10", hora:"13h às 18h (horário de Brasília)", inicio:"2026-09-21", fonte:"Edital de abertura do 48º Exame de Ordem Unificado (FGV/CFOAB), publicado em 21/09/2026 — data provável da prova objetiva"};
+const OAB_FRASES = ["Minha aprovação depende da minha constância.","Não adianta organizar o futuro se eu não estudar hoje.","Cada questão resolvida me aproxima da carteira da OAB.","Eu já cheguei até aqui. Agora preciso concluir essa etapa.","A minha aprovação não pode ficar apenas nos meus planos.","Um dia de cada vez, uma questão de cada vez, até a aprovação.","Não preciso estar motivada todos os dias. Preciso manter o compromisso.","A Jéssica que eu quero ser depende das escolhas que faço hoje."];
+function oabCfg(){ return Object.assign({}, OAB_PADRAO, (DB && DB.config && DB.config.contadorOAB) || {}); }
+function oabHTML(){
+  const o = oabCfg(), h = hojeStr(), dias = difDias(h, o.data), dia = Math.floor(toUTC(h)/86400000);
+  const frase = OAB_FRASES[((dia % OAB_FRASES.length) + OAB_FRASES.length) % OAB_FRASES.length];
+  const total = Math.max(1, difDias(o.inicio || h, o.data)), feito = Math.min(100, Math.max(0, Math.round((1 - dias/total)*100)));
+  const dataLonga = fmtDataLonga(o.data);
+  let num, rot, info, cls = "";
+  if(dias > 0){ num = `<div class="oab-num">${dias}</div>`; rot = dias===1 ? "dia" : "dias";
+    const sem = Math.floor(dias/7), r = dias % 7; const semTxt = sem ? `${sem} semana${sem>1?"s":""}${r ? ` e ${r} dia${r>1?"s":""}` : ""}` : "";
+    info = `<div class="oab-data">para a <b>1ª fase da ${esc(o.nome)}</b></div><div class="oab-data"><b>${esc(dataLonga.replace(/^./, s => s.toUpperCase()))}</b> · ${esc(o.hora)}</div>
+      <div class="oab-barra"><i style="width:${feito}%"></i></div><div class="oab-mini">${dias <= 7 ? "RETA FINAL: revise, descanse e confie no seu preparo." : semTxt ? `Faltam ${semTxt}.` : ""}</div>`;
+    if(dias <= 7) cls = "final"; }
+  else if(dias === 0){ num = `<div class="oab-num txt">É hoje</div>`; rot = "dia da prova"; cls = "final";
+    info = `<div class="oab-data"><b>Prova da 1ª fase da ${esc(o.nome)}</b> · ${esc(o.hora)}</div><div class="oab-mini" style="margin-top:8px">Documento com foto, caneta preta transparente, chegue cedo. Você se preparou para este dia.</div>`; }
+  else { num = `<div class="oab-num txt">Prova feita</div>`; rot = `em ${fmtData(o.data)}`; cls = "final";
+    info = `<div class="oab-data"><b>A 1ª fase da ${esc(o.nome)} já aconteceu.</b></div><div class="oab-mini" style="margin-top:8px">Confira o gabarito no site da FGV e, se houver próxima etapa ou novo exame, toque em “ajustar data”.</div>`; }
+  return `<div class="oab ${cls}" id="oab-cont" title="${esc(o.fonte)}">
+    <button class="oab-ajustar" id="oab-ajustar" type="button">ajustar data</button>
+    <div class="oab-obj">Contador regressivo · ${esc(o.nome)} | minha aprovação</div><div class="oab-tit">Meu objetivo é passar na ${esc(o.nome)}</div>
+    <div class="oab-corpo"><div>${num}<div class="oab-dias">${rot}</div></div><div class="oab-info">${info}</div></div>
+    <div class="oab-frase">${esc(frase)}</div></div>`;
+}
+function oabLigar(){
+  const b = document.getElementById("oab-ajustar"); if(!b) return;
+  b.onclick = async () => { const o = oabCfg();
+    const r = await modal("Contador da OAB", `<form class="campos"><label>Nome do exame<input name="nome" value="${esc(o.nome)}"></label><label>Data da prova<input type="date" name="data" value="${esc(o.data)}" required></label><label class="largo">Horário<input name="hora" value="${esc(o.hora)}"></label><label class="largo">Fonte da data<input name="fonte" value="${esc(o.fonte)}"></label><p class="sub largo">Confira sempre a data no edital oficial da FGV. A data padrão (10/01/2027) é a do edital de abertura do 48º Exame.</p></form>`,
+      [{t:"Voltar ao padrão (OAB 48)", v:"padrao"}, {t:"Cancelar", v:null}, {t:"Salvar", cls:"btn-pri", acao: f => lerForm(f.querySelector("form"))}]);
+    if(!r) return; if(r==="padrao") delete DB.config.contadorOAB; else DB.config.contadorOAB = {nome:r.nome || "OAB", data:r.data, hora:r.hora, fonte:r.fonte, inicio:(r.data===o.data ? o.inicio : hojeStr())};
+    salvar(); oabAtualizar(); toast("Contador atualizado."); };
+}
+let OAB_DIA = null;
+function oabAtualizar(){ const el = document.getElementById("oab-cont"); if(!el) return; const tmp = document.createElement("div"); tmp.innerHTML = oabHTML(); el.replaceWith(tmp.firstElementChild); oabLigar(); OAB_DIA = hojeStr(); }
+setInterval(() => { if(document.getElementById("oab-cont") && OAB_DIA !== hojeStr()) oabAtualizar(); }, 60000);
 const MENSAGENS = ["Você é mais forte do que qualquer dia difícil.","Grandes escritórios nascem de pequenos cuidados diários.","Cada cliente que você acolhe é uma história que confia em você.","Disciplina hoje, tranquilidade amanhã.","O seu trabalho devolve direitos a quem precisa deles.","Não é sobre fazer tudo hoje. É sobre fazer bem o que importa hoje.","Coragem para começar, constância para continuar.","Você chegou até aqui por mérito. Siga com confiança.","Tudo o que você construiu até aqui prova do que você é capaz.","Persistência também é uma forma de talento.","Hoje é dia de transformar estudo em resultado.","Acredite: o seu esforço está sendo visto e vai dar frutos.","Cada benefício concedido muda a vida de uma família inteira.","Você nasceu para fazer a diferença na vida das pessoas.","O sucesso é a soma de pequenos esforços repetidos todos os dias.","Confie no seu preparo. Ele foi construído com muito esforço.","O escritório dos seus sonhos já está acontecendo.","Você não está começando do zero, está começando da experiência.","Seu escritório é reflexo da sua dedicação.","Um dia produtivo começa com uma decisão: acreditar em você.","Defender direitos é uma forma de cuidar das pessoas.","Pequenos passos também levam longe.","Foco no próximo passo, não no tamanho da escada.","Quem luta pelos outros carrega uma força que não se explica.","A sua história inspira quem está começando.","Faça hoje o que vai agradecer amanhã.","Cada dia de estudo foi um tijolo. Olhe o quanto você já ergueu.","Trabalho bem feito fala por você.","Você é a prova de que dedicação abre portas.","Cada não do INSS pode ser o começo de um sim.","A determinação de hoje constrói a reputação de amanhã.","Seja a profissional que você gostaria de encontrar.","Seu brilho não depende de ninguém, depende da sua decisão de continuar.","Os dias difíceis também passam. A sua força fica.","Você não precisa ser perfeita, precisa ser constante.","Toda grande trajetória começou com um primeiro cliente.","Você tem tudo o que precisa para vencer o dia de hoje.","O que é feito com amor e técnica deixa marca.","Celebre cada pequena vitória do caminho.","Hoje é uma nova chance de fazer diferente e melhor.","Orgulhe-se de quem você está se tornando.","Seu esforço de hoje é o alicerce do escritório que você sonhou.","Acredite no processo, inclusive no seu.","Você foi feita para coisas grandes. Siga em frente.","Cada conquista sua abre caminho para muitas outras.","O caminho é longo, mas você já percorreu boa parte dele.","Quem tem propósito não desiste no meio do caminho.","Sonhos grandes pedem rotinas firmes, e você tem as duas coisas.","Uma tarefa concluída é uma vitória. Comemore e siga.","Você é capaz de resolver o que parece difícil.","Fé, foco e confiança em você.","O mundo precisa de profissionais que se importam. Você é uma delas.","O seu cuidado com o cliente é o seu maior diferencial.","Hoje você vai mais longe do que ontem.","A força está em seguir, mesmo nos dias cansativos.","Bons resultados são construídos, não esperados.","Nada do que você plantou com dedicação se perde.","Que hoje o seu trabalho seja motivo de orgulho.","Persistir também é vencer.","Seu propósito é maior que qualquer obstáculo de hoje.","Você já venceu tantas vezes. Hoje não será diferente.","Levante a cabeça: a vitória gosta de quem não desiste."];
 const MENSAGENS_ANTIGAS = ["Uma meta por vez. Comece pela próxima petição.","Grandes escritórios nascem de pequenos cuidados diários.","Cada cliente que você acolhe é uma história que confia em você.","Disciplina hoje, tranquilidade amanhã.","O seu trabalho devolve direitos a quem precisa deles.","Não é sobre fazer tudo hoje. É sobre fazer bem o que importa hoje.","Coragem para começar, constância para continuar.","Você chegou até aqui por mérito. Siga com confiança.","Um processo organizado é meio caminho para um bom resultado.","Escute com atenção: a solução muitas vezes está no relato do cliente.","Persistência também é uma forma de talento.","Hoje é dia de transformar estudo em resultado.","O cuidado com os detalhes é o que diferencia um bom trabalho.","Cada benefício concedido muda a vida de uma família inteira.","Respire, organize, priorize. Depois, execute.","Seja firme nos argumentos e gentil com as pessoas.","O sucesso é a soma de pequenos esforços repetidos todos os dias.","Confie no seu preparo. Ele foi construído com muito esforço.","Quem planeja o dia conduz o dia.","A melhor peça é aquela escrita com clareza e propósito.","Seu escritório é reflexo da sua dedicação.","Um dia produtivo começa com uma decisão: começar.","Defender direitos é uma forma de cuidar das pessoas.","Pequenos passos também levam longe.","Foco no próximo passo, não no tamanho da escada.","Organização é a base da tranquilidade.","A sua história inspira quem está começando.","Faça hoje o que vai agradecer amanhã.","Conhecimento se renova todos os dias. Continue aprendendo.","Trabalho bem feito fala por você.","O cliente esquece o prazo; você não. Isso é profissionalismo.","Cada não do INSS pode ser o começo de um sim.","A determinação de hoje constrói a reputação de amanhã.","Seja a profissional que você gostaria de encontrar.","Um bom atendimento começa com um olhar atento.","Calma não é lentidão: é precisão.","Você não precisa ser perfeita, precisa ser constante.","Toda grande trajetória começou com um primeiro cliente.","Clareza na escrita, segurança na argumentação.","O que é feito com amor e técnica deixa marca.","Celebre cada pequena vitória do caminho.","Hoje é uma nova chance de fazer diferente e melhor.","A excelência mora na revisão.","Seu esforço de hoje é o alicerce do escritório que você sonhou.","Acredite no processo, inclusive no seu.","Ética e competência caminham juntas.","Cada prazo cumprido é uma promessa mantida.","O caminho é longo, mas você já percorreu boa parte dele.","Escreva menos, diga mais.","Sonhos grandes pedem rotinas firmes.","Uma tarefa concluída abre espaço para a próxima.","Você é capaz de resolver o que parece difícil.","Organize a mesa, organize a mente, organize o dia.","Justiça também se faz com paciência.","O seu cuidado com o cliente é o seu maior diferencial.","Comece pelo mais importante, não pelo mais fácil.","A força está em seguir, mesmo nos dias cansativos.","Bons resultados são construídos, não esperados.","Cada documento conferido é um problema evitado.","Que hoje o seu trabalho seja motivo de orgulho.","Persistir também é vencer.","Seu propósito é maior que qualquer obstáculo de hoje."]; // lista da versão anterior, para trocar se ela nunca foi editada
 function despedida(){ const h = new Date().getHours(); return h<12 ? "Tenha um ótimo dia" : h<18 ? "Tenha uma ótima tarde" : "Tenha uma boa noite"; }
@@ -968,6 +1030,7 @@ function telaPainel(c){
   <h1 class="tit">${saudacao()}, ${esc(USU.nome.split(" ")[0])}</h1><div class="fio"></div>
   <div class="sub">${esc(fmtDataLonga(h).replace(/^./, s=>s.toUpperCase()))}</div>
   <div class="msg-dia"><div class="rot">MENSAGEM DO DIA</div><div class="txt ouro-txt">${esc(msg)}</div><div class="assina">${esc(despedida())}, ${esc(USU.nome.split(" ")[0])}.</div></div>
+  ${oabHTML()}
   ${(() => { const at = (DB.acessos||[]).filter(x => x.painel).sort((x,y) => x.ordem - y.ordem); return at.length ? `<div class="atalhos"><span class="rot-atalhos">ACESSO RÁPIDO</span>${at.map(x => botaoAcesso(x, true)).join("")}<a class="atalho mais" href="#acessos">Todos ›</a></div>` : ""; })()}
   ${DB.conteudo && DB.conteudo.itens ? (() => { const p = ccTarefasDoDia(hojeStr()).filter(x => !x.feito).length, a = DB.conteudo.itens.filter(i => i.status==="aprovacao").length; return `<div class="aviso ${p||a?"alerta":"ok"}" data-r="conteudo" style="margin-bottom:14px"><span class="ponto"></span><span><b>Central de Conteúdo:</b> ${p ? p+" tarefa(s) na sua missão de hoje" : "nenhuma tarefa pendente hoje"} · ${a} conteúdo(s) aguardando sua aprovação</span></div>`; })() : ""}
   <div class="kpis">
@@ -983,6 +1046,7 @@ function telaPainel(c){
     <div class="cartao"><h3>Avisos automáticos</h3>${av.length ? av.slice(0,10).map(x => `<div class="aviso ${x.cls}" data-r="${x.r}"><span class="ponto"></span><span>${esc(x.t)}</span></div>`).join("") : `<div class="aviso ok"><span class="ponto"></span><span>Tudo em dia. Nenhum aviso no momento.</span></div>`}
     ${DB.clientes.length===0 ? `<p class="sub" style="margin-top:14px">A base está vazia. Para testar, carregue dados fictícios em <a href="#config">Configurações</a>, ou cadastre seu primeiro cliente.</p>` : ""}</div>
   </div>`;
+  oabLigar(); OAB_DIA = hojeStr();
   c.querySelectorAll("[data-r]").forEach(el => el.onclick = () => ir(el.dataset.r));
 }
 
@@ -2699,7 +2763,7 @@ function telaConfig(c){
   if(cfgAba==="backup"){
     cp.innerHTML = `<div class="grade2" style="margin-top:0"><div class="cartao"><h3>Backup cifrado</h3><p>Gera um arquivo com todos os dados e documentos, cifrado. Ele só abre com o usuário e a senha de quem tinha acesso no momento do backup, ou com o código de recuperação.</p>
     <p class="sub">Guarde duas cópias: uma no pendrive ou HD externo e outra no seu Google Drive. Como o arquivo é cifrado, o Google não consegue ler o conteúdo.</p>
-    ${pode("backup")?`<button class="btn btn-pri" id="bk-fazer">Fazer backup agora</button>`:`<p class="sub">Seu perfil não pode gerar backups.</p>`} <button class="btn" id="bk-rest">Restaurar um backup</button></div>
+    ${pode("backup")?`<button class="btn btn-pri" id="bk-fazer">Fazer backup agora</button>`:`<p class="sub">Seu perfil não pode gerar backups.</p>`} <button class="btn" id="bk-rest">Restaurar um backup</button> <button class="btn" id="bk-juntar">Juntar dados de um backup</button><p class="sub" style="margin:8px 0 0"><b>Restaurar</b> substitui tudo pelo backup. <b>Juntar</b> só acrescenta o que ainda não existe aqui, sem apagar nada.</p></div>
     <div class="cartao"><h3>Exportação aberta</h3><p>Planilha (CSV) de clientes e de processos, para conferência ou migração. <b>Atenção:</b> o CSV não é cifrado; guarde em local seguro e apague depois de usar.</p>
     <button class="btn" id="ex-cli">Clientes (CSV)</button> <button class="btn" id="ex-proc">Processos (CSV)</button></div></div>
     <div class="cartao" style="margin-top:16px"><h3>Onde ficam os dados</h3><p class="sub" style="margin:0">Neste navegador, neste computador, cifrados com AES-256-GCM. A chave é derivada da senha (PBKDF2-SHA256, ${ITER.toLocaleString("pt-BR")} iterações) e nunca é gravada. Limpar os dados do navegador apaga a base: por isso o backup é indispensável. ${ARM.disponivel?"":"<b style='color:var(--perigo)'>Armazenamento indisponível neste navegador: os dados estão só na memória.</b>"}</p></div>`;
@@ -2711,6 +2775,7 @@ function telaConfig(c){
         registrar("backup", "Dados restaurados da cópia automática anterior à atualização"); await salvarAgora(); toast("Cópia restaurada."); ir("painel"); }; });
     const bf = $("#bk-fazer"); if(bf) bf.onclick = fazerBackup;
     $("#bk-rest").onclick = restaurarBackup;
+    $("#bk-juntar").onclick = juntarBackup;
     const csv = (linhas) => "﻿" + linhas.map(l => l.map(v => `"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\r\n");
     $("#ex-cli").onclick = () => { registrar("exportação","Exportou clientes em CSV"); salvar(); salvarArquivo(`clientes-${hojeStr()}.csv`, csv([["Nome","CPF","RG","Nascimento","Telefone","WhatsApp","E-mail","Endereço","Bairro","Cidade","UF","CEP","Situação","Etiquetas"], ...DB.clientes.map(x=>[x.nome,fmtCPF(x.cpf),x.rg,fmtData(x.nascimento),x.telefone,x.whatsapp,x.email,x.endereco,x.bairro,x.cidade,x.uf,x.cep,x.status,(x.etiquetas||[]).join(", ")])]), "text/csv"); };
     $("#ex-proc").onclick = () => { registrar("exportação","Exportou processos em CSV"); salvar(); salvarArquivo(`processos-${hojeStr()}.csv`, csv([["Cliente","Tipo","Número","Protocolo","NB","Órgão","Ação/benefício","Situação","DER","DIB","DIP"], ...DB.processos.map(p=>[nomeCli(p.clienteId),p.tipo,p.numero,p.protocolo,p.nb,p.orgao,p.acao,p.situacao,fmtData(p.der),fmtData(p.dib),fmtData(p.dip)])]), "text/csv"); };
@@ -2829,6 +2894,47 @@ async function restaurarBackup(){
       }catch(x){ e.textContent = x.message==="formato" ? "Este arquivo não é um backup do sistema." : (v.codigo ? "O código de recuperação não confere com este backup." : "Usuário ou senha não conferem com este backup."); return false; }
     }}]);
   if(r){ garantirFeriados(); registrar("backup","Backup restaurado"); salvar(); toast("Backup restaurado."); abrirApp(); }
+}
+
+/* ---- Juntar dados de outro backup (acrescenta, nunca substitui) ---- */
+const JB_NOMES = {clientes:"clientes", familiares:"familiares", atendimentos:"atendimentos", processos:"demandas/processos", movimentacoes:"movimentações", partes:"partes", prazos:"prazos", compromissos:"compromissos", feriados:"feriados", suspensoes:"suspensões de prazo",
+  documentos:"documentos", modelos:"modelos de documento", assinaturas:"assinaturas", honorarios:"honorários", parcelas:"parcelas", recebimentos:"recebimentos", receitas:"receitas", despesas:"despesas", recorrentes:"lançamentos recorrentes", contas:"contas financeiras",
+  calculos:"cálculos salvos", tabelasOficiais:"tabelas oficiais", cnis:"CNIS", bpc:"análises de BPC", pericias:"perícias", periodosEspeciais:"períodos especiais", periodosExterior:"períodos no exterior", tarefas:"tarefas", fluxos:"fluxos", jurisprudencias:"jurisprudências", importacoes:"importações", acessos:"acessos e links"};
+async function juntarBackup(){
+  let aberto = null;
+  const ok = await modal("Juntar dados de um backup", `<form class="campos"><label class="largo">Arquivo de backup (.json)<input type="file" id="jb-arq" accept=".json,application/json" required></label><label>Usuário do backup<input name="login"></label><label>Senha do backup<input name="senha" type="password"></label><label class="largo">Ou, sem a senha: código de recuperação do backup<input name="codigo" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"></label><p class="sub largo"><b>Nada do que já existe aqui é apagado ou alterado.</b> Só entram os registros do backup que ainda não existem neste painel. Antes de juntar, você vê a lista do que vai entrar.</p><div class="sub largo" id="jb-erro" style="color:var(--perigo)"></div></form>`,
+    [{t:"Cancelar", v:null}, {t:"Abrir e conferir", cls:"btn-pri", acao: async f => {
+      const e = f.querySelector("#jb-erro"), file = f.querySelector("#jb-arq").files[0], v = lerForm(f.querySelector("form"));
+      if(!file){ e.textContent = "Escolha o arquivo."; return false; } e.textContent = "Abrindo e verificando o backup…";
+      try{ const p = JSON.parse(await file.text()); if(p.formato!=="JVA-backup") throw new Error("formato");
+        let raw; if(v.codigo) raw = await desembrulhar(v.codigo.toUpperCase().replace(/[^A-Z0-9]/g,""), p.meta.recuperacao);
+        else { const u = p.meta.usuarios.find(x => x.login===String(v.login||"").toLowerCase()); if(!u) throw new Error("login"); raw = await desembrulhar(v.senha, u.w); }
+        const k = await importarMestra(raw); const db = JSON.parse(dec.decode(await decifrarBytes(k, p.dados.iv, unb64(p.dados.ct))));
+        aberto = {p, db}; return true;
+      }catch(x){ e.textContent = x.message==="formato" ? "Este arquivo não é um backup do sistema." : (v.codigo ? "O código de recuperação não confere com este backup." : "Usuário ou senha não conferem com este backup."); return false; } }}]);
+  if(!ok || !aberto) return;
+  const b = aberto.db, novos = {};
+  // contas financeiras com o mesmo nome e âmbito não são duplicadas: os lançamentos passam a usar a conta que já existe
+  const mapaConta = {}; (b.contas||[]).forEach(c => { const igual = (DB.contas||[]).find(x => x.id===c.id || (x.nome===c.nome && x.ambito===c.ambito)); if(igual) mapaConta[c.id] = igual.id; });
+  const listas = [...new Set([...Object.keys(JB_NOMES), ...Object.keys(b).filter(k => Array.isArray(b[k]))])].filter(k => k!=="log" && Array.isArray(b[k]));
+  listas.forEach(k => { const tem = new Set((Array.isArray(DB[k]) ? DB[k] : []).map(x => x && x.id).filter(Boolean));
+    let add = b[k].filter(x => x && x.id && !tem.has(x.id)); if(k==="contas") add = add.filter(c => !mapaConta[c.id]);
+    if(k==="feriados" || k==="suspensoes"){ const chave = x => (x.data||"") + "|" + (x.nome||x.descricao||""); const ja = new Set((DB[k]||[]).map(chave)); add = add.filter(x => !ja.has(chave(x))); }
+    if(add.length) novos[k] = add; });
+  const bc = b.conteudo || {}, tc = new Set(((DB.conteudo||{}).itens||[]).map(i => i.id)); const novosCont = (bc.itens||[]).filter(i => i && i.id && !tc.has(i.id));
+  const linhas = Object.entries(novos).map(([k, l]) => `<li><b>${l.length}</b> ${esc(JB_NOMES[k]||k)}</li>`).join("");
+  if(!linhas && !novosCont.length){ toast("Esse backup não tem nada que ainda não exista neste painel."); return; }
+  const conf = await modal("Conferir antes de juntar", `<p>Vão entrar neste painel:</p><ul>${linhas || "<li>Nenhum cadastro novo.</li>"}</ul>
+    ${novosCont.length ? `<label class="chk"><input type="checkbox" id="jb-cont"> Juntar também <b>${novosCont.length}</b> conteúdo(s) da Central de Conteúdo que não existem aqui</label>` : ""}
+    <p class="sub">Nada do que já existe será apagado ou alterado. Arquivos anexados do backup também entram, se ainda não existirem.</p>`,
+    [{t:"Cancelar", v:null}, {t:"Juntar agora", cls:"btn-pri", acao: f => ({cont: !!f.querySelector("#jb-cont")?.checked})}]);
+  if(!conf) return;
+  const trocaConta = x => { ["contaId","contaOrigem","contaDestino"].forEach(c => { if(x[c] && mapaConta[x[c]]) x[c] = mapaConta[x[c]]; }); return x; };
+  let total = 0; Object.entries(novos).forEach(([k, l]) => { if(!Array.isArray(DB[k])) DB[k] = []; l.forEach(x => DB[k].push(trocaConta(x))); total += l.length; });
+  if(conf.cont && novosCont.length){ garantirConteudo(); ccDB().itens.push(...novosCont); total += novosCont.length; }
+  const tem = new Set(await ARM.chaves("arquivos")); let nArq = 0; for(const a of (aberto.p.arquivos||[])){ if(tem.has(a.id)) continue; await ARM.put("arquivos", a.id, {iv:a.iv, ct:unb64(a.ct)}); nArq++; }
+  registrar("backup", `Dados juntados de um backup: ${total} registro(s)${nArq ? `, ${nArq} arquivo(s)` : ""}`); salvar();
+  toast(`Pronto: ${total} registro(s) juntados${nArq ? ` e ${nArq} arquivo(s)` : ""}. Nada foi substituído.`); rota();
 }
 
 /* ---- Dados de teste ---- */
