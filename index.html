@@ -210,6 +210,15 @@ ol.passos{padding-left:20px;margin:0}ol.passos>li{margin-bottom:14px;line-height
 .modal .aviso{cursor:default}
 .lista-mod{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
 /* ===== Central de Conteúdo ===== */
+.bf-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:14px}
+.bf-foto{position:relative;border:1px solid var(--linha);border-radius:10px;padding:0;overflow:hidden;background:var(--nude-claro);cursor:pointer;aspect-ratio:4/5}
+.bf-foto img{width:100%;height:100%;object-fit:cover;display:block}.bf-foto.bf-ed{opacity:.6}
+.bf-et{position:absolute;left:0;right:0;bottom:0;background:rgba(43,30,22,.72);color:#F7F2E9;font-size:11px;padding:5px 8px;text-align:left}
+.bf-vert{display:flex;gap:12px;flex-wrap:wrap}.bf-v{border:1px solid var(--linha);background:#fff;border-radius:10px;padding:6px;cursor:pointer;width:130px}.bf-v .at-thumb{aspect-ratio:9/16;width:100%}
+.bf-ed-grade{display:grid;grid-template-columns:minmax(220px,340px) 1fr;gap:18px;align-items:start}.bf-palco canvas{width:100%;height:auto;border-radius:8px;cursor:crosshair;background:var(--nude-claro)}
+.bf-props{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.bf-prop canvas{width:100%;height:auto;border-radius:8px;box-shadow:0 6px 20px rgba(43,30,22,.15)}
+@media(max-width:760px){.bf-ed-grade,.bf-props{grid-template-columns:1fr}}
+
 .ccx{margin:0 0 16px;border-color:var(--ouro)}
 .ccx-topo{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-start}
 .ccx-botoes{display:flex;gap:8px;flex-wrap:wrap}
@@ -3009,7 +3018,7 @@ const CC_AREAS = {prev:"Previdenciário", fam:"Família", bast:"Bastidores"};
 const CC_STATUS = [
   ["ideia","Ideia criada"],["roteiro","Roteiro pronto"],["gravar","Aguardando gravação"],["enviado","Vídeo enviado"],
   ["edicao","Em edição"],["aprovacao","Aguardando aprovação"],["aprovado","Aprovado"],["agendado","Agendado"],
-  ["publicado","Publicado"],["ajustes","Reprovado / precisa de ajustes"]
+  ["publicado","Publicado"],["ajustes","Reprovado / precisa de ajustes"],["arquivado","Arquivado"]
 ];
 const CC_ST = Object.fromEntries(CC_STATUS);
 const CC_TIPOS = {video:"Vídeo (Reels/TikTok)", carrossel:"Carrossel", post:"Post individual", stories:"Sequência de stories", capa:"Capa de Reels"};
@@ -3811,7 +3820,7 @@ async function ccApagarArquivo(id){ try{ await ARM.del("arquivos", id); }catch(e
 /* =========================================================
    CENTRAL DE CONTEÚDO — telas
    ========================================================= */
-const CC_ABAS = [["criar","Criar conteúdo"],["feed","Meu Feed Preview"],["carrosseis","Carrosséis"],["aguardando","Aguardando aprovação"],["aprovados","Aprovados"],["editorial","Calendário editorial"],["fila","Fila de publicação"],["publicados","Publicados"],["ideias","Banco de ideias"],
+const CC_ABAS = [["criar","Criar conteúdo"],["fotos","Biblioteca de fotos"],["feed","Meu Feed Preview"],["carrosseis","Carrosséis"],["aguardando","Aguardando aprovação"],["aprovados","Aprovados"],["editorial","Calendário editorial"],["fila","Fila de publicação"],["publicados","Publicados"],["ideias","Banco de ideias"],
   ["hoje","Hoje"],["planejamento","Planejamento"],["producao","Produção (vídeos)"],["edicao","Edição de vídeos"],["posts","Estúdio de artes"],["stories","Stories"],["calendario","Calendário geral"],["desempenho","Desempenho"],["assistente","Assistente"],["ajustes","Fontes, regras e integrações"]];
 let CC_SUB = "feed", CC_MIGROU_V3 = false;
 function telaConteudo(c, id){
@@ -3830,7 +3839,7 @@ function telaConteudo(c, id){
   c.querySelectorAll("[data-cc-ir]").forEach(b => b.onclick = () => ir("conteudo-"+b.dataset.ccIr));
   $("#cc-novo").onclick = () => ir("conteudo-criar");
   const corpo = $("#cc-corpo"); const ccxEl = $("#ccx-painel"); if(ccxEl) ccxPainel(ccxEl);
-  ({criar:ccTelaCriarFeed, feed:ccTelaFeed, carrosseis:ccTelaCarrosseis, aguardando:ccTelaAguardando, aprovados:ccTelaAprovados, editorial:ccTelaEditorial, fila:ccTelaFila, publicados:ccTelaPublicados, ideias:ccTelaIdeiasFeed,
+  ({criar:ccTelaCriarFeed, fotos:ccTelaFotos, feed:ccTelaFeed, carrosseis:ccTelaCarrosseis, aguardando:ccTelaAguardando, aprovados:ccTelaAprovados, editorial:ccTelaEditorial, fila:ccTelaFila, publicados:ccTelaPublicados, ideias:ccTelaIdeiasFeed,
     hoje:ccTelaHoje, planejamento:ccTelaPlanejamento, producao:ccTelaProducao, edicao:ccTelaEdicao, posts:ccTelaPosts, stories:ccTelaStories,
     calendario:ccTelaCalendario, desempenho:ccTelaDesempenho, assistente:ccTelaAssistente, ajustes:ccTelaAjustesFeed})[CC_SUB](corpo, arg);
 }
@@ -4704,7 +4713,7 @@ async function ccDesenharSlide(g, W, H, i, idx){
   const disp = H - y - 200*k; const tx = ccAjustarFonte(g, s.texto||"", MON, 400, larg, disp, 46*k, 1.48, 28*k); g.font = `400 ${tx.t}px ${MON}`; ccTexto(g, tx.linhas, mx, y, tx.t, 1.48, corTxt, corDest, "left", W);
   if(papel==="final"){ g.font = `600 ${26*k}px ${MON}`; g.fillStyle = corDest; g.textBaseline = "alphabetic"; g.fillText("SALVE ESTE POST  ·  COMPARTILHE COM QUEM PRECISA", mx, H - 150*k); }
 }
-function ccTamPost(i){ return [1080, 1350]; }
+function ccTamPost(i){ return i && i.design && ["reels","story"].includes(i.design.formato) ? [1080, 1920] : [1080, 1350]; }
 async function ccMiniaturas(i, el){
   if(!el) return; el.innerHTML = ""; const [W,H] = ccTamPost(i); await ccFontes();
   for(let n=0;n<i.slides.length;n++){ const cv = document.createElement("canvas"); cv.width = W/4; cv.height = H/4; const g = cv.getContext("2d"); g.scale(.25,.25); await ccDesenharSlide(g, W, H, i, n); cv.title = `Slide ${n+1}`; el.appendChild(cv); }
@@ -5287,6 +5296,9 @@ function atFundo(g, W, H, P, i, seed, k, estilo){
 function atPaleta(i, s){ const d = i.design || {}; let p = (s && s.paleta) || d.paleta || "areia"; return AT_PALETAS[p] || AT_PALETAS.areia; }
 function atInversa(P){ return P.escuro ? AT_PALETAS.areia : AT_PALETAS.cafe; }
 async function ccAtDesenhar(g, W, H, i, idx){
+  if(i.design && ["reels","story"].includes(i.design.formato)) return fpDesenharVert(g, W, H, i);
+  if(i.design && i.design.fotoId && FP_FEED[i.design.fotoLayout]){ const s_ = i.slides[idx] || {}, tot_ = i.slides.length, pap_ = s_.papel || (tot_===1 ? "unico" : idx===0 ? "capa" : idx===tot_-1 ? "final" : "meio");
+    if(pap_==="capa" || (pap_==="unico" && !["mito","check","dica"].includes(s_.layout))) return fpDesenhar(g, W, H, i, idx); }
   if(i.design && AT_PREMIUM[i.design.premium]) return apDesenhar(g, W, H, i, idx);
   if(i.design && AT_CAPAS_ED[i.design.capa]){ const s_ = i.slides[idx] || {}, tot_ = i.slides.length, pap_ = s_.papel || (tot_===1 ? "unico" : idx===0 ? "capa" : idx===tot_-1 ? "final" : "meio");
     if((pap_==="capa" && !s_.layout) || (pap_==="unico" && (s_.layout||"unico")==="unico")){ const k_ = W/1080, sd_ = (i.design.seed||1)*31 + idx*7; let P_ = atPaleta(i, s_); if(s_.inverter) P_ = atInversa(P_); g.save(); g.textAlign = "left"; g.textBaseline = "alphabetic"; await atCapaEd(g, W, H, i, s_, P_, k_, sd_, idx, tot_, i.design.capa); g.restore(); return; } }
@@ -5604,7 +5616,7 @@ function ccFeedGerar(temaId, tipo, opc){
 function atHoraSugerida(data){ const f = ccCfg().feed || {}; const w = diaSemana(data); return (w===0 || w===6) ? (f.horaFds || "10:00") : (ccCfg().horarios.feed || "12:00"); }
 function ccFeedLegendaCompleta(i){ const l = i.legenda||""; if(/(#\S+\s*)+$/.test(l.trim()) && (!i.hashtags || l.includes(i.hashtags))) return l; return [l, i.hashtags||""].filter(Boolean).join("\n\n"); }
 function ccFeedAssinatura(i){ return atHash(JSON.stringify([i.slides, i.design, i.legenda, i.hashtags])); }
-function ccFeedItens(){ return ccDB().itens.filter(i => ["carrossel","post"].includes(i.tipo)); }
+function ccFeedItens(){ return ccDB().itens.filter(i => ["carrossel","post"].includes(i.tipo) && i.status!=="arquivado"); }
 function ccFeedAtivo(){ const h = hojeStr(), f = addDias(h, 30); return ccDB().itens.some(i => i.design && i.dataPrevista >= h && i.dataPrevista <= f); }
 function ccFeedTemaDe(i){ if(i.temaId) return ccTema(i.temaId); if(i.temaLivre) return ccTemaLivre(i.temaLivre.assunto, i.temaLivre.area, i.temaLivre.pontos); return null; }
 
@@ -5695,8 +5707,8 @@ const AT_CACHE = new Map();
 async function atMini(i, n, esc_){
   esc_ = esc_ || .25; const key = `${i.id}:${n}:${esc_}:${i.design ? ccFeedAssinatura(i) : atHash(JSON.stringify([i.slides, i.visual]))}`;
   if(AT_CACHE.has(key)) return AT_CACHE.get(key);
-  const cv = document.createElement("canvas"); cv.width = Math.round(1080*esc_); cv.height = Math.round(1350*esc_); const g = cv.getContext("2d"); g.scale(esc_, esc_);
-  await ccFontes(); await ccDesenharSlide(g, 1080, 1350, i, n); AT_CACHE.set(key, cv); if(AT_CACHE.size > 500) AT_CACHE.delete(AT_CACHE.keys().next().value); return cv;
+  const [W_, H_] = ccTamPost(i); const cv = document.createElement("canvas"); cv.width = Math.round(W_*esc_); cv.height = Math.round(H_*esc_); const g = cv.getContext("2d"); g.scale(esc_, esc_);
+  await ccFontes(); await ccDesenharSlide(g, W_, H_, i, n); AT_CACHE.set(key, cv); if(AT_CACHE.size > 500) AT_CACHE.delete(AT_CACHE.keys().next().value); return cv;
 }
 function atClonar(cv){ const c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height; c.getContext("2d").drawImage(cv, 0, 0); return c; }
 async function atPreencherMinis(raiz){
@@ -5786,7 +5798,7 @@ document.addEventListener("click", e => {
   const b = e.target.closest("#at-pm-bx, #at-pm-cp"); if(!b || !CC_PUB_ATUAL) return; const i = CC_PUB_ATUAL;
   if(b.id==="at-pm-bx") ccFeedBaixar(i, "jpg"); else navigator.clipboard?.writeText(ccFeedLegendaCompleta(i)).then(() => toast("Legenda copiada."), () => toast("Não foi possível copiar.", true));
 });
-async function ccSlideBlob(i, n, tipo){ const cv = document.createElement("canvas"); cv.width = 1080; cv.height = 1350; await ccDesenharSlide(cv.getContext("2d"), 1080, 1350, i, n); return new Promise(r => cv.toBlob(r, tipo==="jpg" ? "image/jpeg" : "image/png", .93)); }
+async function ccSlideBlob(i, n, tipo){ const [W_, H_] = ccTamPost(i); const cv = document.createElement("canvas"); cv.width = W_; cv.height = H_; await ccDesenharSlide(cv.getContext("2d"), W_, H_, i, n); return new Promise(r => cv.toBlob(r, tipo==="jpg" ? "image/jpeg" : "image/png", .93)); }
 async function ccFeedBaixar(i, tipo){
   await ccFontes(); const ext = tipo==="jpg" ? "jpg" : "png", nome = `${i.dataPrevista||"sem-data"}-${ccSlug(i.titulo)}`;
   if(i.slides.length===1) return salvarArquivo(`${nome}.${ext}`, await ccSlideBlob(i, 0, tipo), tipo==="jpg" ? "image/jpeg" : "image/png");
@@ -5812,7 +5824,7 @@ async function ccFeedVer(id, lista){
   const tecla = e => { if(e.key==="Escape") return fechar(); if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||"")) return; if(e.key==="ArrowRight") irSlide(1); if(e.key==="ArrowLeft") irSlide(-1); };
   document.addEventListener("keydown", tecla); f.addEventListener("mousedown", e => { if(e.target===f) fechar(); });
   let i; const irSlide = d => { if(!i) return; sel = (sel + d + i.slides.length) % i.slides.length; pintar(); };
-  const pintar = async () => { const cv = f.querySelector("#at-lb-cv"); if(!cv) return; await ccFontes(); const g = cv.getContext("2d"); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,1080,1350); await ccDesenharSlide(g, 1080, 1350, i, sel);
+  const pintar = async () => { const cv = f.querySelector("#at-lb-cv"); if(!cv) return; await ccFontes(); const g = cv.getContext("2d"); g.setTransform(1,0,0,1,0,0); const [W_, H_] = ccTamPost(i); if(cv.height!==H_) cv.height = H_; g.clearRect(0,0,W_,H_); await ccDesenharSlide(g, W_, H_, i, sel);
     f.querySelector("#at-lb-n").textContent = `${sel+1} / ${i.slides.length}`; f.querySelectorAll(".at-lb-th > div").forEach((x, n) => x.classList.toggle("ativo", n===sel)); };
   const desenhar = async () => {
     i = ccItem(lista[pos]); if(!i){ fechar(); return; } CCX.vista = i.id; if(!i.slides || !i.slides.length){ f.innerHTML = `<div class="modal"><h2>${esc(i.titulo)}</h2><p>Esta publicação não tem arte no sistema${i.link?` (<a href="${esc(i.link)}" target="_blank" rel="noopener">abrir no Instagram</a>)`:""}.</p><div class="rodape"><button class="btn" id="at-lb-x">Fechar</button></div></div>`; f.querySelector("#at-lb-x").onclick = fechar; return; }
@@ -5825,7 +5837,7 @@ async function ccFeedVer(id, lista){
         <div class="at-lb-arte"><div class="at-lb-palco"><canvas id="at-lb-cv" width="1080" height="1350"></canvas>${i.slides.length>1?`<button class="at-seta esq" id="at-s-ant" aria-label="Slide anterior">‹</button><button class="at-seta dir" id="at-s-prox" aria-label="Próximo slide">›</button>`:""}</div>
           <div class="at-lb-n sub" id="at-lb-n"></div>
           <div class="at-lb-th">${i.slides.map((_, n) => `<div data-mini="${i.id}:${n}" data-esc=".12" data-sl="${n}"></div>`).join("")}</div>
-          <div class="barra-acoes" style="margin-top:8px"><button class="btn btn-sm" id="at-bx-jpg">Baixar JPG${i.slides.length>1?" (ZIP)":""}</button><button class="btn btn-sm" id="at-bx-png">Baixar PNG</button></div></div>
+          <div class="barra-acoes" style="margin-top:8px"><button class="btn btn-sm" id="at-bx-jpg">Baixar JPG${i.slides.length>1?" (ZIP)":""}</button><button class="btn btn-sm" id="at-bx-png">Baixar PNG</button><button class="btn btn-sm" id="at-3p">3 propostas visuais</button><button class="btn btn-sm" id="at-dup">Duplicar</button>${i.status!=="publicado"?`<button class="btn btn-sm" id="at-arq">Arquivar</button>`:""}</div></div>
         <div class="at-lb-info">
           ${i.status==="ajustes" && i.ajuste ? `<div class="aviso perigo"><span class="ponto"></span><span><b>${i.ajuste.tipo==="reprovado"?"Reprovado":"Alterações"}:</b> ${esc(i.ajuste.obs)}</span></div>` : ""}
           ${i.ultimoPedido && i.ultimoPedido.versao===i.versao ? `<div class="aviso ok"><span class="ponto"></span><span><b>Versão ${i.versao}</b> gerada a partir do seu pedido “${esc(i.ultimoPedido.pedido)}”. Mudou: ${esc(i.ultimoPedido.feito.join("; "))}.</span></div>` : ""}
@@ -5851,6 +5863,9 @@ async function ccFeedVer(id, lista){
     on("#at-s-ant", () => irSlide(-1)); on("#at-s-prox", () => irSlide(1));
     f.querySelectorAll("[data-sl]").forEach(x => x.onclick = () => { sel = +x.dataset.sl; pintar(); });
     on("#at-bx-jpg", () => ccFeedBaixar(i, "jpg")); on("#at-bx-png", () => ccFeedBaixar(i, "png"));
+    on("#at-3p", () => { f.remove(); document.removeEventListener("keydown", tecla); fp3Propostas(i); });
+    on("#at-dup", () => { const c2 = ccDuplicar(i); f.remove(); document.removeEventListener("keydown", tecla); toast("Cópia criada, aguardando aprovação."); ccRerender(); ccFeedVer(c2.id); });
+    on("#at-arq", async () => { if(await ccArquivar(i)){ f.remove(); document.removeEventListener("keydown", tecla); ccRerender(); toast("Arquivado. Veja em Comandos da Central → Arquivados."); } });
     on("#at-cp", () => navigator.clipboard?.writeText(ccFeedLegendaCompleta(i)).then(() => toast("Legenda copiada."), () => toast("Não foi possível copiar.", true)));
     on("#at-aprovar", async () => { if(await ccFeedAprovar(i)){ toast(i.status==="agendado" ? `Aprovado e colocado na fila: ${atDH(i)}.` : "Aprovado."); desenhar(); } });
     on("#at-alt", async () => { if(await ccFeedPedirAlteracoes(i)){ sel = 0; desenhar(); } });
@@ -6058,6 +6073,316 @@ function atAjustarEd(g, txt, o){ // títulos com *destaque* em letra manuscrita
     if((alt <= o.maxAlt && !ls.some(l => l.length===1 && l[0].larg > o.max)) || t <= o.min) return {t, ls, fN, fD, lh:o.lh, alt};
     t -= 2; }
 }
+/* =========================================================
+   ARTES COM AS SUAS FOTOS — biblioteca, enquadramento pelo
+   rosto (ponto escolhido por você), ajustes leves de luz e tom.
+   O rosto nunca é alterado: só recorte, moldura e composição.
+   ========================================================= */
+const FP_FEED = {lateral:"Foto · editorial lateral", moldura:"Foto · retrato emoldurado", revista:"Foto · capa de revista", arcofoto:"Foto · arco", dividido:"Foto · foto em cima, texto embaixo", circulo:"Foto · retrato redondo e frase"};
+const FP_VERT = {rv_inteira:"Vertical · foto inteira", rv_moldura:"Vertical · retrato emoldurado", rv_dividida:"Vertical · foto e faixa de texto"};
+const FP_FORMATOS = {feed:"Post ou carrossel do feed (1080×1350)", reels:"Capa de Reels (1080×1920)", story:"Story (1080×1920)"};
+const FP_ENQ = {rosto:"Rosto / busto", meio:"Meio corpo", inteiro:"Corpo inteiro"};
+const FP_ROUPA = {clara:"Clara (branco, off-white)", bege:"Bege / caramelo", marrom:"Marrom", escura:"Preta / escura", cinza:"Cinza", outra:"Outra"};
+const FP_USOS = {capa:"Capas de carrossel", reels:"Capas de Reels", stories:"Stories", institucional:"Posts institucionais", frase:"Frases", bastidores:"Bastidores / estudo"};
+function fpFotos(){ return (ccDB().imagens||[]).filter(x => x.marca); }
+function fpMeta(id){ return (ccDB().imagens||[]).find(x => x.id===id) || {}; }
+
+/* ---------- desenho da foto com ponto focal ---------- */
+async function fpFoto(g, id, x, y, w, h, o){
+  o = o || {}; const im = id ? await ccImagem(id) : null; if(!im) return false;
+  const m = fpMeta(id), f = m.foco || {x:.5, y:.3}, aj = m.aj || {};
+  const e = Math.max(w/im.naturalWidth, h/im.naturalHeight) * (o.zoom || 1), dw = im.naturalWidth*e, dh = im.naturalHeight*e;
+  const ax = o.alvo ? o.alvo[0] : .5, ay = o.alvo ? o.alvo[1] : .3;
+  let dx = x + w*ax - f.x*dw, dy = y + h*ay - f.y*dh;
+  dx = Math.min(x, Math.max(x + w - dw, dx)); dy = Math.min(y, Math.max(y + h - dh, dy));
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+  const fl = []; if(aj.luz) fl.push(`brightness(${1 + aj.luz/100})`); if(aj.contraste) fl.push(`contrast(${1 + aj.contraste/100})`); if(aj.sat) fl.push(`saturate(${1 + aj.sat/100})`);
+  g.filter = fl.join(" ") || "none"; g.drawImage(im, dx, dy, dw, dh); g.filter = "none";
+  if(aj.calor){ g.globalCompositeOperation = "soft-light"; g.fillStyle = aj.calor > 0 ? `rgba(201,150,90,${Math.min(.6, aj.calor/100)})` : `rgba(120,135,150,${Math.min(.6, -aj.calor/100)})`; g.fillRect(x, y, w, h); g.globalCompositeOperation = "source-over"; }
+  g.restore(); return true;
+}
+function fpDegrade(g, x, y, w, h, cor, de, ate){ const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, atRgba(cor, de)); gr.addColorStop(1, atRgba(cor, ate)); g.fillStyle = gr; g.fillRect(x, y, w, h); }
+function atRgba(hex, a){ const h = String(hex).replace("#",""); const n = parseInt(h.length===3 ? h.split("").map(c => c + c).join("") : h, 16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+
+/* ---------- sugestão da melhor foto ---------- */
+function fpSugerir(i, lay, evitar){
+  const fs = fpFotos().filter(x => !x.editada && !(evitar||[]).includes(x.id)); if(!fs.length) return null;
+  const vert = /^rv_/.test(lay), usadas = {}; ccFeedItens().filter(x => x.design?.fotoId).slice(-12).forEach(x => usadas[x.design.fotoId] = (usadas[x.design.fotoId]||0) + 1);
+  const quer = i.estilo==="frase" || i.estilo==="motivacional" ? "frase" : i.area==="bast" ? "bastidores" : vert ? (i.design?.formato==="story" ? "stories" : "reels") : "capa";
+  const P = AT_PALETAS[i.design?.paleta] || AT_PALETAS.areia;
+  const nota = x => { let s = 0; if((x.usos||[]).includes(quer)) s += 4; if(x.fav) s += 2;
+    if(lay==="revista" || lay==="rv_inteira") s += x.fundo==="claro" ? 2 : 0;
+    if(["circulo","moldura","rv_moldura","arcofoto"].includes(lay)) s += x.enq==="rosto" ? 3 : x.enq==="meio" ? 1 : -2;
+    if(["lateral","dividido","rv_dividida"].includes(lay)) s += x.enq==="inteiro" ? -1 : 1;
+    if(P.escuro && ["clara","bege"].includes(x.roupa)) s += 1; if(!P.escuro && ["marrom","escura"].includes(x.roupa)) s += 1;
+    s -= (usadas[x.id]||0) * 2.5; if(!x.foco) s -= 1; return s; };
+  return fs.map(x => [x, nota(x) + ((parseInt(String(x.id).slice(-3), 36) || 0) % 7)/100]).sort((a, b) => b[1] - a[1])[0][0].id;
+}
+
+/* ---------- capas e posts com foto ---------- */
+async function fpDesenhar(g, W, H, i, idx){
+  const s = i.slides[idx] || {}, total = i.slides.length, k = W/1080, d = i.design, seed = (d.seed||1)*31 + idx*7, P = atPaleta(i, s);
+  const K = v => v*k, mx = 96*k, larg = W - 2*mx, rot = s.rotulo || atAreaRot(i), lay = d.fotoLayout, fid = d.fotoId, unico = total===1;
+  const tit = s.titulo || "", corpo = unico ? (s.texto || s.sub || "") : "", sub = unico ? "" : (s.sub || "Deslize e descubra");
+  g.save(); g.textAlign = "left"; g.textBaseline = "alphabetic";
+  const D = apEscuro(P, seed), L = apClaro(P);
+  if(lay==="lateral"){
+    const xf = Math.round(W*.46); apPapel(g, W, H, L, seed, k);
+    await fpFoto(g, fid, xf, 0, W - xf, H, {alvo:[.5,.28]}); g.fillStyle = atOuro(g, xf, 0, xf, H, false); g.fillRect(xf - K(3), 0, K(3), H);
+    const lx = K(70), lw = xf - K(120); atRotulo(g, rot, lx, K(120), L, k);
+    const f = apTit(g, tit, {max:lw, maxAlt:K(560), tam:K(80), min:K(42), lh:1.08}); const yT = Math.max(K(230), (H - f.alt)/2 - K(60)); atEscrever(g, f, lx, yT, {cor:L.tit, corD:L.ac});
+    let y = yT + f.alt + K(40); g.fillStyle = L.ac; g.fillRect(lx, y, K(70), K(3)); y += K(40);
+    if(corpo){ const fc = apTxt(g, corpo, {max:lw, maxAlt:H - y - K(200), tam:K(28), min:K(19)}); atEscrever(g, fc, lx, y, {cor:L.txt, corD:L.ac2}); }
+    else apRot(g, sub, lx, y + K(10), L.mut, k, 15);
+    g.save(); g.beginPath(); g.rect(0, 0, xf, H); g.clip(); await atRodape(g, W, H, L, k, idx, total, {}); g.restore();
+  }
+  else if(lay==="moldura"){
+    apPapel(g, W, H, L, seed, k); const fx = K(300), fy = K(110), fw = K(520), fh = K(700);
+    g.strokeStyle = L.ac; g.lineWidth = K(1.6); g.strokeRect(fx + K(26), fy + K(26), fw, fh);
+    g.save(); g.shadowColor = "rgba(43,30,22,.22)"; g.shadowBlur = K(40); g.shadowOffsetY = K(18); g.fillStyle = L.soft; g.fillRect(fx, fy, fw, fh); g.restore();
+    await fpFoto(g, fid, fx, fy, fw, fh, {alvo:[.5,.32]});
+    apVertical(g, rot, K(150), fy + fh/2, L.ac2, k, 16); apBrilho(g, fx + fw + K(70), fy + K(40), K(14), L.ac); apBrilho(g, fx + fw + K(48), fy + K(80), K(7), L.ac);
+    const f = apTit(g, tit, {max:larg, maxAlt:K(260), tam:K(78), min:K(40), lh:1.06}); const yT = fy + fh + K(70); atEscrever(g, f, W/2, yT, {cor:L.tit, corD:L.ac, alinh:"center"});
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg - K(60), maxAlt:H - yT - f.alt - K(170), tam:K(26), min:K(18)}); atEscrever(g, fc, W/2, yT + f.alt + K(24), {cor:L.txt, corD:L.ac2, alinh:"center"}); }
+    await atRodape(g, W, H, L, k, idx, total);
+  }
+  else if(lay==="revista"){
+    g.fillStyle = L.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, H, {alvo:[.5,.3]});
+    fpDegrade(g, 0, 0, W, K(260), "#2B1E16", .55, 0); fpDegrade(g, 0, H*.48, W, H*.52, "#2B1E16", 0, .82);
+    g.font = `400 ${K(64)}px ${AT_SERIF}`; g.fillStyle = "#F7F2E9"; g.textAlign = "center"; atEspacado(g, (ccCfg().assinatura || "JÉSSICA VALIENTE").toUpperCase(), W/2, K(130), K(14), "center"); g.textAlign = "left";
+    apLinha(g, mx, K(160), W - mx, K(160), "#D9C092", k, 1, .8); apRot(g, rot, W/2, K(196), "#D9C092", k, 14, "center");
+    const f = apTit(g, tit, {max:larg, maxAlt:K(330), tam:K(92), min:K(46), lh:1.04}); const yT = H - K(200) - f.alt - (corpo ? K(110) : 0);
+    atEscrever(g, f, mx, yT, {cor:"#FFFFFF", corD:"#D9C092"});
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(100), tam:K(26), min:K(18), peso:400}); atEscrever(g, fc, mx, yT + f.alt + K(26), {cor:"#F3EADD"}); }
+    await atRodape(g, W, H, Object.assign({}, D, {tit:"#F7F2E9", mut:"#EBDDCB", linha:"rgba(255,255,255,.4)"}), k, idx, total);
+  }
+  else if(lay==="arcofoto"){
+    apPapel(g, W, H, L, seed, k); const ax = K(250), ay = K(100), aw = K(580), ah = K(720);
+    g.strokeStyle = L.ac; g.lineWidth = K(1.6); atArco(g, ax - K(22), ay - K(22), aw + K(44), ah + K(44)); g.stroke();
+    g.save(); atArco(g, ax, ay, aw, ah); g.clip(); g.fillStyle = L.soft; g.fillRect(ax, ay, aw, ah); await fpFoto(g, fid, ax, ay, aw, ah, {alvo:[.5,.36]}); g.restore();
+    apRamo(g, ax - K(20), ay + ah - K(40), K(180), -2.6, L.ac, k, true); apBrilho(g, ax + aw + K(30), ay + K(120), K(14), L.ac);
+    atRotulo(g, rot, W/2, ay + ah + K(52), L, k, {alinh:"center", cheio:L.bg, corTxt:L.ac2});
+    const f = apTit(g, tit, {max:larg, maxAlt:K(250), tam:K(74), min:K(40), lh:1.06}); atEscrever(g, f, W/2, ay + ah + K(130), {cor:L.tit, corD:L.ac, alinh:"center"});
+    await atRodape(g, W, H, L, k, idx, total);
+  }
+  else if(lay==="dividido"){
+    const hf = Math.round(H*.56); g.fillStyle = D.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, hf, {alvo:[.5,.38]});
+    g.save(); g.beginPath(); g.rect(0, hf, W, H - hf); g.clip(); apPapel(g, W, H, D, seed, k); g.restore();
+    g.fillStyle = atOuro(g, 0, hf, W, hf, true); g.fillRect(0, hf, W, K(4));
+    atRotulo(g, rot, mx, hf - K(25), D, k, {cheio:D.bg, corTxt:D.ac});
+    const f = apTit(g, tit, {max:larg, maxAlt:H - hf - K(250) - (corpo ? K(90) : 0), tam:K(76), min:K(38), lh:1.06}); atEscrever(g, f, mx, hf + K(70), {cor:D.tit, corD:D.ac});
+    if(corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(90), tam:K(25), min:K(18), peso:400}); atEscrever(g, fc, mx, hf + K(90) + f.alt, {cor:D.txt, corD:D.ac}); }
+    else if(!unico) apSeta(g, W - mx - K(34), hf + K(110), K(32), D, k, true);
+    await atRodape(g, W, H, D, k, idx, total);
+  }
+  else { // circulo — retrato redondo e frase
+    apPapel(g, W, H, P, seed, k); apMoldura(g, W, H, P, k); const r = K(170), cx = W/2, cy = K(330);
+    g.strokeStyle = P.ac; g.lineWidth = K(1.4); g.beginPath(); g.arc(cx, cy, r + K(18), 0, Math.PI*2); g.stroke();
+    g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.clip(); g.fillStyle = P.soft; g.fill(); await fpFoto(g, fid, cx - r, cy - r, 2*r, 2*r, {alvo:[.5,.42]}); g.restore();
+    apBrilho(g, cx + r + K(40), cy - r + K(20), K(14), P.ac);
+    const f = apTit(g, tit, {max:larg - K(80), maxAlt:K(420), tam:K(70), min:K(38), lh:1.12}); const yT = cy + r + K(90); atEscrever(g, f, W/2, yT, {cor:P.tit, corD:P.ac, alinh:"center"});
+    const y2 = yT + f.alt + K(46); atDivisor(g, W/2, y2, K(130), P.ac, k); apRot(g, ccCfg().assinatura || "Jéssica Valiente", W/2, y2 + K(56), P.mut, k, 15, "center");
+    await atRodape(g, W, H, P, k, idx, total);
+  }
+  g.restore();
+}
+
+/* ---------- capas de Reels e stories (1080×1920) ---------- */
+async function fpDesenharVert(g, W, H, i){
+  const s = i.slides[0] || {}, d = i.design, k = W/1080, K = v => v*k, P = atPaleta(i, s), seed = (d.seed||1)*31, D = apEscuro(P, seed), L = apClaro(P), mx = K(90), larg = W - 2*mx;
+  const reels = d.formato==="reels", tit = s.titulo || "", corpo = s.texto || s.sub || "", rot = s.rotulo || atAreaRot(i), fid = d.fotoId, lay = d.fotoLayout || "rv_inteira";
+  g.save(); g.textAlign = "left"; g.textBaseline = "alphabetic";
+  // área central segura: o Instagram mostra a capa de Reels cortada em 1080×1350 no perfil
+  const yS0 = (H - W*1350/1080)/2, yS1 = yS0 + W*1350/1080;
+  if(lay==="rv_moldura"){
+    apPapel(g, W, H, L, seed, k); const fw = K(640), fh = K(820), fx = (W - fw)/2, fy = yS0 + K(60);
+    g.strokeStyle = L.ac; g.lineWidth = K(1.6); g.strokeRect(fx - K(24), fy - K(24), fw + K(48), fh + K(48));
+    g.save(); g.shadowColor = "rgba(43,30,22,.22)"; g.shadowBlur = K(40); g.shadowOffsetY = K(18); g.fillStyle = L.soft; g.fillRect(fx, fy, fw, fh); g.restore(); await fpFoto(g, fid, fx, fy, fw, fh, {alvo:[.5,.32]});
+    apRot(g, rot, W/2, yS0 - K(40), L.ac2, k, 18, "center");
+    const f = apTit(g, tit, {max:larg, maxAlt:K(300), tam:K(84), min:K(44)}); atEscrever(g, f, W/2, fy + fh + K(80), {cor:L.tit, corD:L.ac, alinh:"center"});
+    if(!reels && corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(200), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, W/2, fy + fh + K(110) + f.alt, {cor:L.txt, alinh:"center"}); }
+  }
+  else if(lay==="rv_dividida"){
+    const hf = Math.round(H*.6); g.fillStyle = D.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, hf, {alvo:[.5,.42]});
+    g.save(); g.beginPath(); g.rect(0, hf, W, H - hf); g.clip(); apPapel(g, W, H, D, seed, k); g.restore(); g.fillStyle = atOuro(g, 0, hf, W, hf, true); g.fillRect(0, hf, W, K(5));
+    atRotulo(g, rot, mx, hf - K(25), D, k, {cheio:D.bg, corTxt:D.ac});
+    const f = apTit(g, tit, {max:larg, maxAlt:Math.min(K(330), yS1 - hf - K(80)), tam:K(84), min:K(42)}); atEscrever(g, f, mx, hf + K(80), {cor:D.tit, corD:D.ac});
+    if(!reels && corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(220), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, mx, hf + K(110) + f.alt, {cor:D.txt, corD:D.ac}); }
+  }
+  else { // rv_inteira
+    g.fillStyle = L.bg; g.fillRect(0, 0, W, H); await fpFoto(g, fid, 0, 0, W, H, {alvo:[.5,.3]});
+    fpDegrade(g, 0, H*.45, W, H*.55, "#2B1E16", 0, .85); fpDegrade(g, 0, 0, W, K(320), "#2B1E16", .4, 0);
+    apRot(g, rot, mx, yS0 + K(70), "#D9C092", k, 18);
+    const f = apTit(g, tit, {max:larg, maxAlt:K(380), tam:K(96), min:K(48), lh:1.04}); const yT = yS1 - K(110) - f.alt; atEscrever(g, f, mx, yT, {cor:"#FFFFFF", corD:"#D9C092"});
+    if(!reels && corpo){ const fc = apTxt(g, corpo, {max:larg, maxAlt:K(260), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, mx, yS1 - K(70), {cor:"#F3EADD"}); }
+  }
+  // marca discreta e chamada
+  const escuro = lay!=="rv_moldura"; g.font = `600 ${K(20)}px ${AT_SANS}`; g.fillStyle = escuro ? "#EBDDCB" : L.mut; g.textAlign = "center";
+  atEspacado(g, (ccCfg().assinatura || "JÉSSICA VALIENTE").toUpperCase() + (ccCfg().arroba ? "  ·  " + ccCfg().arroba : ""), W/2, H - K(150), K(4), "center");
+  if(reels){ g.beginPath(); g.arc(W/2, yS1 + K(40), K(34), 0, Math.PI*2); g.strokeStyle = escuro ? "#D9C092" : L.ac; g.lineWidth = K(2); g.stroke(); g.fillStyle = escuro ? "#D9C092" : L.ac; g.beginPath(); g.moveTo(W/2 - K(9), yS1 + K(26)); g.lineTo(W/2 + K(14), yS1 + K(40)); g.lineTo(W/2 - K(9), yS1 + K(54)); g.closePath(); g.fill(); }
+  g.textAlign = "left"; g.restore();
+}
+
+/* =========================================================
+   BIBLIOTECA DE FOTOS · CRIADOR COM FOTO · 3 PROPOSTAS
+   ========================================================= */
+function ccTelaFotos(c){
+  const fs = fpFotos(), vert = ccDB().itens.filter(i => i.tipo==="capa" && i.design && i.design.formato);
+  c.innerHTML = `<div class="cartao"><div class="ccx-topo"><div><h3 style="margin:0">Biblioteca de fotos</h3><p class="sub" style="margin:4px 0 0">Suas fotos ficam cifradas no servidor. Toque numa foto para marcar onde está o seu rosto (o enquadramento das artes segue esse ponto), ajustar luz e tom e dizer para que ela serve. O rosto nunca é alterado.</p></div>
+    <div class="ccx-botoes"><label class="btn btn-pri">Enviar fotos<input type="file" id="bf-up" accept="image/*" multiple hidden></label><button class="btn" id="bf-criar" ${fs.length?"":"disabled"}>Criar arte com foto</button></div></div>
+    <div class="bf-grade">${fs.map(x => `<button class="bf-foto ${x.editada?"bf-ed":""}" data-foto="${x.id}" type="button"><img data-img="${x.id}" alt=""><span class="bf-et">${x.fav?"★ ":""}${esc(FP_ENQ[x.enq]||"sem etiqueta")}${x.foco?"":" · marque o rosto"}${x.editada?" · editada por app":""}</span></button>`).join("") || `<p class="sub">Nenhuma foto ainda. Envie fotos de ensaio, do escritório ou de estudo (sem dados de clientes).</p>`}</div></div>
+  <div class="cartao" style="margin-top:16px"><h3 style="margin-top:0">Capas de Reels e Stories criadas (${vert.length})</h3>
+    <p class="sub" style="margin-top:0">Formato 1080×1920. Baixe e use no Instagram (a capa de Reels é escolhida no próprio app ao publicar o vídeo). Ficam fora da fila de publicação automática, que só aceita o formato do feed.</p>
+    <div class="bf-vert">${vert.slice().reverse().map(i => `<button class="bf-v" data-vert="${i.id}" type="button"><div class="at-thumb" data-mini="${i.id}:0" data-esc=".18"></div><span class="sub">${esc(FP_FORMATOS[i.design.formato].split(" (")[0])} · ${esc(CC_ST[i.status]||i.status)}</span></button>`).join("") || `<span class="sub">Nenhuma ainda.</span>`}</div></div>`;
+  c.querySelectorAll("img[data-img]").forEach(async im => { const m = fpMeta(im.dataset.img); im.src = await ccUrl(im.dataset.img, m.mime || "image/jpeg") || ""; });
+  $("#bf-up").onchange = async e => { let n = 0; for(const fl of e.target.files){ const id = uid(); const buf = await fl.arrayBuffer(); await ccGuardarArquivo(id, buf);
+      const meta = {id, nome:fl.name, mime:fl.type, marca:true, criado:new Date().toISOString(), usos:[], aj:{}}; try{ Object.assign(meta, await fpAnalisar(new Blob([buf], {type:fl.type}))); }catch(x){} fpPistasDoNome(meta); ccDB().imagens.push(meta); n++; }
+    salvar(); toast(`${n} foto(s) guardada(s). Agora toque em cada uma para marcar o rosto.`); ccRerender(); };
+  c.querySelectorAll("[data-foto]").forEach(b => b.onclick = () => fpEditarFoto(b.dataset.foto));
+  c.querySelectorAll("[data-vert]").forEach(b => b.onclick = () => fpVerVertical(b.dataset.vert));
+  $("#bf-criar").onclick = () => fpAbrirCriador();
+  atPreencherMinis(c);
+}
+function fpPistasDoNome(m){ // nomes preparados: "nome_f53-27.jpg" já trazem o ponto do rosto
+  const n = String(m.nome||"").toLowerCase(), f = n.match(/_f(\d{1,2})-(\d{1,2})/); if(f) m.foco = {x:+f[1]/100, y:+f[2]/100};
+  if(/faceapp|gemini/.test(n)) m.editada = true;
+  const u = new Set(m.usos||[]); if(/selfie|livro|estud|cafe/.test(n)) { u.add("bastidores"); u.add("stories"); } if(/retrato|frente|mesa|escritorio/.test(n)) { u.add("capa"); u.add("institucional"); u.add("reels"); } if(/cadeira|chao|cafe/.test(n)) { u.add("capa"); u.add("frase"); }
+  if(/retrato|mesa|frente|bege/.test(n) && !/terno/.test(n)) m.enq = m.enq || "meio"; if(/terno|cadeira/.test(n)) m.enq = "inteiro"; if(/retrato|cafe|selfie/.test(n)) m.enq = "rosto";
+  if(/off-white|branco/.test(n)) m.roupa = "clara"; else if(/bege|cafe/.test(n)) m.roupa = "bege"; else if(/marrom/.test(n)) m.roupa = "marrom"; else if(/preto|selfie/.test(n)) m.roupa = "escura"; else if(/cinza/.test(n)) m.roupa = "cinza";
+  m.usos = [...u]; }
+async function fpAnalisar(blob){ // orientação e claridade do fundo (bordas superiores da foto)
+  const u = URL.createObjectURL(blob); const im = await new Promise((ok, no) => { const x = new Image(); x.onload = () => ok(x); x.onerror = no; x.src = u; });
+  const cv = document.createElement("canvas"); cv.width = 60; cv.height = 80; const g = cv.getContext("2d"); g.drawImage(im, 0, 0, 60, 80); const d = g.getImageData(0, 0, 60, 14).data;
+  let s = 0; for(let n=0;n<d.length;n+=4) s += (d[n]*.3 + d[n+1]*.59 + d[n+2]*.11); URL.revokeObjectURL(u);
+  const lum = s/(d.length/4), r = im.naturalHeight/im.naturalWidth; return {fundo: lum > 150 ? "claro" : "escuro", larg:im.naturalWidth, alt:im.naturalHeight, enq: r > 1.6 ? "inteiro" : "meio"};
+}
+function fpEditarFoto(id){
+  const m = fpMeta(id); if(!m.id) return; m.aj = m.aj || {}; const f0 = m.foco ? {...m.foco} : null; const aj0 = {...m.aj};
+  const sel = (nome, op, v) => `<select name="${nome}">${Object.entries(op).map(([k, t]) => `<option value="${k}" ${v===k?"selected":""}>${esc(t)}</option>`).join("")}</select>`;
+  const corpo = `<div class="bf-ed-grade"><div class="bf-palco"><canvas id="bf-cv" width="600" height="750"></canvas><p class="sub" style="margin:6px 0 0">Toque no meio do seu rosto para marcar o ponto de enquadramento.</p></div>
+    <form class="campos" id="bf-f">
+      <label>Enquadramento${sel("enq", FP_ENQ, m.enq)}</label><label>Fundo da foto${sel("fundo", {claro:"Claro", escuro:"Escuro"}, m.fundo)}</label>
+      <label>Cor da roupa${sel("roupa", FP_ROUPA, m.roupa || "outra")}</label>
+      <div class="largo"><div class="sub" style="margin-bottom:4px">Usar em</div>${Object.entries(FP_USOS).map(([k, t]) => `<label class="chk" style="display:inline-flex;margin-right:12px"><input type="checkbox" name="u_${k}" ${(m.usos||[]).includes(k)?"checked":""}> ${t}</label>`).join("")}</div>
+      <label>Luz <input type="range" name="luz" min="-25" max="25" value="${m.aj.luz||0}"></label><label>Contraste <input type="range" name="contraste" min="-25" max="25" value="${m.aj.contraste||0}"></label>
+      <label>Tom (frio ↔ quente) <input type="range" name="calor" min="-30" max="30" value="${m.aj.calor||0}"></label><label>Saturação <input type="range" name="sat" min="-40" max="20" value="${m.aj.sat||0}"></label>
+      <label class="chk largo"><input type="checkbox" name="fav" ${m.fav?"checked":""}> ★ Foto favorita (aparece mais nas sugestões)</label>
+      <label class="chk largo"><input type="checkbox" name="editada" ${m.editada?"checked":""}> Foto alterada por aplicativo ou IA (não será sugerida automaticamente)</label></form></div>`;
+  const desenhar = async () => { const cv = document.getElementById("bf-cv"); if(!cv) return; const g = cv.getContext("2d"); const im = await ccImagem(id); if(!im) return;
+    const e = Math.min(600/im.naturalWidth, 750/im.naturalHeight); cv.width = Math.round(im.naturalWidth*e); cv.height = Math.round(im.naturalHeight*e); g.clearRect(0, 0, cv.width, cv.height);
+    await fpFoto(g, id, 0, 0, cv.width, cv.height, {alvo:[(m.foco||{x:.5}).x, (m.foco||{y:.3}).y]});
+    if(m.foco){ const x = m.foco.x*cv.width, y = m.foco.y*cv.height; g.strokeStyle = "#D9C092"; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 26, 0, Math.PI*2); g.stroke(); g.beginPath(); g.moveTo(x - 36, y); g.lineTo(x + 36, y); g.moveTo(x, y - 36); g.lineTo(x, y + 36); g.stroke(); } };
+  const ler = f => { const v = lerForm(f.querySelector("#bf-f")); m.enq = v.enq; m.fundo = v.fundo; m.roupa = v.roupa; m.usos = Object.keys(FP_USOS).filter(k => v["u_"+k]); m.fav = !!v.fav; m.editada = !!v.editada;
+    m.aj = {luz:+v.luz||0, contraste:+v.contraste||0, calor:+v.calor||0, sat:+v.sat||0}; };
+  modal("Foto da biblioteca", corpo, [{t:"Remover foto", v:"rm"}, {t:"Cancelar", v:null}, {t:"Salvar", cls:"btn-pri", acao: f => { ler(f); return true; }}]).then(async r => {
+    if(r==="rm"){ if(!(await confirmar("Remover foto", "Remover esta foto da biblioteca? Artes que usam esta foto passam a usar a ilustração do modelo.", "Remover", true))){ m.foco = f0; m.aj = aj0; return fpEditarFoto(id); }
+      await ccApagarArquivo(id); ccDB().imagens = ccDB().imagens.filter(x => x.id!==id); ccDB().itens.forEach(i => { if(i.design?.fotoId===id){ i.design.fotoId = null; } }); salvar(); AT_CACHE.clear(); ccRerender(); return; }
+    if(r){ salvar(); CC_IMGS.delete && CC_IMGS.delete(id); AT_CACHE.clear(); toast("Foto atualizada."); ccRerender(); } else { m.foco = f0; m.aj = aj0; } });
+  setTimeout(() => { const cv = document.getElementById("bf-cv"), fm = document.getElementById("bf-f"); if(!cv) return; desenhar();
+    cv.onclick = e => { const r = cv.getBoundingClientRect(); m.foco = {x:+((e.clientX - r.left)/r.width).toFixed(3), y:+((e.clientY - r.top)/r.height).toFixed(3)}; desenhar(); };
+    fm.querySelectorAll("input[type=range]").forEach(x => x.oninput = () => { m.aj = Object.assign(m.aj||{}, {[x.name]: +x.value}); desenhar(); }); }, 30);
+}
+
+/* ---------- criador de artes com foto ---------- */
+function fpAbrirCriador(pre){
+  pre = pre || {}; const fs = fpFotos();
+  const opTemas = a => CC_TEMAS.filter(t => t.area===a && !t.id.startsWith("__")).map(t => `<option value="${t.id}">${esc(t.titulo.replace(/\*/g,""))}</option>`).join("");
+  const corpo = `<form class="campos" id="fp-f">
+    <label>Formato<select name="formato">${Object.entries(FP_FORMATOS).map(([k, v]) => `<option value="${k}" ${pre.formato===k?"selected":""}>${v}</option>`).join("")}</select></label>
+    <label>Tipo (feed)<select name="estilo"><option value="info">Post único</option><option value="carrossel">Carrossel</option><option value="frase">Frase</option><option value="motivacional">Frase motivacional</option></select></label>
+    <label class="largo">Tema<select name="tema"><option value="">Escolher automaticamente</option><optgroup label="Previdenciário">${opTemas("prev")}</optgroup><optgroup label="Família">${opTemas("fam")}</optgroup><optgroup label="Bastidores">${opTemas("bast")}</optgroup></select></label>
+    <label class="largo">Título da arte (opcional — use *asteriscos* para a palavra em destaque)<input name="titulo" placeholder="Ex.: O INSS negou seu *benefício*?"></label>
+    <label class="largo">Texto de apoio (opcional)<input name="texto" placeholder="Ex.: Entenda o que fazer nos próximos 30 dias"></label>
+    <label>Foto<select name="foto"><option value="">Sugerir a melhor foto</option>${fs.map(x => `<option value="${x.id}">${esc(x.nome||"foto")}${x.fav?" ★":""}${x.editada?" (editada por app)":""}</option>`).join("")}</select></label>
+    <label>Data<input type="date" name="d" value="${atProximoDiaLivre()}"></label>
+    <p class="sub largo">Você recebe <b>3 propostas com composições diferentes</b> e escolhe a que mais gostou. Tudo vai para aprovação; nada é publicado sozinho.</p></form>`;
+  modal("Criar arte com foto", corpo, [{t:"Cancelar", v:null}, {t:"Ver 3 propostas", cls:"btn-pri", acao: f => lerForm(f.querySelector("#fp-f"))}]).then(v => { if(v) fpCriar(v); });
+}
+function fpCriar(v){
+  const vert = v.formato!=="feed"; const estilo = vert ? "info" : (v.estilo || "info"); const tipoFeed = estilo==="carrossel" ? "carrossel" : "post";
+  const area = v.tema ? (ccTema(v.tema)||{}).area : (Math.floor(toUTC(v.d||hojeStr())/86400000) % 2 ? "fam" : "prev");
+  const t = v.tema ? ccTema(v.tema) : ccProximoTema(area==="fam" ? "fam" : "prev", new Set());
+  const it = ccFeedGerar(t.id, tipoFeed, {estilo, variacao: ccDB().itens.filter(i => i.temaId===t.id).length, data: vert ? null : (v.d || null), premium: apFamiliaPorData(v.d, 1)});
+  if(!it) return toast("Não consegui criar a arte.", true);
+  if(vert){ it.tipo = "capa"; it.slides = [Object.assign({}, it.slides[0], {papel:"unico", layout:"unico"})]; it.plataformas = [v.formato==="reels" ? "reels" : "stories"]; it.feed = false; if(v.d) it.dataPrevista = v.d; }
+  const s0 = it.slides[0]; if(it.slides.length===1 && ["mito","check","dica"].includes(s0.layout)){ s0.texto = s0.texto || s0.sub || (s0.itens||[]).join(" · "); s0.layout = "unico"; delete s0.itens; }
+  if(v.titulo) it.slides[0].titulo = v.titulo; if(v.texto){ it.slides[0].texto = v.texto; it.slides[0].sub = v.texto; }
+  it.design.formato = vert ? v.formato : null; it.origem = "foto";
+  const lays = vert ? Object.keys(FP_VERT) : ["lateral","arcofoto","dividido","moldura","revista","circulo"];
+  const props = []; const usadas = [];
+  for(const lay of (vert ? lays : (estilo==="frase"||estilo==="motivacional" ? ["circulo","moldura","lateral"] : lays.slice(0, 5)))){
+    if(props.length===3) break; const fid = v.foto || fpSugerir(it, lay, usadas) || fpSugerir(it, lay) ; if(fid && !v.foto) usadas.push(fid);
+    props.push({fotoLayout:lay, fotoId:fid}); }
+  ccDB().itens.push(it); salvar();
+  fp3Propostas(it, props, true);
+}
+
+/* ---------- 3 propostas ---------- */
+function fpPropostasPara(i){
+  const fs = fpFotos().filter(x => !x.editada), d = i.design || {}, vert = !!d.formato, props = [], usadas = d.fotoId ? [d.fotoId] : [];
+  if(vert){ Object.keys(FP_VERT).filter(l => l!==d.fotoLayout).concat(d.fotoLayout ? [] : []).slice(0, 3).forEach(l => { const f = fpSugerir(i, l, usadas) || d.fotoId; usadas.push(f); props.push({fotoLayout:l, fotoId:f}); }); return props.slice(0, 3); }
+  const fams = AP_ORDEM.filter(f => f!==d.premium); const lays = ["lateral","arcofoto","dividido","moldura","revista","circulo"].filter(l => l!==d.fotoLayout);
+  const podeFoto = i.slides.length > 1 || !["mito","check","dica"].includes(i.slides[0]?.layout);
+  if(fs.length && podeFoto){ // duas com foto, uma só gráfica
+    for(const l of lays){ if(props.length===2) break; const f = fpSugerir(i, l, usadas); if(f){ usadas.push(f); props.push({fotoLayout:l, fotoId:f, premium:d.premium || fams[0]}); } }
+  }
+  fams.forEach(f => { if(props.length < 3) props.push({fotoLayout:null, premium:f}); });
+  return props.slice(0, 3);
+}
+async function fp3Propostas(i, props, novo){
+  props = props || fpPropostasPara(i); const orig = JSON.parse(JSON.stringify(i.design)); const vert = !!orig.formato;
+  const nomes = p => p.fotoLayout ? (FP_FEED[p.fotoLayout] || FP_VERT[p.fotoLayout]) : AT_PREMIUM[p.premium];
+  const corpo = `<p class="sub" style="margin-top:0">Composições diferentes para o mesmo conteúdo. Escolha uma — você ainda pode trocar a foto, editar os textos e pedir outras propostas depois.</p>
+    <div class="bf-props">${props.map((p, n) => `<div class="bf-prop"><canvas id="bf-p${n}" width="${vert?360:432}" height="${vert?640:540}"></canvas><div class="sub" style="margin:6px 0"><b>Proposta ${n+1}</b> · ${esc(nomes(p))}</div></div>`).join("")}</div>`;
+  const pr = modal(novo ? "Escolha a proposta" : "3 propostas visuais", corpo, [{t: novo ? "Descartar arte" : "Manter a atual", v:null}, ...props.map((p, n) => ({t:`Escolher a ${n+1}`, cls:"btn-pri", v:"p"+n}))]);
+  setTimeout(async () => { await ccFontes();
+    for(let n=0;n<props.length;n++){ const cv = document.getElementById("bf-p"+n); if(!cv) continue; const tmp = JSON.parse(JSON.stringify(i)); Object.assign(tmp.design, props[n]); if(props[n].fotoLayout===null) tmp.design.fotoLayout = null;
+      const [W, H] = ccTamPost(tmp); const g = cv.getContext("2d"); g.setTransform(cv.width/W, 0, 0, cv.height/H, 0, 0); await ccDesenharSlide(g, W, H, tmp, 0); } }, 40);
+  const r = await pr; if(r){ return fpAplicarProposta(i, props[+r.slice(1)], novo); }
+  if(novo){ ccDB().itens = ccDB().itens.filter(x => x.id!==i.id); salvar(); toast("Arte descartada."); }
+}
+function fpAplicarProposta(i, p, novo){
+  if(!novo) atGuardarVersao(i, "Proposta visual escolhida");
+  i.design.fotoLayout = p.fotoLayout || null; if(p.fotoId !== undefined) i.design.fotoId = p.fotoId || null; if(p.premium) i.design.premium = p.premium; i.design.v = 4;
+  if(!novo){ ccAlterouAposAprovar(i); if(i.status==="ajustes"){ ccMudarStatus(i, "aprovacao", "Nova proposta visual escolhida"); } }
+  i.atualizado = new Date().toISOString(); i.historico.push({ts:i.atualizado, de:i.status, para:i.status, obs:`Proposta visual: ${p.fotoLayout ? (FP_FEED[p.fotoLayout]||FP_VERT[p.fotoLayout]) : AT_PREMIUM[p.premium]}`, usuario:USU?.nome||""});
+  salvar(); AT_CACHE.clear(); toast("Proposta aplicada. Ela está aguardando a sua aprovação.");
+  if(i.design.formato) fpVerVertical(i.id); else { ccRerender(); ccFeedVer(i.id); }
+}
+
+/* ---------- capas de Reels e stories: visualizar ---------- */
+function fpVerVertical(id){
+  const i = ccItem(id); if(!i) return; const s = i.slides[0];
+  const corpo = `<div class="bf-ed-grade"><div class="bf-palco"><canvas id="bf-vcv" width="1080" height="1920" style="width:100%;max-width:320px;height:auto"></canvas></div>
+    <form class="campos" id="bf-vf"><label class="largo">Título (*palavra* em destaque)<input name="titulo" value="${esc(s.titulo||"")}"></label><label class="largo">Texto (stories)<input name="texto" value="${esc(s.texto||s.sub||"")}"></label>
+    <label>Foto<select name="foto">${fpFotos().map(x => `<option value="${x.id}" ${x.id===i.design.fotoId?"selected":""}>${esc(x.nome||"foto")}</option>`).join("")}</select></label>
+    <label>Composição<select name="lay">${Object.entries(FP_VERT).map(([k, v]) => `<option value="${k}" ${k===i.design.fotoLayout?"selected":""}>${v}</option>`).join("")}</select></label>
+    <p class="sub largo">Situação: <b>${esc(CC_ST[i.status]||i.status)}</b></p></form></div>`;
+  const pr = modal(FP_FORMATOS[i.design.formato].split(" (")[0], corpo, [{t:"Excluir", v:"del"}, {t:"3 propostas", v:"prop"}, {t:"Baixar JPG", v:"jpg"}, {t:i.status==="aprovado" ? "Fechar" : "Salvar e aprovar", cls:"btn-pri", acao: f => lerForm(f.querySelector("#bf-vf"))}]);
+  const pintar = async () => { const cv = document.getElementById("bf-vcv"); if(!cv) return; await ccFontes(); const g = cv.getContext("2d"); g.setTransform(1,0,0,1,0,0); await ccDesenharSlide(g, 1080, 1920, i, 0); };
+  setTimeout(() => { pintar(); const f = document.getElementById("bf-vf"); if(!f) return; f.oninput = () => { const v = lerForm(f); s.titulo = v.titulo; s.texto = v.texto; s.sub = v.texto; i.design.fotoId = v.foto; i.design.fotoLayout = v.lay; pintar(); }; }, 30);
+  pr.then(async r => {
+    if(r==="del"){ if(await confirmar("Excluir", "Excluir esta capa/story?", "Excluir", true)){ ccDB().itens = ccDB().itens.filter(x => x.id!==i.id); salvar(); ccRerender(); } return; }
+    if(r==="prop") return fp3Propostas(i);
+    if(r==="jpg"){ const b = await ccSlideBlob(i, 0, "jpg"); salvarArquivo(`${(i.design.formato==="reels"?"capa-reels":"story")}-${(s.titulo||"arte").replace(/\*/g,"").slice(0,30).replace(/[^\wÀ-ú]+/g,"-")}.jpg`, b, "image/jpeg"); salvar(); return fpVerVertical(id); }
+    if(r && typeof r==="object"){ if(i.status!=="aprovado"){ ccMudarStatus(i, "aprovado", "Aprovado na biblioteca"); i.aprovacao = {em:new Date().toISOString(), por:USU?.nome||""}; } salvar(); AT_CACHE.clear(); toast("Salvo."); ccRerender(); }
+  });
+}
+
+/* ---------- duplicar, arquivar ---------- */
+function ccDuplicar(i){
+  const c = JSON.parse(JSON.stringify(i)); c.id = uid(); c.status = "aprovacao"; c.aprovacao = null; c.pub = null; c.versao = 1; c.versoes = []; c.criado = c.atualizado = new Date().toISOString();
+  c.historico = [{ts:c.criado, de:null, para:"aprovacao", obs:`Duplicado de “${i.titulo}”`, usuario:USU?.nome||""}]; if(c.dataPrevista && c.tipo!=="capa") c.dataPrevista = atProximoDiaLivre();
+  ccDB().itens.push(c); salvar(); return c;
+}
+async function ccArquivar(i){ if(!(await confirmar("Arquivar", `Arquivar “${esc(i.titulo)}”? Sai do feed e da fila, mas fica guardado e pode voltar a qualquer momento.`, "Arquivar"))) return false;
+  i.statusAntes = i.status; ccMudarStatus(i, "arquivado", "Arquivado"); salvar(); return true; }
+function ccVerArquivados(){
+  const l = ccDB().itens.filter(i => i.status==="arquivado");
+  modal(`Arquivados (${l.length})`, l.length ? `<table class="tabela"><tbody>${l.map(i => `<tr><td>${esc(i.titulo)}<div class="sub">${esc(CC_TIPOS[i.tipo]||i.tipo)}${i.dataPrevista?` · ${fmtData(i.dataPrevista)}`:""}</div></td><td style="text-align:right"><button class="btn btn-sm" data-desarq="${i.id}" type="button">Desarquivar</button></td></tr>`).join("")}</tbody></table>` : `<p class="sub">Nada arquivado.</p>`, [{t:"Fechar", v:null}]);
+  setTimeout(() => document.querySelectorAll("[data-desarq]").forEach(b => b.onclick = () => { const i = ccItem(b.dataset.desarq); ccMudarStatus(i, i.statusAntes && i.statusAntes!=="publicado" ? "aprovacao" : (i.statusAntes||"aprovacao"), "Desarquivado"); salvar(); b.closest("tr").remove(); toast("Desarquivado: voltou para aguardando aprovação."); ccRerender(); }), 30);
+}
+
 /* =========================================================
    COLEÇÃO PREMIUM — artes com acabamento de pack profissional
    5 famílias (Ateliê, Revista, Bloco, Clássico, Moderno), cada
@@ -6304,7 +6629,8 @@ async function apFinal(C){
   const {g, W, H, k, P, s, mx, seed} = C; const K = v => v*k; const larg = W - 2*mx;
   const Q = C.fam==="bloco" ? apEscuro(P, seed) : P;
   apPapel(g, W, H, Q, seed, k); if(C.fam==="classico") apMoldura(g, W, H, Q, k); if(C.fam==="moderno") apGrade(g, W, H, Q, k);
-  apSelo(g, W/2, K(270), K(112), Q, k);
+  if(C.d.fotoId && (await ccImagem(C.d.fotoId))){ const r = K(112); g.strokeStyle = Q.ac; g.lineWidth = K(1.4); g.beginPath(); g.arc(W/2, K(270), r + K(14), 0, Math.PI*2); g.stroke(); g.save(); g.beginPath(); g.arc(W/2, K(270), r, 0, Math.PI*2); g.clip(); await fpFoto(g, C.d.fotoId, W/2 - r, K(270) - r, 2*r, 2*r, {alvo:[.5,.45]}); g.restore(); }
+  else apSelo(g, W/2, K(270), K(112), Q, k);
   const f = apTit(g, s.titulo, {max:larg - K(60), maxAlt:K(270), tam:K(86), min:K(46), lh:1.08}); const y = K(450); atEscrever(g, f, W/2, y, {cor:Q.tit, corD:Q.ac, alinh:"center"});
   let y2 = y + f.alt + K(40); atDivisor(g, W/2, y2, K(160), Q.ac, k); y2 += K(50);
   if(s.texto){ const fc = apTxt(g, s.texto, {max:larg - K(120), maxAlt:K(150), tam:K(32), min:K(22), peso:400}); atEscrever(g, fc, W/2, y2, {cor:Q.txt, corD:Q.ac2, alinh:"center"}); y2 += fc.alt + K(60); }
@@ -6364,7 +6690,7 @@ function ccxPainel(el){
     <div class="ccx-topo"><div><h3 style="margin:0">Comandos da Central</h3><p class="sub" style="margin:4px 0 0">Tudo o que for criado ou alterado aqui vai para <b>Aguardando aprovação</b>. Nada é publicado sem o seu APROVAR.</p></div>
       <div class="ccx-botoes"><button class="btn btn-pri" id="ccx-gerar">GERAR NOVOS CONTEÚDOS</button>
         <button class="btn btn-perigo" id="ccx-limpar" ${pend.length ? "" : "disabled"}>LIMPAR CONTEÚDOS PENDENTES${pend.length ? ` (${pend.length})` : ""}</button>
-        <button class="btn" id="ccx-refs">Referências e instruções</button>
+        <button class="btn" id="ccx-refs">Referências e instruções</button><button class="btn" id="ccx-fotos">Biblioteca de fotos (${fpFotos().length})</button><button class="btn btn-sm" id="ccx-arq">Arquivados (${ccDB().itens.filter(i => i.status==="arquivado").length})</button>
         ${lix && lix.itens && lix.itens.length ? `<button class="btn btn-sm" id="ccx-desfazer" title="Apagados em ${new Date(lix.em).toLocaleString("pt-BR")}">Desfazer última limpeza (${lix.itens.length})</button>` : ""}</div></div>
     <form id="ccx-f" class="ccx-cmd"><textarea name="t" rows="2" placeholder="Converse com a IA da Central. Ex.: Crie 5 posts seguindo esta referência." required></textarea>
       <div class="ccx-cmd-lado"><label class="sub">Aplicar alterações em<select name="alvo">
@@ -6379,7 +6705,7 @@ function ccxPainel(el){
   </div>`;
   $("#ccx-gerar").onclick = () => ccxAbrirGerar();
   $("#ccx-limpar").onclick = () => ccxLimpar();
-  $("#ccx-refs").onclick = () => ccxAbrirRefs();
+  $("#ccx-refs").onclick = () => ccxAbrirRefs(); $("#ccx-fotos").onclick = () => ir("conteudo-fotos"); $("#ccx-arq").onclick = () => ccVerArquivados();
   const bd = $("#ccx-desfazer"); if(bd) bd.onclick = () => ccxDesfazerLimpeza();
   el.querySelectorAll("[data-ccx-ex]").forEach(b => b.onclick = () => { const t = $("#ccx-f").t; t.value = b.dataset.ccxEx; t.focus(); });
   $("#ccx-f").t.onkeydown = e => { if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); $("#ccx-f").requestSubmit(); } };
