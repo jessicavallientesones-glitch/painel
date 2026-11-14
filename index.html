@@ -1989,7 +1989,7 @@ function telaAssinaturas(c){
    Escritório, timbrado e profissionais (Configurações)
    ========================================================= */
 function garantirEscritorio(){
-  const e = DB.escritorio, pad_ = {nomeTimbre:"JÉSSICA VALIENTE", subTimbre:"CORRESPONDENTE JURÍDICA", endereco:"Rua Coronel Urbano, 271", telefone:"(53) 99907-5447", email:"contatojessicavaliente@gmail.com", instagram:"@jessicavaliente_"};
+  const e = DB.escritorio, pad_ = {nomeTimbre:"JÉSSICA VALIENTE", subTimbre:"CORRESPONDENTE JURÍDICA", endereco:"", telefone:"", email:"", instagram:"@jessicavaliente_"};
   if(!e.timbreIniciado){ for(const k in pad_) if(!e[k]) e[k] = pad_[k]; e.timbreIniciado = true; }
   if(!Array.isArray(e.profissionais)) e.profissionais = [{id:uid(), nome:"Jéssica Valiente", genero:"Feminino", tipo:"estagiario", oab:"", uf:"RS", padrao:true}];
 }
